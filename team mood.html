@@ -1609,22 +1609,28 @@
 
         const questionBank = {
             convergent: [
-                { title: "Acertijo Lógico", text: "Tengo ciudades, pero no casas. Tengo montañas, pero no árboles. Tengo agua, pero no peces. ¿Qué soy?", acceptedAnswers: ["mapa", "planisferio", "atlas"], time: 45 },
-                { title: "Acertijo Clásico", text: "Aliméntame y viviré, pero dame de beber y moriré. ¿Qué soy?", acceptedAnswers: ["fuego", "llama", "candela", "incendio"], time: 45 },
-                { title: "Secuencia Numérica", text: "¿Qué número sigue en esta secuencia: 1, 4, 9, 16, 25, ...?", acceptedAnswers: ["36", "treinta y seis"], time: 30 },
-                { title: "Deducción Analítica", text: "El padre de Ana tiene 4 hijas: Lala, Lele, Lili y... ¿quién es la cuarta hija?", acceptedAnswers: ["ana"], time: 30 },
-                { title: "Lógica de Procesos", text: "Si 5 máquinas tardan 5 minutos en fabricar 5 piezas, ¿cuántos minutos tardarán 100 máquinas en fabricar 100 piezas?", acceptedAnswers: ["5", "cinco"], time: 40 },
-                { title: "Posicionamiento Lógico", text: "En una carrera adelantas al corredor que va en segundo lugar. ¿En qué posición quedas ahora?", acceptedAnswers: ["segundo", "segunda", "2", "2do"], time: 35 },
-                { title: "Paradoja Verbal", text: "¿Qué palabra de 5 letras se vuelve más corta cuando le añades dos letras al final?", acceptedAnswers: ["corta", "corto"], time: 40 },
-                { title: "Progresión Matemática", text: "¿Qué número continúa la serie lógica: 2, 6, 12, 20, 30, ...?", acceptedAnswers: ["42", "cuarenta y dos"], time: 40 }
+                { title: "El Reto de la Meta", text: "Participas en la maratón recreativa de la Caja y, justo antes de la meta, adelantas a la persona que va en segundo lugar. ¿En qué posición cruzas la meta?", acceptedAnswers: ["segundo", "segunda", "2", "2do"], time: 40 },
+                { title: "Atención al Detalle", text: "El papá de Ana tiene 4 hijas muy talentosas: Lala, Lele, Lili y... ¿cómo se llama la cuarta hija?", acceptedAnswers: ["ana"], time: 35 },
+                { title: "Identidad en Equipo", text: "Pertenezco solo a ti, pero tus compañeros de trabajo me usan mucho más que tú todos los días. ¿Qué soy?", acceptedAnswers: ["nombre", "apodo", "alias"], time: 45 },
+                { title: "Agilidad en Selección", text: "Si 5 psicólogos entrevistan a 5 candidatos en 5 minutos, ¿cuántos minutos tardarán 50 psicólogos en entrevistar a 50 candidatos al mismo tiempo?", acceptedAnswers: ["5", "cinco"], time: 45 },
+                { title: "Efecto Contagio", text: "Todos me saben abrir, nadie me sabe cerrar y cuando aparezco en medio de una reunión larga soy súper contagioso. ¿Qué soy?", acceptedAnswers: ["bostezo", "bostezar", "risa", "sonrisa"], time: 45 },
+                { title: "Acertijo del Viajero", text: "Tengo ciudades llenas de nombres, pero ninguna casa. Tengo ríos largos, pero ni una gota de agua. Tengo bosques, pero ningún árbol. ¿Qué soy?", acceptedAnswers: ["mapa", "planisferio", "atlas", "globo"], time: 45 },
+                { title: "Energía Vital", text: "Si me alimentas crezco con fuerza y doy calor, pero si me das de beber agua me apago al instante. ¿Qué soy?", acceptedAnswers: ["fuego", "llama", "candela", "fogata", "incendio"], time: 45 },
+                { title: "Paradoja Lógica", text: "Cuanto más me quitas, más grande me vuelvo. ¿Qué soy?", acceptedAnswers: ["hueco", "agujero", "hoyo", "pozo", "vacio"], time: 45 }
             ],
-            divergent: [
-                { title: "Usos Inusuales", text: "Escribe la mayor cantidad de usos creativos posibles para un clip metálico común fuera de la oficina. Separa cada idea con un Enter.", type: "list", time: 60 },
-                { title: "Escenario Hipotético", text: "Imagina que a partir de hoy todos los seres humanos pueden levitar hasta 2 metros. ¿Qué tres cambios o innovaciones ocurrirían en las ciudades?", type: "text", time: 60 },
-                { title: "Reinvención de Objetos", text: "Escribe todos los usos alternativos y creativos que podrías darle a un ladrillo común (sin usarlo para construir muros). Separa cada idea con un Enter.", type: "list", time: 60 },
-                { title: "Conexión Disruptiva", text: "Si fusionaras una cafetería, una biblioteca digital y un gimnasio en un solo concepto, ¿qué experiencias únicas ofrecerías?", type: "text", time: 60 },
-                { title: "Nuevos Usos: Botella Plástica", text: "Escribe la mayor cantidad de usos creativos y útiles que podrías darle a una botella plástica vacía (sin usarla para guardar líquidos). Separa cada idea con un Enter.", type: "list", time: 60 },
-                { title: "Experiencia de Servicio", text: "¿Cómo diseñarías un restaurante donde los clientes no eligen su plato de un menú tradicional, pero todos salen encantados? Describe tu propuesta.", type: "text", time: 60 }
+            divergentObjects: [
+                { title: "Nuevos Usos: Botella Plástica", text: "Escribe la mayor cantidad de usos creativos, divertidos o útiles que podrías darle a una botella plástica vacía (sin usarla para guardar líquidos). Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Usos Inusuales del Clip", text: "Escribe la mayor cantidad de usos creativos posibles para un clip metálico fuera de la oficina. Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Reinvención del Ladrillo", text: "Escribe todos los usos alternativos y creativos que podrías darle a un ladrillo común (sin usarlo para construir muros). Separa cada idea con un Enter.", type: "list", time: 60 }
+            ],
+            divergentPeople: [
+                { title: "Lunes Inolvidables", text: "Si pudieras reinventar los lunes por la mañana para que sean el momento favorito de la semana en tu equipo, ¿qué ideas locas o geniales implementarías? Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "La Sala de Espera Feliz", text: "¿Qué experiencias o detalles inesperados pondrías en una sala de espera para que las personas deseen quedarse 15 minutos más aunque ya sea su turno?", type: "text", time: 60 },
+                { title: "Bienvenida Memorables", text: "Inventa ideas creativas y fuera de lo común para recibir a un nuevo integrante en su primer día de trabajo y que nunca lo olvide. Separa cada idea con un Enter.", type: "list", time: 60 }
+            ],
+            divergentDisruptive: [
+                { title: "Fusión Intercajas", text: "Si fusionaras un centro recreativo, una cafetería y el área de Talento Humano en un solo lugar mágico, ¿qué experiencias únicas vivirían las personas allí?", type: "text", time: 60 },
+                { title: "Superpoder en el Equipo", text: "Imagina que a partir de mañana las personas pudieran ver una chispa de color sobre los demás cada vez que tienen una buena idea. ¿Qué cambiaría en las reuniones y en el trabajo?", type: "text", time: 60 }
             ]
         };
 
@@ -1659,9 +1665,16 @@
 
         function generateQuiz() {
             shuffleArray(questionBank.convergent);
-            shuffleArray(questionBank.divergent);
+            shuffleArray(questionBank.divergentObjects);
+            shuffleArray(questionBank.divergentPeople);
+            shuffleArray(questionBank.divergentDisruptive);
+
             const selectedConv = questionBank.convergent.slice(0, 3).map(q => ({...q, questionType: 'convergent'}));
-            const selectedDiv = questionBank.divergent.slice(0, 3).map(q => ({...q, questionType: 'divergent'}));
+            const selectedDiv = [
+                { ...questionBank.divergentObjects[0], questionType: 'divergent' },
+                { ...questionBank.divergentPeople[0], questionType: 'divergent' },
+                { ...questionBank.divergentDisruptive[0], questionType: 'divergent' }
+            ];
             questions = [...selectedConv, ...selectedDiv];
             shuffleArray(questions);
             userResponses = [];
@@ -1789,15 +1802,23 @@
             loadQuestion();
         }
 
-        function renderScoreUI() {
-            const totalScore = scores.convergent + scores.divergent;
-            const divergentWeight = totalScore > 0 ? (scores.divergent / totalScore) * 100 : 50;
+        function calculateDivergentWeight(s) {
+            const div = Math.max(0, Number(s?.divergent) || 0);
+            const conv = Math.max(0, Number(s?.convergent) || 0);
+            if (div === 0 && conv === 0) return 50;
+            const smoothedDiv = div + 20;
+            const smoothedConv = conv + 20;
+            return (smoothedDiv / (smoothedDiv + smoothedConv)) * 100;
+        }
 
-            const { title, description } = getProfileText(divergentWeight);
+        function renderScoreUI() {
+            const divergentWeight = calculateDivergentWeight(scores);
+            const { title, description, colorClass } = getProfileText(divergentWeight);
             elements.resultTitle.textContent = title;
+            elements.resultTitle.className = `text-2xl font-semibold mb-3 font-orbitron ${colorClass || 'text-sky-300'}`;
             elements.resultDescription.textContent = description;
             updateProfileBar(elements.resultBar, divergentWeight);
-            return divergentWeight;
+            return { divergentWeight, profileTitle: title };
         }
 
         async function showResults() {
@@ -1806,7 +1827,7 @@
             elements.progressBar.style.width = '100%';
 
             const { name: participantName, mood: participantMood } = getCurrentParticipantContext();
-            renderScoreUI();
+            const { profileTitle } = renderScoreUI();
 
             if (db && userId && isConnected) {
                 const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
@@ -1819,22 +1840,24 @@
                 
                 const divergentSummary = userResponses
                     .filter(r => r.questionType === 'divergent')
-                    .map(r => `- Reto "${r.title}": Respuesta del usuario: "${r.answer}"`)
+                    .map(r => `- Reto "${r.title}": "${r.answer}"`)
                     .join('\n');
 
-                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} que acaba de realizar un ejercicio contrarreloj de pensamiento:
-Puntaje Convergente (Enfoque práctico y analítico, máx 75): ${scores.convergent}
-Puntaje Divergente preliminar (Exploración creativa, máx 75): ${scores.divergent}
-Ideas compartidas por el participante en los retos abiertos:
+                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} cuyo resultado en El Prisma del Pensamiento es "${profileTitle}".
+Datos internos de referencia (NO los menciones como números en tu respuesta):
+- Enfoque Convergente: ${scores.convergent}/75
+- Exploración Divergente: ${scores.divergent}/75
+- Ideas escritas en los retos creativos:
 ${divergentSummary}
 
-Instrucciones clave de tono:
-1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre.` : 'Saluda con calidez al participante.'} NUNCA uses palabras negativas, clínicas o críticas (prohibido decir "bajo puntaje", "poca fluidez", "respuestas breves", "falta de", "limitado" o "sin respuesta").
-2. Si alguna respuesta fue corta o quedó en blanco por el reto del tiempo, compréndelo con total empatía sin mencionarlo como falla y enfócate 100% en celebrar su talento natural (ya sea su agudeza práctica para ir al grano o su chispa imaginativa).
-3. Rescata con entusiasmo algún detalle o intención positiva de lo que escribió y regálale una invitación sencilla, cálida e inspiradora (máximo 3 frases en total) para potenciar su estilo en el día a día.
-4. Estima con generosidad su puntaje divergente ajustado entre ${Math.max(15, scores.divergent)} y 75.
+Reglas estrictas para tu mensaje ("feedback"):
+1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre` : 'Saluda con calidez'} y felicítalo mencionando explícitamente su perfil obtenido ("${profileTitle}").
+2. PROHIBIDO mencionar números, puntajes o frases técnicas como "puntaje preliminar", "35 puntos", "bajo puntaje", "poca fluidez" o "sin respuesta".
+3. Cita con naturalidad 1 o 2 ideas concretas que haya escrito para destacar cómo se refleja su estilo de pensamiento, y cierra con una invitación breve e inspiradora.
+4. Sé conciso: máximo 3 oraciones breves (alrededor de 45 a 60 palabras en total).
+5. Estima internamente "adjustedDivergentScore" entre ${Math.max(15, scores.divergent)} y 75 manteniendo coherencia con su desempeño.
 Devuelve ÚNICAMENTE un objeto JSON válido sin bloques markdown con este formato exacto:
-{"adjustedDivergentScore": ${scores.divergent}, "feedback": "Tu mensaje cálido, apreciativo y motivador en español aquí."}`;
+{"adjustedDivergentScore": ${scores.divergent}, "feedback": "Tu mensaje cálido, coherente con el perfil y conciso aquí."}`;
 
                 const aiResponse = await generateAIAnalysis(prompt);
                 if (aiResponse) {
@@ -1862,26 +1885,28 @@ Devuelve ÚNICAMENTE un objeto JSON válido sin bloques markdown con este format
         }
 
         function getProfileText(divergentWeight) {
-            if (divergentWeight > 60) {
-                return { title: "El Innovador Disruptivo", description: "Tu mente genera un océano continuo de posibilidades originales. Tu mayor poder es pensar fuera del molde habitual." };
-            } else if (divergentWeight > 40) {
-                return { title: "El Arquitecto Estratégico", description: "Mantienes un equilibrio virtuoso entre la generación libre de ideas y la capacidad analítica para estructurar soluciones reales." };
+            if (divergentWeight > 58) {
+                return { title: "El Innovador Disruptivo", colorClass: "text-pink-400", description: "Tu mente genera un océano continuo de posibilidades originales. Tu mayor poder es pensar fuera del molde habitual." };
+            } else if (divergentWeight >= 42) {
+                return { title: "El Arquitecto Estratégico", colorClass: "text-purple-300", description: "Mantienes un equilibrio virtuoso entre la generación libre de ideas y la capacidad analítica para estructurar soluciones reales." };
             } else {
-                return { title: "El Solucionador de Precisión", description: "Sobresales analizando datos complejos y hallando la ruta directa y lógica hacia la solución óptima." };
+                return { title: "El Solucionador de Precisión", colorClass: "text-sky-300", description: "Sobresales analizando datos complejos y hallando la ruta directa y lógica hacia la solución óptima." };
             }
         }
 
         function updateProfileBar(barElement, divergentWeight) {
             const balancePoint = 50;
-            let pull = Math.abs(divergentWeight - balancePoint);
-            if (divergentWeight > balancePoint) {
-                barElement.style.left = `50%`;
-                barElement.style.width = `${pull}%`;
-                barElement.style.background = 'linear-gradient(to right, #a78bfa, #ec4899)';
-            } else {
+            let pull = Math.min(50, Math.max(4, Math.abs(divergentWeight - balancePoint)));
+            if (divergentWeight >= balancePoint) {
+                // Divergente está a la IZQUIERDA (0% a 50%)
                 barElement.style.left = `${50 - pull}%`;
                 barElement.style.width = `${pull}%`;
-                barElement.style.background = 'linear-gradient(to right, #38bdf8, #a78bfa)';
+                barElement.style.background = 'linear-gradient(to left, #a78bfa, #ec4899)';
+            } else {
+                // Convergente está a la DERECHA (50% a 100%)
+                barElement.style.left = `50%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to right, #a78bfa, #38bdf8)';
             }
         }
 
@@ -1906,10 +1931,9 @@ Devuelve ÚNICAMENTE un objeto JSON válido sin bloques markdown con este format
                 
                 const profileCounts = { "Disruptivo": 0, "Estratégico": 0, "Solucionador": 0 };
                 results.forEach(s => {
-                    const tot = s.convergent + s.divergent;
-                    const w = tot > 0 ? (s.divergent / tot) * 100 : 50;
-                    if (w > 60) profileCounts["Disruptivo"]++;
-                    else if (w > 40) profileCounts["Estratégico"]++;
+                    const w = calculateDivergentWeight(s);
+                    if (w > 58) profileCounts["Disruptivo"]++;
+                    else if (w >= 42) profileCounts["Estratégico"]++;
                     else profileCounts["Solucionador"]++;
                 });
 
