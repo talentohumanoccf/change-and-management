@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#080c14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Team Mood - Árbol de Emociones | Comfamiliar Risaralda</title>
+    
+    <!-- External Libraries & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuración de ambiente local -->
+    <script src="env.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #080c14;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --accent-sky: #38bdf8;
+            --accent-purple: #a78bfa;
+            --accent-pink: #ec4899;
+            --accent-emerald: #34d399;
+            --accent-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-radius: 1.25rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.25);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #a78bfa 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        input[type="text"] {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.65rem 1rem;
+            background-color: rgba(15, 23, 42, 0.95);
+            color: #f3f4f6;
+            transition: all 0.3s ease;
+            font-size: 16px; /* Evita zoom automático en iOS Safari */
+        }
+
+        @media (min-width: 640px) {
+            input[type="text"] { font-size: 0.875rem; }
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-sky);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        /* Tree Placeholders & Touch Hitbox */
+        .tree-placeholder {
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            touch-action: manipulation;
+        }
+
+        /* Hitbox invisible ampliada para toques móviles precisos */
+        .tree-placeholder::after {
+            content: '';
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+        }
+
+        .tree-placeholder:hover, .tree-placeholder:active {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 30;
+            filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.85));
+        }
+
+        .avatar-occupied {
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.2); opacity: 0; }
+            80% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #plexus-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        #toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            left: 16px;
+            max-width: 420px;
+            margin: 0 auto;
+            z-index: 100;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(-90px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        @media (min-width: 640px) {
+            #toast { left: auto; right: 24px; top: 24px; }
+        }
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+
+        .mood-chip {
+            touch-action: manipulation;
+        }
+        .mood-chip.selected {
+            border-color: #38bdf8 !important;
+            background: rgba(56, 189, 248, 0.22) !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+            transform: translateY(-2px);
+        }
+
+        /* Zoom Container for Mobile/Desktop */
+        #tree-zoom-viewport {
+            touch-action: pinch-zoom;
+            transform-origin: center center;
+            transition: transform 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col justify-between">
+    <canvas id="plexus-bg"></canvas>
+    
+    <div id="toast" class="bg-slate-900/95 text-white border border-sky-500/40 backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+        <i id="toast-icon" class="fas fa-check-circle text-sky-400 text-lg flex-shrink-0"></i>
+        <span id="toast-message" class="text-xs sm:text-sm font-medium leading-tight">Notificación</span>
+    </div>
+    <!-- Top Responsive Header -->
+    <header class="w-full px-3 py-2.5 sm:px-6 sm:py-3 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 flex-shrink-0">
+                <i class="fas fa-tree text-sm sm:text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-orbitron text-base sm:text-xl font-bold tracking-wide text-white">Team Mood</h1>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/30 uppercase tracking-wider">30 Slots</span>
+                </div>
+                <p class="text-[10px] sm:text-xs text-slate-400 hidden xs:block">Árbol de Emociones • Comfamiliar Risaralda</p>
+            </div>
+        </div>
+
+        <!-- Connection Badge & Global Quick Actions -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5">
+            <div id="connection-badge" class="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+                <span id="connection-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span id="connection-text" class="text-slate-300 hidden sm:inline text-[11px]">Conectando...</span>
+            </div>
+
+            <div class="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+                <i class="fas fa-users text-sky-400 text-xs"></i>
+                <span class="text-slate-300 text-[11px]"><strong id="total-participants-badge" class="text-sky-400 font-bold">0</strong><span class="text-slate-500">/30</span></span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-800">
+                <button id="qrShareBtn" title="Compartir con Código QR para Móviles" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-qrcode text-xs sm:text-sm"></i>
+                </button>
+                <button id="openStatsBtn" title="Ver Estadísticas del Clima" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-purple-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-chart-pie text-xs sm:text-sm"></i>
+                </button>
+                <button id="exportTreeBtn" title="Exportar Árbol como Imagen (PNG)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-camera text-xs sm:text-sm"></i>
+                </button>
+                <button id="soundToggleBtn" title="Sonido" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-volume-up text-xs sm:text-sm"></i>
+                </button>
+                <button id="fullscreenBtn" title="Pantalla Completa" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-expand text-xs sm:text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Screen View Switcher Tabs (Only visible on screens < 1024px) -->
+    <div class="lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
+        <div class="flex items-center p-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl">
+            <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
+                <i class="fas fa-tree"></i> Ver Árbol (30)
+            </button>
+            <button id="tab-btn-form" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                <i class="fas fa-user-edit"></i> Mi Registro & Clima
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
+        
+        <!-- Left Column: Controls & Participation -->
+        <aside id="aside-panel" class="w-full lg:w-[380px] flex flex-col gap-4 order-2 lg:order-1 hidden lg:flex">
+            
+            <!-- Registration Card -->
+            <div class="glass-card p-4 sm:p-5 space-y-3.5">
+                <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+                    <div>
+                        <h2 class="font-orbitron font-bold text-xs sm:text-sm text-white flex items-center gap-2">
+                            <i class="fas fa-user-check text-sky-400"></i> Tu Registro
+                        </h2>
+                        <p class="text-[11px] text-slate-400">Ubica tu estado en una rama del árbol</p>
+                    </div>
+                    <span class="text-[10px] font-mono bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-md border border-sky-500/30">Paso a paso</span>
+                </div>
+
+                <div>
+                    <label for="participant-name" class="block text-xs font-semibold text-slate-300 mb-1">
+                        1. Tu Nombre o Alias:
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="participant-name" placeholder="Ej: Diana Valencia..." class="w-full py-2 px-3 pl-8 text-xs sm:text-sm">
+                        <i class="fas fa-user absolute left-2.5 top-3 text-slate-500 text-xs"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">
+                        2. ¿Cómo te sientes hoy?:
+                    </label>
+                    <div id="mood-palette" class="grid grid-cols-3 gap-1.5 sm:gap-2"></div>
+                </div>
+
+                <!-- Call to action Step 3 -->
+                <div class="bg-sky-500/10 border border-sky-500/30 p-2.5 rounded-xl text-xs text-sky-300 flex items-start gap-2">
+                    <i class="fas fa-hand-pointer text-base text-sky-400 mt-0.5 flex-shrink-0 animate-bounce"></i>
+                    <div class="flex-1">
+                        <strong class="font-bold block">3. Toca una rama vacía (+)</strong>
+                        <p class="text-[10px] sm:text-[11px] text-sky-300/80 mt-0.5">Toca cualquiera de los 30 círculos vacíos del árbol para colgar tu avatar.</p>
+                        <button id="btn-goto-tree-mobile" class="lg:hidden mt-2 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-md">
+                            <span>Ir al Árbol a elegir mi rama</span>
+                            <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Estado del Usuario Actual (Confirmación Fija + Paso al Ejercicio 2) -->
+                <div id="my-avatar-status" class="hidden bg-slate-900/90 border border-emerald-500/30 p-3 rounded-xl space-y-2.5 shadow-lg shadow-emerald-500/5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div id="my-avatar-icon-box" class="w-8 h-8 rounded-full bg-slate-950 border border-sky-400 flex items-center justify-center text-sm flex-shrink-0">
+                                <i class="fas fa-smile text-amber-400"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-white truncate" id="my-avatar-name">Mi Avatar</p>
+                                <p class="text-[10px] text-slate-400 truncate" id="my-avatar-slot">Rama: #</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1.5 flex-shrink-0">
+                            <i class="fas fa-check-circle text-xs"></i> Registrado
+                        </span>
+                    </div>
+                    <button id="btn-continue-prisma" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+                        <span>Continuar al Ejercicio 2: Prisma del Pensamiento</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Team Emotional Pulse Card -->
+            <div class="glass-card p-4 sm:p-5 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-orbitron font-bold text-xs uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                        <i class="fas fa-heartbeat text-rose-400"></i> Clima en Vivo
+                    </h3>
+                    <button id="view-stats-link" class="text-[11px] text-sky-400 hover:underline">Ver gráfica</button>
+                </div>
+
+                <div class="w-full bg-slate-900 rounded-full h-3 flex overflow-hidden border border-slate-800 p-0.5" id="mood-distribution-bar">
+                    <div class="h-full bg-slate-800 w-full text-center text-[8px] text-slate-500">Esperando participantes...</div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1 text-[11px]" id="mood-summary-badges"></div>
+            </div>
+
+            <!-- Facilitator Control Card -->
+            <div class="glass-card p-3.5 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                            <i class="fas fa-sliders-h text-purple-400"></i> Zona Facilitador
+                        </h4>
+                        <p class="text-[10px] text-slate-500">Control de sesión en vivo</p>
+                    </div>
+                    <button id="reset-tree-btn" class="bg-red-500/15 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold py-1.5 px-3 rounded-xl transition text-xs flex items-center gap-1.5">
+                        <i class="fas fa-trash-alt text-[10px]"></i> Reset (Admin)
+                    </button>
+                </div>
+                <button id="launch-prisma-btn" class="w-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 hover:text-white font-semibold py-2 px-3 rounded-xl transition text-xs flex items-center justify-center gap-2">
+                    <i class="fas fa-broadcast-tower text-pink-400"></i>
+                    <span>Enviar Grupo al Ejercicio 2 (Prisma)</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Right Column: Interactive 30-Participant Emotional Tree -->
+        <section id="tree-section" class="flex-1 glass-card p-2 sm:p-5 flex flex-col items-center justify-between relative overflow-hidden min-h-[520px] lg:min-h-[720px] order-1 lg:order-2">
+            
+            <!-- Floating Zoom Controls for Mobile & Precision Navigation -->
+            <div class="absolute top-3 right-3 z-30 flex flex-col sm:flex-row items-center gap-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl shadow-xl backdrop-blur-md">
+                <button id="zoom-in-btn" title="Acercar Árbol (+)" class="w-7 h-7 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800 transition flex items-center justify-center font-bold text-sm">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button id="zoom-reset-btn" title="Restablecer Vista (100%)" class="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center justify-center text-[10px] font-mono font-bold">
+                    1x
+                </button>
+                <button id="zoom-out-btn" title="Alejar Árbol (-)" class="w-7 h-7 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800 transition flex items-center justify-center font-bold text-sm">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+
+            <div id="tree-export-wrapper" class="w-full h-full relative flex flex-col items-center justify-center flex-1">
+                
+                <div class="text-center z-20 mb-1 pointer-events-none px-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-[9px] sm:text-[11px] font-bold uppercase tracking-widest">
+                        Sesión Colectiva en Tiempo Real
+                    </span>
+                    <h2 class="font-orbitron text-base sm:text-2xl font-black text-white mt-1">
+                        Árbol de Emociones del Equipo
+                    </h2>
+                    <p class="text-slate-400 text-[11px] sm:text-xs">
+                        Capacidad: <strong class="text-sky-400">30 integrantes</strong> • Toca un círculo vacío (+) para colgarte
+                    </p>
+                </div>
+
+                <!-- Tree Viewport with Pinch/Button Zooming -->
+                <div id="tree-zoom-viewport" class="w-full max-w-[920px] aspect-[1/1] relative flex items-center justify-center flex-1 overflow-visible select-none transition-transform duration-200">
+                    
+                    <svg viewBox="0 0 900 900" preserveAspectRatio="xMidYMid meet" class="w-full h-full absolute top-0 left-0 pointer-events-none">
+                        <defs>
+                            <linearGradient id="trunkGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" stop-color="#1c140e" />
+                                <stop offset="35%" stop-color="#3b2b20" />
+                                <stop offset="70%" stop-color="#5a4232" />
+                                <stop offset="100%" stop-color="#805d46" />
+                            </linearGradient>
+
+                            <radialGradient id="foliageGlowCenter" cx="50%" cy="40%" r="50%">
+                                <stop offset="0%" stop-color="rgba(56, 189, 248, 0.22)" />
+                                <stop offset="60%" stop-color="rgba(167, 139, 250, 0.12)" />
+                                <stop offset="100%" stop-color="rgba(56, 189, 248, 0)" />
+                            </radialGradient>
+
+                            <radialGradient id="foliageGlowLeft" cx="30%" cy="40%" r="40%">
+                                <stop offset="0%" stop-color="rgba(52, 211, 153, 0.18)" />
+                                <stop offset="80%" stop-color="rgba(52, 211, 153, 0)" />
+                            </radialGradient>
+
+                            <radialGradient id="foliageGlowRight" cx="70%" cy="40%" r="40%">
+                                <stop offset="0%" stop-color="rgba(236, 72, 153, 0.18)" />
+                                <stop offset="80%" stop-color="rgba(236, 72, 153, 0)" />
+                            </radialGradient>
+                            
+                            <radialGradient id="foliageGlowTop" cx="50%" cy="20%" r="35%">
+                                <stop offset="0%" stop-color="rgba(245, 158, 11, 0.18)" />
+                                <stop offset="80%" stop-color="rgba(245, 158, 11, 0)" />
+                            </radialGradient>
+                        </defs>
+
+                        <!-- Canopy Ambient Glows -->
+                        <circle cx="450" cy="380" r="380" fill="url(#foliageGlowCenter)" />
+                        <circle cx="280" cy="360" r="260" fill="url(#foliageGlowLeft)" />
+                        <circle cx="620" cy="360" r="260" fill="url(#foliageGlowRight)" />
+                        <circle cx="450" cy="220" r="220" fill="url(#foliageGlowTop)" />
+
+                        <!-- Aesthetic Foliage Cloud Rings -->
+                        <g opacity="0.22" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1.5" fill="none" stroke-dasharray="4 8">
+                            <circle cx="450" cy="180" r="140" />
+                            <circle cx="280" cy="300" r="160" />
+                            <circle cx="620" cy="300" r="160" />
+                            <circle cx="450" cy="380" r="240" />
+                        </g>
+
+                        <!-- Main Trunk -->
+                        <path d="M450 900 Q 450 680 450 540" stroke="url(#trunkGradient)" stroke-width="38" fill="none" stroke-linecap="round" />
+                        
+                        <!-- Base Branches -->
+                        <path d="M450 590 Q 340 580 200 620" stroke="url(#trunkGradient)" stroke-width="18" fill="none" stroke-linecap="round" />
+                        <path d="M450 590 Q 560 580 700 620" stroke="url(#trunkGradient)" stroke-width="18" fill="none" stroke-linecap="round" />
+                        
+                        <!-- Mid-Low Branches -->
+                        <path d="M450 540 Q 300 480 180 430" stroke="url(#trunkGradient)" stroke-width="24" fill="none" stroke-linecap="round" />
+                        <path d="M450 540 Q 600 480 720 430" stroke="url(#trunkGradient)" stroke-width="24" fill="none" stroke-linecap="round" />
+
+                        <!-- Mid Branches -->
+                        <path d="M450 520 Q 360 410 230 330 Q 140 270 120 220" stroke="url(#trunkGradient)" stroke-width="22" fill="none" stroke-linecap="round" />
+                        <path d="M450 520 Q 540 410 670 330 Q 760 270 780 220" stroke="url(#trunkGradient)" stroke-width="22" fill="none" stroke-linecap="round" />
+
+                        <!-- High Central Branch & Crown -->
+                        <path d="M450 520 Q 450 340 450 180 Q 450 120 450 70" stroke="url(#trunkGradient)" stroke-width="24" fill="none" stroke-linecap="round" />
+                        <path d="M450 350 Q 350 250 260 140" stroke="url(#trunkGradient)" stroke-width="16" fill="none" stroke-linecap="round" />
+                        <path d="M450 350 Q 550 250 640 140" stroke="url(#trunkGradient)" stroke-width="16" fill="none" stroke-linecap="round" />
+
+                        <path d="M350 250 Q 380 160 350 80" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+                        <path d="M550 250 Q 520 160 550 80" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+                        <path d="M230 330 Q 260 230 380 180" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+                        <path d="M670 330 Q 640 230 520 180" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+
+                        <path d="M450 900 Q 380 880 320 900" stroke="#1c140e" stroke-width="14" fill="none" stroke-linecap="round" />
+                        <path d="M450 900 Q 520 880 580 900" stroke="#1c140e" stroke-width="14" fill="none" stroke-linecap="round" />
+                    </svg>
+
+                    <!-- 30 Interactive Slots Layer -->
+                    <div id="tree-placeholders" class="w-full h-full absolute top-0 left-0 pointer-events-auto"></div>
+                </div>
+
+                <!-- Legend of Mood Colors -->
+                <div class="flex items-center justify-center gap-2 sm:gap-5 flex-wrap mt-1 pt-2 border-t border-slate-800/60 text-[10px] sm:text-xs text-slate-400 z-20">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Feliz</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Motivado</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Neutro</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Triste</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Retado</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Curioso</span>
+                </div>
+
+                <!-- Banner Flotante de Avance al Ejercicio 2 tras registrarse en el árbol -->
+                <div id="tree-continue-banner" class="hidden w-full max-w-md mx-auto mt-3 z-30">
+                    <button id="btn-tree-continue-prisma" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold py-2.5 px-5 rounded-2xl text-xs sm:text-sm shadow-xl shadow-purple-500/30 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02] border border-white/20">
+                        <i class="fas fa-check-circle text-emerald-300"></i>
+                        <span>¡Rama lista! Ir al Ejercicio 2: Prisma del Pensamiento</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Compartir / Código QR para Conectar Celulares -->
+    <div id="qr-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 hidden opacity-0 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-slate-900 border border-sky-500/30 w-full max-w-sm p-6 rounded-3xl shadow-2xl space-y-4 text-center relative">
+            <button id="close-qr-btn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+            <div>
+                <span class="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold uppercase tracking-wider">Unirse al Árbol</span>
+                <h3 class="text-xl font-bold font-orbitron text-white mt-2">Escanea con tu Móvil</h3>
+                <p class="text-slate-400 text-xs mt-1">Apunta la cámara de tu celular para registrar tu estado de ánimo</p>
+            </div>
+
+            <!-- Contenedor del Código QR generado dinámicamente -->
+            <div class="bg-white p-3.5 rounded-2xl w-48 h-48 mx-auto flex items-center justify-center shadow-lg shadow-sky-500/20">
+                <img id="qr-image" src="" alt="Código QR de Conexión" class="w-full h-full object-contain">
+            </div>
+
+            <div class="space-y-1">
+                <p class="text-[11px] text-slate-400 break-all font-mono bg-slate-950 p-2 rounded-xl border border-slate-800" id="qr-url-text"></p>
+                <button id="copy-url-btn" class="text-xs text-sky-400 hover:underline flex items-center justify-center gap-1.5 mx-auto pt-1">
+                    <i class="far fa-copy"></i> Copiar enlace de la sesión
+                </button>
+            </div>
+
+            <button id="btn-close-qr-footer" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2.5 rounded-xl transition">Listo</button>
+        </div>
+    </div>
+
+    <!-- Modal: Estadísticas y Diagnóstico -->
+    <div id="stats-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 hidden opacity-0 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-slate-900 border border-purple-500/30 w-full max-w-xl p-5 sm:p-8 rounded-3xl shadow-2xl space-y-4 sm:space-y-6 relative">
+            <button id="close-stats-btn" class="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center">
+                <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider">Análisis Colectivo</span>
+                <h3 class="text-xl sm:text-2xl font-bold font-orbitron text-white mt-1">Diagnóstico de Clima de Equipo</h3>
+                <p class="text-slate-400 text-xs mt-0.5">Consolidado de las emociones registradas en el árbol</p>
+            </div>
+            <div class="relative w-full h-56 sm:h-64 mx-auto">
+                <canvas id="stats-chart"></canvas>
+            </div>
+            <div class="bg-purple-950/20 border border-purple-500/30 p-3.5 sm:p-4 rounded-2xl flex items-start gap-3 text-xs text-purple-200">
+                <i class="fas fa-sparkles text-pink-400 text-base mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <strong class="font-bold text-white block mb-0.5">Lectura Facilitadora:</strong>
+                    <p id="stats-insight-text" class="leading-relaxed text-slate-300">Esperando participantes para formular diagnóstico.</p>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button id="btn-close-stats-footer" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2 px-5 rounded-xl transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Password de Administración (Reset Tree) -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center z-50 hidden opacity-0 transition-all duration-300 p-4">
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-sky-500/30 space-y-4">
+            <div class="w-12 h-12 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 class="font-bold text-lg sm:text-xl text-white font-orbitron">Acción Protegida</h3>
+            <p class="text-slate-400 text-xs">Introduce la clave de facilitador para reiniciar los 30 slots del árbol.</p>
+            <div>
+                <input type="password" id="password-input" class="w-full text-center tracking-widest text-lg font-mono mb-1" placeholder="********">
+                <p id="password-error" class="text-red-400 text-xs font-semibold h-4"></p>
+            </div>
+            <div class="flex gap-3 pt-1">
+                <button id="password-cancel" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-xl text-xs transition">Cancelar</button>
+                <button id="password-submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-sky-500/30 text-xs transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Participante en Rama -->
+    <div id="participant-detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 hidden opacity-0 transition-all duration-200 p-4">
+        <div class="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-xs w-full text-center space-y-3 shadow-2xl relative">
+            <button id="close-participant-modal" class="absolute top-3 right-3 text-slate-500 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="detail-avatar-icon" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-2xl shadow-lg"></div>
+            <div>
+                <h4 id="detail-participant-name" class="font-bold text-base text-white">Nombre</h4>
+            </div>
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300">
+                <p>Estado: <strong id="detail-mood-name" class="capitalize">Feliz</strong></p>
+                <p class="text-[10px] text-slate-500 mt-0.5" id="detail-slot-number">Rama #1</p>
+            </div>
+            <button id="btn-close-detail" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2 rounded-xl transition">Volver al Árbol</button>
+        </div>
+    </div>
+    <!-- Script Module: Multi-Device Engine (Part A) -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    class SoundFX {
+        constructor() {
+            this.ctx = null;
+            this.muted = false;
+        }
+
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        }
+
+        playClick() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.05);
+        }
+
+        playChime() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                }, i * 65);
+            });
+        }
+
+        playWhoosh() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.15);
+        }
+    }
+
+    const sound = new SoundFX();
+
+    function showToast(message, icon = 'fa-check-circle') {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toast-message');
+        const iconEl = document.getElementById('toast-icon');
+        msgEl.textContent = message;
+        iconEl.className = `fas ${icon} text-sky-400 text-lg flex-shrink-0`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    const MOODS = {
+        feliz: { id: 'feliz', label: 'Feliz', icon: 'fa-smile', color: 'text-amber-400', bgColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', description: 'Optimista' },
+        motivado: { id: 'motivado', label: 'Motivado', icon: 'fa-star', color: 'text-emerald-400', bgColor: 'rgba(52, 211, 153, 0.2)', borderColor: '#34d399', description: 'Con energía' },
+        neutro: { id: 'neutro', label: 'Neutro', icon: 'fa-meh', color: 'text-slate-400', bgColor: 'rgba(148, 163, 184, 0.2)', borderColor: '#94a3b8', description: 'En pausa' },
+        triste: { id: 'triste', label: 'Triste', icon: 'fa-frown', color: 'text-sky-400', bgColor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38bdf8', description: 'Baja energía' },
+        retado: { id: 'retado', label: 'Retado', icon: 'fa-fire', color: 'text-rose-500', bgColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e', description: 'En desafío' },
+        curioso: { id: 'curioso', label: 'Curioso', icon: 'fa-lightbulb', color: 'text-purple-400', bgColor: 'rgba(192, 132, 252, 0.2)', borderColor: '#c084fc', description: 'Descubriendo' }
+    };
+
+    const TREE_POSITIONS_30 = [
+        { top: '8%', left: '25%' }, { top: '6%', left: '38%' }, { top: '5%', left: '50%' }, { top: '6%', left: '62%' }, { top: '8%', left: '75%' },
+        { top: '17%', left: '16%' }, { top: '16%', left: '28%' }, { top: '15%', left: '40%' }, { top: '14%', left: '50%' }, { top: '15%', left: '60%' }, { top: '16%', left: '72%' }, { top: '17%', left: '84%' },
+        { top: '28%', left: '12%' }, { top: '27%', left: '24%' }, { top: '26%', left: '37%' }, { top: '25%', left: '50%' }, { top: '26%', left: '63%' }, { top: '27%', left: '76%' }, { top: '28%', left: '88%' },
+        { top: '41%', left: '15%' }, { top: '39%', left: '27%' }, { top: '37%', left: '41%' }, { top: '37%', left: '59%' }, { top: '39%', left: '73%' }, { top: '41%', left: '85%' },
+        { top: '55%', left: '20%' }, { top: '53%', left: '34%' }, { top: '51%', left: '50%' }, { top: '53%', left: '66%' }, { top: '55%', left: '80%' }
+    ];
+
+    let db = null, auth = null, userId = null, appId = 'sesion-comfamiliar-team-mood-30', isConnected = false;
+    let selectedMood = null, participantsState = {}, statsChartInstance = null;
+    let currentZoom = 1.0;
+    const sessionLoadedAt = Date.now();
+
+    function navigateToPrisma() {
+        sound.playChime();
+        const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+        const nameInput = document.getElementById('participant-name');
+        const name = (mySlotEntry && mySlotEntry[1]?.name) || nameInput?.value.trim() || localStorage.getItem('intercajas_participant_name') || '';
+        const mood = (mySlotEntry && mySlotEntry[1]?.mood) || selectedMood || localStorage.getItem('intercajas_participant_mood') || '';
+
+        if (name) localStorage.setItem('intercajas_participant_name', name);
+        if (mood) localStorage.setItem('intercajas_participant_mood', mood);
+
+        const params = new URLSearchParams();
+        if (name) params.set('name', name);
+        if (mood) params.set('mood', mood);
+        const query = params.toString() ? `?${params.toString()}` : '';
+        window.location.href = `./Prisma%20del%20Pensamiento/index.html${query}`;
+    }
+
+    window.onload = async () => {
+        setupMoodPalette();
+        renderTreePlaceholders();
+        setupControls();
+        setupMobileTabs();
+        setupZoomControls();
+        initPlexus();
+
+        try {
+            await initFirebase();
+            updateConnectionStatus(true);
+        } catch (err) {
+            console.warn("Modo local offline activado:", err.message);
+            updateConnectionStatus(false);
+            initOfflineStorage();
+        }
+
+        updateMoodAnalytics();
+    };
+
+    function updateConnectionStatus(connected) {
+        isConnected = connected;
+        const dot = document.getElementById('connection-dot');
+        const text = document.getElementById('connection-text');
+        if (connected) {
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+            text.textContent = 'En vivo (Sincronizado)';
+        } else {
+            dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+            text.textContent = 'Modo Local (Offline)';
+        }
+    }
+
+    async function initFirebase() {
+        const DEFAULT_CONFIG = {
+            apiKey: "AIzaSyCHBOA0tixmSnoxABwwVWoxrXsBljvomNA",
+            authDomain: "mentalidad-7752e.firebaseapp.com",
+            projectId: "mentalidad-7752e",
+            storageBucket: "mentalidad-7752e.firebasestorage.app",
+            messagingSenderId: "485164590441",
+            appId: "1:485164590441:web:0161a806a16577977ac9f8",
+            measurementId: "G-2SC4L6MQ56"
+        };
+        let config = DEFAULT_CONFIG;
+        if (typeof __firebase_config !== 'undefined') {
+            try { config = JSON.parse(__firebase_config); } catch(e) {}
+        } else if (window.__firebase_config) {
+            try { config = JSON.parse(window.__firebase_config); } catch(e) {}
+        }
+
+        const app = initializeApp(config);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        appId = typeof __app_id !== 'undefined' ? __app_id : (window.__app_id || 'sesion-comfamiliar-team-mood-30');
+
+        await new Promise((resolve, reject) => {
+            const unsub = onAuthStateChanged(auth, user => {
+                unsub();
+                if (user) { userId = user.uid; resolve(user); }
+                else { signInAnonymously(auth).then(res => { userId = res.user.uid; resolve(res.user); }).catch(reject); }
+            }, reject);
+        });
+
+        const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+        onSnapshot(collection(db, collectionPath), (snapshot) => {
+            participantsState = {};
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.index !== undefined) participantsState[data.index] = data;
+            });
+            renderOccupiedSlots();
+            updateMoodAnalytics();
+            checkUserCurrentAvatar();
+        });
+
+        const routingDocRef = doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing');
+        onSnapshot(routingDocRef, (docSnap) => {
+            if (!docSnap.exists()) return;
+            const data = docSnap.data();
+            if (data.activeActivity === 'prisma' && data.launchedAt && data.launchedAt > (sessionLoadedAt - 4000)) {
+                if (data.facilitatorId === userId) {
+                    showToast("¡Grupo enviado en vivo al Ejercicio 2 (Prisma)!", "fa-broadcast-tower");
+                } else {
+                    showToast("¡El facilitador inició el Ejercicio 2! Abriendo Prisma del Pensamiento...", "fa-rocket");
+                    setTimeout(() => navigateToPrisma(), 1600);
+                }
+            }
+        });
+    }
+
+    function initOfflineStorage() {
+        userId = localStorage.getItem('team_mood_local_uid') || ('local-' + Math.random().toString(36).substr(2, 9));
+        localStorage.setItem('team_mood_local_uid', userId);
+        const saved = localStorage.getItem(`team_mood_state_${appId}`);
+        if (saved) {
+            try { participantsState = JSON.parse(saved); } catch(e) { participantsState = {}; }
+        }
+        renderOccupiedSlots();
+        updateMoodAnalytics();
+        checkUserCurrentAvatar();
+    }
+
+    function saveOfflineState() {
+        localStorage.setItem(`team_mood_state_${appId}`, JSON.stringify(participantsState));
+        renderOccupiedSlots();
+        updateMoodAnalytics();
+        checkUserCurrentAvatar();
+    }
+    // --- Mobile Tabs Switcher ---
+    function setupMobileTabs() {
+        const tabTree = document.getElementById('tab-btn-tree');
+        const tabForm = document.getElementById('tab-btn-form');
+        const treeSection = document.getElementById('tree-section');
+        const asidePanel = document.getElementById('aside-panel');
+        const btnGotoTree = document.getElementById('btn-goto-tree-mobile');
+
+        function showTreeTab() {
+            sound.playClick();
+            tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
+            tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+            treeSection.classList.remove('hidden');
+            asidePanel.classList.add('hidden');
+        }
+
+        function showFormTab() {
+            sound.playClick();
+            tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
+            tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+            asidePanel.classList.remove('hidden');
+            treeSection.classList.add('hidden');
+        }
+
+        tabTree.addEventListener('click', showTreeTab);
+        tabForm.addEventListener('click', showFormTab);
+        if (btnGotoTree) btnGotoTree.addEventListener('click', showTreeTab);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                treeSection.classList.remove('hidden');
+                asidePanel.classList.remove('hidden');
+            } else {
+                if (tabTree.classList.contains('text-white')) {
+                    treeSection.classList.remove('hidden');
+                    asidePanel.classList.add('hidden');
+                } else {
+                    asidePanel.classList.remove('hidden');
+                    treeSection.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    // --- Zoom & Pan Engine for Mobile/Desktop ---
+    function setupZoomControls() {
+        const viewport = document.getElementById('tree-zoom-viewport');
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const zoomResetBtn = document.getElementById('zoom-reset-btn');
+
+        function applyZoom(newZoom) {
+            currentZoom = Math.min(Math.max(newZoom, 0.75), 2.2);
+            viewport.style.transform = `scale(${currentZoom})`;
+            zoomResetBtn.textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        zoomInBtn.addEventListener('click', () => {
+            sound.playClick();
+            applyZoom(currentZoom + 0.25);
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            sound.playClick();
+            applyZoom(currentZoom - 0.25);
+        });
+
+        zoomResetBtn.addEventListener('click', () => {
+            sound.playClick();
+            applyZoom(1.0);
+        });
+    }
+
+    function setupMoodPalette() {
+        const container = document.getElementById('mood-palette');
+        container.innerHTML = Object.entries(MOODS).map(([key, mood]) => `
+            <div class="mood-chip p-2 bg-slate-950/90 border border-slate-800 rounded-xl text-center cursor-pointer hover:border-sky-500/50 transition-all flex flex-col items-center justify-center group select-none" data-mood="${key}">
+                <i class="fas ${mood.icon} ${mood.color} text-lg sm:text-xl group-hover:scale-110 transition-transform"></i>
+                <span class="text-[10px] sm:text-[11px] font-bold text-slate-200 mt-1">${mood.label}</span>
+                <span class="text-[8px] text-slate-500 hidden sm:block">${mood.description}</span>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.mood-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                sound.playClick();
+                container.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedMood = chip.dataset.mood;
+            });
+        });
+    }
+
+    function renderTreePlaceholders() {
+        const container = document.getElementById('tree-placeholders');
+        container.innerHTML = TREE_POSITIONS_30.map((pos, i) => `
+            <div class="tree-placeholder w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12" style="left: ${pos.left}; top: ${pos.top};" data-index="${i}" title="Rama #${i + 1}">
+                <div class="placeholder-empty w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-slate-950/85 border-2 border-dashed border-sky-400/40 hover:border-sky-400 hover:bg-sky-500/20 flex flex-col items-center justify-center text-sky-400/70 shadow-lg backdrop-blur-sm transition-all duration-300">
+                    <i class="fas fa-plus text-[9px] sm:text-xs"></i>
+                    <span class="text-[7px] sm:text-[8px] font-mono text-slate-400 font-bold leading-none mt-0.5">${i + 1}</span>
+                </div>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.tree-placeholder').forEach(placeholder => {
+            placeholder.addEventListener('click', () => {
+                handleSlotClick(parseInt(placeholder.dataset.index));
+            });
+        });
+    }
+
+    async function handleSlotClick(index) {
+        const existing = participantsState[index];
+        if (existing) {
+            sound.playClick();
+            openParticipantDetail(existing, index);
+            return;
+        }
+
+        // Evitar desorden en clase: si el participante ya tiene una rama asignada, mantener fija su posición
+        const alreadyRegistered = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+        if (alreadyRegistered) {
+            sound.playClick();
+            showToast(`Ya estás registrado en la Rama #${parseInt(alreadyRegistered[0]) + 1}. Tu posición está asegurada.`, "fa-check-circle");
+            return;
+        }
+
+        const nameInput = document.getElementById('participant-name');
+        const name = nameInput.value.trim();
+
+        if (!name) {
+            showToast("Escribe tu nombre en el formulario", "fa-exclamation-triangle");
+            if (window.innerWidth < 1024) document.getElementById('tab-btn-form').click();
+            nameInput.focus();
+            return;
+        }
+        if (!selectedMood) {
+            showToast("Selecciona tu estado de ánimo", "fa-smile-beam");
+            if (window.innerWidth < 1024) document.getElementById('tab-btn-form').click();
+            return;
+        }
+
+        sound.playChime();
+        const newRecord = { index, name, mood: selectedMood, userId, timestamp: new Date().toISOString() };
+
+        if (isConnected && db) {
+            const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+            await setDoc(doc(db, collectionPath, `${index}`), newRecord);
+        } else {
+            participantsState[index] = newRecord;
+            saveOfflineState();
+        }
+
+        showToast(`¡Avatar colgado con éxito por ${name}!`, "fa-heart");
+    }
+
+    async function freeSlot(slotIndex) {
+        if (isConnected && db) {
+            const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+            await deleteDoc(doc(db, collectionPath, `${slotIndex}`));
+        } else {
+            delete participantsState[slotIndex];
+            saveOfflineState();
+        }
+    }
+    function renderOccupiedSlots() {
+        const container = document.getElementById('tree-placeholders');
+        TREE_POSITIONS_30.forEach((_, i) => {
+            const placeholder = container.querySelector(`.tree-placeholder[data-index="${i}"]`);
+            if (!placeholder) return;
+            const data = participantsState[i];
+            if (data && MOODS[data.mood]) {
+                const mood = MOODS[data.mood];
+                const isMine = data.userId === userId;
+                placeholder.innerHTML = `
+                    <div class="avatar-occupied flex flex-col items-center justify-center relative cursor-pointer group">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-slate-950 border-2 shadow-xl transition-transform group-hover:scale-115"
+                             style="border-color: ${mood.borderColor}; box-shadow: 0 0 12px ${mood.borderColor}66;">
+                            <i class="fas ${mood.icon} ${mood.color} text-sm sm:text-base md:text-xl"></i>
+                            ${isMine ? '<span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sky-400 border-2 border-slate-900 rounded-full"></span>' : ''}
+                        </div>
+                        <div class="bg-slate-900/95 border border-slate-700/80 px-1 py-0.5 rounded-md mt-0.5 max-w-[55px] sm:max-w-[70px] truncate text-center shadow-md pointer-events-none">
+                            <span class="text-[7px] sm:text-[9px] font-bold text-white block truncate leading-tight">${data.name}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                placeholder.innerHTML = `
+                    <div class="placeholder-empty w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-slate-950/85 border-2 border-dashed border-sky-400/40 hover:border-sky-400 hover:bg-sky-500/20 flex flex-col items-center justify-center text-sky-400/70 shadow-lg backdrop-blur-sm transition-all duration-300">
+                        <i class="fas fa-plus text-[9px] sm:text-xs"></i>
+                        <span class="text-[7px] sm:text-[8px] font-mono text-slate-400 font-bold leading-none mt-0.5">${i + 1}</span>
+                    </div>
+                `;
+            }
+        });
+        document.getElementById('total-participants-badge').textContent = Object.keys(participantsState).length;
+    }
+
+    function checkUserCurrentAvatar() {
+        const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+        const myStatusBox = document.getElementById('my-avatar-status');
+        const treeContinueBanner = document.getElementById('tree-continue-banner');
+        const myIconBox = document.getElementById('my-avatar-icon-box');
+        const myNameEl = document.getElementById('my-avatar-name');
+        const mySlotEl = document.getElementById('my-avatar-slot');
+
+        if (mySlotEntry) {
+            const [slotIdx, data] = mySlotEntry;
+            const mood = MOODS[data.mood];
+            if (data.name) localStorage.setItem('intercajas_participant_name', data.name);
+            if (data.mood) localStorage.setItem('intercajas_participant_mood', data.mood);
+            myStatusBox.classList.remove('hidden');
+            if (treeContinueBanner) treeContinueBanner.classList.remove('hidden');
+            myNameEl.textContent = data.name;
+            mySlotEl.textContent = `Rama #${parseInt(slotIdx) + 1} • ${mood ? mood.label : ''}`;
+            if (mood) {
+                myIconBox.innerHTML = `<i class="fas ${mood.icon} ${mood.color}"></i>`;
+                myIconBox.style.borderColor = mood.borderColor;
+            }
+        } else {
+            myStatusBox.classList.add('hidden');
+            if (treeContinueBanner) treeContinueBanner.classList.add('hidden');
+        }
+    }
+
+    function updateMoodAnalytics() {
+        const total = Object.keys(participantsState).length;
+        const counts = { feliz: 0, motivado: 0, neutro: 0, triste: 0, retado: 0, curioso: 0 };
+        Object.values(participantsState).forEach(p => { if (counts[p.mood] !== undefined) counts[p.mood]++; });
+
+        const barContainer = document.getElementById('mood-distribution-bar');
+        if (total === 0) {
+            barContainer.innerHTML = `<div class="h-full bg-slate-800 w-full text-center text-[8px] text-slate-500">Esperando participantes...</div>`;
+        } else {
+            barContainer.innerHTML = Object.entries(counts).map(([moodKey, count]) => {
+                if (count === 0) return '';
+                const pct = ((count / total) * 100).toFixed(1);
+                return `<div class="h-full" style="width: ${pct}%; background-color: ${MOODS[moodKey].borderColor};" title="${MOODS[moodKey].label}: ${count} (${pct}%)"></div>`;
+            }).join('');
+        }
+
+        const badgesContainer = document.getElementById('mood-summary-badges');
+        badgesContainer.innerHTML = Object.entries(MOODS).map(([key, mood]) => {
+            const c = counts[key];
+            const pct = total > 0 ? Math.round((c / total) * 100) : 0;
+            return `
+                <div class="bg-slate-950/80 border border-slate-800/80 p-1 sm:p-1.5 rounded-lg flex items-center justify-between">
+                    <span class="flex items-center gap-1">
+                        <i class="fas ${mood.icon} ${mood.color} text-[10px] sm:text-xs"></i>
+                        <span class="text-slate-300 text-[9px] sm:text-[10px]">${mood.label}</span>
+                    </span>
+                    <strong class="font-bold text-white text-[9px] sm:text-[10px]">${c} <span class="text-slate-500 font-normal">(${pct}%)</span></strong>
+                </div>
+            `;
+        }).join('');
+
+        const dominantEntry = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        const insightEl = document.getElementById('stats-insight-text');
+        if (total === 0) {
+            insightEl.textContent = "Aún no hay participantes registrados. Invita al equipo a elegir su emoción.";
+        } else {
+            const dominantMood = MOODS[dominantEntry[0]];
+            const posPct = Math.round(((counts.feliz + counts.motivado + counts.curioso) / total) * 100);
+            if (posPct >= 65) {
+                insightEl.innerHTML = `El equipo presenta una <strong>energía altamente positiva y proactiva (${posPct}%)</strong>, con predominio de <em>${dominantMood.label}</em>. Es propicio para retos de innovación y co-creación estratégica.`;
+            } else if (counts.retado + counts.triste > counts.feliz + counts.motivado) {
+                insightEl.innerHTML = `Existe una cuota importante de <strong>incertidumbre o tensión operativa</strong> (${counts.retado} retados, ${counts.triste} desanimados). Se recomienda iniciar con un espacio de empatía.`;
+            } else {
+                insightEl.innerHTML = `Clima equilibrado con estado dominante en <strong>${dominantMood.label} (${dominantEntry[1]} personas)</strong>. Una dinámica reflexiva permitirá canalizar la curiosidad hacia los objetivos.`;
+            }
+        }
+    }
+
+    function openStatsModal() {
+        sound.playClick();
+        const modal = document.getElementById('stats-modal');
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        const labels = Object.values(MOODS).map(m => m.label);
+        const colors = Object.values(MOODS).map(m => m.borderColor);
+        const counts = { feliz: 0, motivado: 0, neutro: 0, triste: 0, retado: 0, curioso: 0 };
+        Object.values(participantsState).forEach(p => { if (counts[p.mood] !== undefined) counts[p.mood]++; });
+        const dataValues = Object.keys(MOODS).map(k => counts[k]);
+
+        if (statsChartInstance) statsChartInstance.destroy();
+        statsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Participantes', data: dataValues, backgroundColor: colors, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#f1f5f9', font: { weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function closeStatsModal() {
+        const modal = document.getElementById('stats-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function openParticipantDetail(data, slotIdx) {
+        const modal = document.getElementById('participant-detail-modal');
+        const mood = MOODS[data.mood];
+        document.getElementById('detail-participant-name').textContent = data.name;
+        document.getElementById('detail-mood-name').textContent = mood ? mood.label : data.mood;
+        document.getElementById('detail-slot-number').textContent = `Rama #${slotIdx + 1} de 30`;
+
+        const iconBox = document.getElementById('detail-avatar-icon');
+        iconBox.className = `w-12 h-12 rounded-full mx-auto flex items-center justify-center text-2xl shadow-lg bg-slate-950 border-2`;
+        iconBox.style.borderColor = mood ? mood.borderColor : '#38bdf8';
+        iconBox.innerHTML = `<i class="fas ${mood ? mood.icon : 'fa-smile'} ${mood ? mood.color : 'text-sky-400'}"></i>`;
+
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeParticipantDetail() {
+        const modal = document.getElementById('participant-detail-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function openQrModal() {
+        sound.playClick();
+        const modal = document.getElementById('qr-modal');
+        const qrImage = document.getElementById('qr-image');
+        const qrUrlText = document.getElementById('qr-url-text');
+        
+        const currentUrl = window.location.href.split('#')[0];
+        qrUrlText.textContent = currentUrl;
+        qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}&bgcolor=ffffff&color=080c14&margin=1`;
+
+        document.getElementById('copy-url-btn').onclick = () => {
+            navigator.clipboard.writeText(currentUrl);
+            showToast("Enlace copiado al portapapeles", "fa-copy");
+        };
+
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeQrModal() {
+        const modal = document.getElementById('qr-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function exportTreeImage() {
+        sound.playClick();
+        showToast("Generando captura de alta resolución...", "fa-camera");
+        const target = document.getElementById('tree-export-wrapper');
+        html2canvas(target, { backgroundColor: '#080c14', scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Team-Mood-Arbol-Comfamiliar-${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast("¡Imagen descargada con éxito!", "fa-check-circle");
+        }).catch(err => {
+            showToast("No se pudo generar la imagen", "fa-times-circle");
+        });
+    }
+
+    function promptAdminAction(onAuthorized) {
+        const modal = document.getElementById('password-modal');
+        const input = document.getElementById('password-input');
+        const error = document.getElementById('password-error');
+        const cancelBtn = document.getElementById('password-cancel');
+        const submitBtn = document.getElementById('password-submit');
+
+        input.value = '';
+        error.textContent = '';
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        input.focus();
+
+        const closeModal = () => {
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            submitBtn.removeEventListener('click', handleSubmit);
+            cancelBtn.removeEventListener('click', closeModal);
+        };
+
+        const handleSubmit = async () => {
+            if (input.value === 'Comfa2025') {
+                sound.playWhoosh();
+                closeModal();
+                await onAuthorized();
+            } else {
+                error.textContent = "Clave incorrecta";
+                input.value = '';
+                input.focus();
+            }
+        };
+
+        submitBtn.addEventListener('click', handleSubmit);
+        cancelBtn.addEventListener('click', closeModal);
+    }
+
+    function promptAdminReset() {
+        promptAdminAction(async () => {
+            if (isConnected && db) {
+                const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+                const snap = await getDocs(collection(db, collectionPath));
+                const deletePromises = [];
+                snap.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
+                deletePromises.push(setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    activeActivity: 'team-mood',
+                    launchedAt: Date.now()
+                }));
+                await Promise.all(deletePromises);
+            } else {
+                participantsState = {};
+                saveOfflineState();
+            }
+            showToast("Árbol reiniciado para 30 nuevos participantes");
+        });
+    }
+
+    function promptLaunchPrisma() {
+        promptAdminAction(async () => {
+            if (isConnected && db) {
+                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    activeActivity: 'prisma',
+                    launchedAt: Date.now(),
+                    facilitatorId: userId
+                });
+                showToast("¡Enviando a todos los participantes al Prisma del Pensamiento!", "fa-broadcast-tower");
+            } else {
+                navigateToPrisma();
+            }
+        });
+    }
+
+    function setupControls() {
+        const soundBtn = document.getElementById('soundToggleBtn');
+        soundBtn.addEventListener('click', () => {
+            sound.muted = !sound.muted;
+            soundBtn.innerHTML = sound.muted ? `<i class="fas fa-volume-mute text-xs sm:text-sm text-rose-400"></i>` : `<i class="fas fa-volume-up text-xs sm:text-sm text-sky-400"></i>`;
+            showToast(sound.muted ? "Sonido silenciado" : "Sonido activado");
+        });
+
+        const fullBtn = document.getElementById('fullscreenBtn');
+        fullBtn.addEventListener('click', () => {
+            sound.playClick();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                fullBtn.innerHTML = `<i class="fas fa-compress text-xs sm:text-sm"></i>`;
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+                fullBtn.innerHTML = `<i class="fas fa-expand text-xs sm:text-sm"></i>`;
+            }
+        });
+
+        document.getElementById('openStatsBtn').onclick = openStatsModal;
+        document.getElementById('view-stats-link').onclick = openStatsModal;
+        document.getElementById('close-stats-btn').onclick = closeStatsModal;
+        document.getElementById('btn-close-stats-footer').onclick = closeStatsModal;
+
+        document.getElementById('qrShareBtn').onclick = openQrModal;
+        document.getElementById('close-qr-btn').onclick = closeQrModal;
+        document.getElementById('btn-close-qr-footer').onclick = closeQrModal;
+
+        document.getElementById('close-participant-modal').onclick = closeParticipantDetail;
+        document.getElementById('btn-close-detail').onclick = closeParticipantDetail;
+
+        document.getElementById('exportTreeBtn').onclick = exportTreeImage;
+        document.getElementById('reset-tree-btn').onclick = promptAdminReset;
+        document.getElementById('launch-prisma-btn').onclick = promptLaunchPrisma;
+
+        const btnContinuePrisma = document.getElementById('btn-continue-prisma');
+        if (btnContinuePrisma) btnContinuePrisma.onclick = navigateToPrisma;
+        const btnTreeContinuePrisma = document.getElementById('btn-tree-continue-prisma');
+        if (btnTreeContinuePrisma) btnTreeContinuePrisma.onclick = navigateToPrisma;
+    }
+
+    function initPlexus() {
+        const canvas = document.getElementById('plexus-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 120 };
+
+        window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 1.5 + 0.6;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                if (mouse.x && mouse.y) {
+                    let dx = mouse.x - this.x, dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        let force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= (dx / dist) * force * 1.5;
+                        this.y -= (dy / dist) * force * 1.5;
+                    }
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            resize();
+            particles = [];
+            const divisor = window.innerWidth < 768 ? 32000 : 20000;
+            let count = Math.min(Math.floor((canvas.width * canvas.height) / divisor), 45);
+            for (let i = 0; i < count; i++) particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 90) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.3 * (1 - dist / 90)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', createParticles);
+        createParticles();
+        animate();
+    }
+    </script>
+</body>
+</html>
