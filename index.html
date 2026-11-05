@@ -319,7 +319,7 @@
                     </div>
                 </div>
 
-                <!-- Estado del Usuario Actual (Confirmación Fija + Paso al Ejercicio 2) -->
+                <!-- Estado del Usuario Actual (Confirmación Fija + Paso al Ejercicio 2 controlado por Facilitador) -->
                 <div id="my-avatar-status" class="hidden bg-slate-900/90 border border-emerald-500/30 p-3 rounded-xl space-y-2.5 shadow-lg shadow-emerald-500/5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -335,7 +335,11 @@
                             <i class="fas fa-check-circle text-xs"></i> Registrado
                         </span>
                     </div>
-                    <button id="btn-continue-prisma" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+                    <div id="waiting-facilitator-msg" class="bg-slate-950/80 border border-sky-500/20 rounded-xl p-2.5 text-[11px] text-slate-300 flex items-center gap-2.5">
+                        <i class="fas fa-lock text-sky-400 animate-pulse"></i>
+                        <span>Observa cómo crece el árbol del equipo. El facilitador abrirá el <strong>Ejercicio 2</strong> en breve.</span>
+                    </div>
+                    <button id="btn-continue-prisma" class="hidden w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
                         <span>Continuar al Ejercicio 2: Prisma del Pensamiento</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -498,11 +502,17 @@
                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Curioso</span>
                 </div>
 
-                <!-- Banner Flotante de Avance al Ejercicio 2 tras registrarse en el árbol -->
+                <!-- Banner de Espera / Avance al Ejercicio 2 tras registrarse en el árbol -->
+                <div id="tree-waiting-banner" class="hidden w-full max-w-md mx-auto mt-3 z-30">
+                    <div class="w-full bg-slate-900/90 border border-sky-500/30 text-slate-200 py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-lg">
+                        <i class="fas fa-check-circle text-emerald-400"></i>
+                        <span>¡Tu emoción ya está en el árbol! Espera la señal del facilitador para iniciar el Ejercicio 2.</span>
+                    </div>
+                </div>
                 <div id="tree-continue-banner" class="hidden w-full max-w-md mx-auto mt-3 z-30">
                     <button id="btn-tree-continue-prisma" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold py-2.5 px-5 rounded-2xl text-xs sm:text-sm shadow-xl shadow-purple-500/30 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02] border border-white/20">
-                        <i class="fas fa-check-circle text-emerald-300"></i>
-                        <span>¡Rama lista! Ir al Ejercicio 2: Prisma del Pensamiento</span>
+                        <i class="fas fa-unlock text-emerald-300"></i>
+                        <span>¡Ejercicio 2 Habilitado! Ir al Prisma del Pensamiento</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -811,6 +821,7 @@
     const sessionLoadedAt = Date.now();
 
     let prismaInitialized = false;
+    let isPrismaUnlocked = false;
 
     async function generateAIAnalysis(promptText) {
         const defaultApiKey = atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
@@ -976,12 +987,25 @@
         onSnapshot(routingDocRef, (docSnap) => {
             if (!docSnap.exists()) return;
             const data = docSnap.data();
-            if (data.activeActivity === 'prisma' && data.launchedAt && data.launchedAt > (sessionLoadedAt - 4000)) {
-                if (data.facilitatorId === userId) {
-                    showToast("¡Grupo enviado en vivo al Ejercicio 2 (Prisma)!", "fa-broadcast-tower");
-                } else {
-                    showToast("¡El facilitador inició el Ejercicio 2! Abriendo Prisma del Pensamiento...", "fa-rocket");
-                    setTimeout(() => navigateToPrisma(), 1600);
+            const isRecentSession = data.launchedAt && (Date.now() - data.launchedAt < 30 * 60 * 1000);
+            const isJustLaunched = data.launchedAt && data.launchedAt > (sessionLoadedAt - 4000);
+
+            if (data.activeActivity === 'prisma' && isRecentSession) {
+                isPrismaUnlocked = true;
+                checkUserCurrentAvatar();
+                if (isJustLaunched) {
+                    if (data.facilitatorId === userId) {
+                        showToast("¡Grupo enviado en vivo al Ejercicio 2 (Prisma)!", "fa-broadcast-tower");
+                    } else {
+                        showToast("¡El facilitador inició el Ejercicio 2! Abriendo Prisma del Pensamiento...", "fa-rocket");
+                        setTimeout(() => navigateToPrisma(), 1200);
+                    }
+                }
+            } else if (data.activeActivity === 'team-mood') {
+                isPrismaUnlocked = false;
+                checkUserCurrentAvatar();
+                if (isJustLaunched) {
+                    navigateToTeamMood();
                 }
             }
         });
@@ -1206,6 +1230,9 @@
     function checkUserCurrentAvatar() {
         const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
         const myStatusBox = document.getElementById('my-avatar-status');
+        const waitingMsg = document.getElementById('waiting-facilitator-msg');
+        const btnContinuePrisma = document.getElementById('btn-continue-prisma');
+        const treeWaitingBanner = document.getElementById('tree-waiting-banner');
         const treeContinueBanner = document.getElementById('tree-continue-banner');
         const myIconBox = document.getElementById('my-avatar-icon-box');
         const myNameEl = document.getElementById('my-avatar-name');
@@ -1217,7 +1244,19 @@
             if (data.name) localStorage.setItem('intercajas_participant_name', data.name);
             if (data.mood) localStorage.setItem('intercajas_participant_mood', data.mood);
             myStatusBox.classList.remove('hidden');
-            if (treeContinueBanner) treeContinueBanner.classList.remove('hidden');
+
+            if (isPrismaUnlocked) {
+                if (waitingMsg) waitingMsg.classList.add('hidden');
+                if (btnContinuePrisma) btnContinuePrisma.classList.remove('hidden');
+                if (treeWaitingBanner) treeWaitingBanner.classList.add('hidden');
+                if (treeContinueBanner) treeContinueBanner.classList.remove('hidden');
+            } else {
+                if (waitingMsg) waitingMsg.classList.remove('hidden');
+                if (btnContinuePrisma) btnContinuePrisma.classList.add('hidden');
+                if (treeWaitingBanner) treeWaitingBanner.classList.remove('hidden');
+                if (treeContinueBanner) treeContinueBanner.classList.add('hidden');
+            }
+
             myNameEl.textContent = data.name;
             mySlotEl.textContent = `Rama #${parseInt(slotIdx) + 1} • ${mood ? mood.label : ''}`;
             if (mood) {
@@ -1226,6 +1265,7 @@
             }
         } else {
             myStatusBox.classList.add('hidden');
+            if (treeWaitingBanner) treeWaitingBanner.classList.add('hidden');
             if (treeContinueBanner) treeContinueBanner.classList.add('hidden');
         }
     }
@@ -1429,6 +1469,7 @@
 
     function promptAdminReset() {
         promptAdminAction(async () => {
+            isPrismaUnlocked = false;
             if (isConnected && db) {
                 const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
                 const snap = await getDocs(collection(db, collectionPath));
@@ -1443,6 +1484,7 @@
                 participantsState = {};
                 saveOfflineState();
             }
+            checkUserCurrentAvatar();
             showToast("Árbol reiniciado para 30 nuevos participantes");
         }, {
             title: 'Reiniciar Árbol (30 Slots)',
@@ -1452,6 +1494,8 @@
 
     function promptLaunchPrisma() {
         promptAdminAction(async () => {
+            isPrismaUnlocked = true;
+            checkUserCurrentAvatar();
             if (isConnected && db) {
                 await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
                     activeActivity: 'prisma',
