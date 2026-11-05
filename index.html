@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Prisma del Pensamiento - Assessment | Comfamiliar Risaralda</title>
+    
+    <!-- External Libraries & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Cargar configuración de ambiente local (excluido en .gitignore) -->
+    <script src="env.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #080c14;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --accent-sky: #38bdf8;
+            --accent-purple: #a78bfa;
+            --accent-pink: #ec4899;
+            --accent-emerald: #34d399;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.15);
+        }
+
+        /* Text Gradients */
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #a78bfa 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Form Inputs */
+        select, textarea, input[type="text"], input[type="password"] {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            background-color: rgba(15, 23, 42, 0.9);
+            color: #f3f4f6;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: var(--accent-sky);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        #plexus-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .assessment-screen {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AI Glow Pulse */
+        .ai-glow-card {
+            background: rgba(147, 51, 234, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.2);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
+
+        #password-modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
+
+        /* Toast notification */
+        #toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            transition: all 0.3s ease;
+            transform: translateY(-50px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen">
+
+    <!-- Interactive Canvas Background -->
+    <canvas id="plexus-bg"></canvas>
+
+    <!-- Status Indicator -->
+    <div id="init-status" class="fixed top-5 left-5 bg-slate-900/90 text-sky-400 text-xs px-3 py-1.5 rounded-full border border-sky-500/30 z-50 backdrop-blur-md transition-all duration-500 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+        <span id="init-status-text">Iniciando...</span>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="bg-slate-900/90 text-white border border-sky-500/40 backdrop-blur-md px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+        <i id="toast-icon" class="fas fa-check-circle text-sky-400 text-lg"></i>
+        <span id="toast-message" class="text-sm font-medium">Notificación</span>
+    </div>
+
+    <!-- Top Action Bar (Fixed Controls) -->
+    <div class="fixed top-5 right-5 z-40 flex items-center gap-3">
+        <a href="../team%20mood.html" title="Volver al Árbol de Emociones (Team Mood)" class="px-3.5 py-2.5 rounded-full bg-slate-900/80 border border-slate-700/50 text-slate-300 hover:text-sky-400 hover:border-sky-500/50 backdrop-blur-md shadow-lg transition-all duration-300 text-xs font-semibold flex items-center gap-2">
+            <i class="fas fa-tree text-sky-400"></i>
+            <span class="hidden sm:inline">Árbol Team Mood</span>
+        </a>
+
+        <button id="soundToggleBtn" title="Activar/Silenciar Efectos de Sonido" class="p-3 rounded-full bg-slate-900/80 border border-slate-700/50 text-slate-300 hover:text-sky-400 hover:border-sky-500/50 backdrop-blur-md shadow-lg transition-all duration-300">
+            <i class="fas fa-volume-up text-lg"></i>
+        </button>
+
+        <button id="fullscreenBtn" title="Modo Pantalla Completa" class="p-3 rounded-full bg-slate-900/80 border border-slate-700/50 text-slate-300 hover:text-sky-400 hover:border-sky-500/50 backdrop-blur-md shadow-lg transition-all duration-300">
+            <i class="fas fa-expand text-lg"></i>
+        </button>
+    </div>
+
+    <!-- Main Standalone Content -->
+    <main class="flex-1 flex items-center justify-center p-6 md:p-10 z-10">
+        <div id="quiz-container" class="w-full max-w-3xl mx-auto">
+            <div class="glass-card p-6 md:p-10">
+                <div id="start-screen" class="assessment-screen text-center">
+                    <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider">Ejercicio 2 • Actividad Interactiva</span>
+                    <div id="participant-greeting-badge" class="hidden mt-4 mb-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/15 border border-sky-400/40 text-sky-300 text-sm font-semibold">
+                        <i class="fas fa-user-check text-sky-400"></i>
+                        <span id="participant-greeting-text">¡Hola!</span>
+                    </div>
+                    <h1 class="font-orbitron text-3xl font-bold gradient-text mt-3 mb-3">El Prisma del Pensamiento</h1>
+                    <p class="text-slate-400 italic my-4 text-base">"Las personas que están lo suficientemente locas como para pensar que pueden cambiar el mundo, son las que lo hacen."</p>
+                    <p class="text-slate-300 mb-8 leading-relaxed text-justify">Este ejercicio revela tu estilo dominante de pensamiento. ¿Generas un universo de alternativas ilimitadas o hallas con precisión quirúrgica la única solución brillante? Descúbrelo.</p>
+                    <button id="start-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 px-10 rounded-full text-lg shadow-lg shadow-purple-500/30 hover:scale-105 transition-all">Comenzar el Viaje</button>
+                </div>
+
+                <div id="question-screen" class="assessment-screen">
+                    <div class="flex justify-between items-center mb-4">
+                        <div id="progress-text" class="text-sm font-semibold text-slate-400"></div>
+                        <div id="timer" class="font-orbitron text-2xl text-sky-400 ml-4 font-bold"></div>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 mb-6 p-0.5 border border-slate-700">
+                        <div id="progress-bar" class="bg-gradient-to-r from-sky-400 to-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <h2 id="question-title" class="text-xl font-bold text-white mb-2 font-orbitron"></h2>
+                    <p id="question-text" class="text-slate-300 mb-6 leading-relaxed text-base"></p>
+                    <div id="answer-area"></div>
+                    <div class="mt-8 flex justify-end">
+                        <button id="next-q-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-8 rounded-xl shadow-lg shadow-sky-500/30 transition-all flex items-center gap-2">
+                            <span>Siguiente</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result-screen" class="assessment-screen text-center">
+                    <h2 class="text-3xl font-bold mb-4 font-orbitron gradient-text">Tu Perfil de Pensamiento</h2>
+                    
+                    <div id="result-viz" class="w-full h-20 my-8 flex items-center justify-center space-x-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                        <div class="text-right w-28"><div class="font-bold text-pink-400 text-sm">Divergente</div><div class="text-xs text-slate-400">El Innovador</div></div>
+                        <div class="w-full h-4 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700">
+                            <div id="result-bar" class="absolute top-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500" style="left: 50%; width: 0%;"></div>
+                            <div class="absolute top-0 left-1/2 w-0.5 h-full bg-slate-400"></div>
+                        </div>
+                        <div class="text-left w-28"><div class="font-bold text-sky-400 text-sm">Convergente</div><div class="text-xs text-slate-400">El Solucionador</div></div>
+                    </div>
+
+                    <h3 id="result-title" class="text-2xl font-semibold mb-3 text-sky-300 font-orbitron"></h3>
+                    <p id="result-description" class="text-slate-300 mb-6 max-w-md mx-auto text-sm leading-relaxed"></p>
+
+                    <!-- AI Feedback Container -->
+                    <div id="ai-pensamiento-container" class="my-6 hidden">
+                        <div class="ai-glow-card p-5 rounded-2xl text-left space-y-2">
+                            <div class="flex items-center gap-2 text-purple-300 font-semibold text-xs font-orbitron uppercase">
+                                <i class="fas fa-sparkles text-pink-400"></i> Impulso de Innovación (Coaching IA)
+                            </div>
+                            <p id="ai-pensamiento-text" class="text-slate-200 text-xs leading-relaxed italic"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        <button id="restart-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-full text-sm transition-all">Intentar de Nuevo</button>
+                        <button id="show-group-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-6 rounded-full text-sm shadow-lg shadow-purple-500/30 transition-all">Ver Perfil del Grupo</button>
+                    </div>
+                </div>
+
+                <div id="group-result-screen" class="assessment-screen text-center">
+                    <h2 class="text-3xl font-bold mb-2 font-orbitron gradient-text">Perfil Colectivo del Grupo</h2>
+                    <p class="mb-4 text-slate-400 text-sm">Total de Participantes Registrados: <span id="group-total-participants" class="font-bold text-sky-400">0</span></p>
+                    
+                    <div id="group-profile-pie-chart-container" class="relative mx-auto" style="height:280px; max-width:380px;">
+                        <canvas id="group-profile-pie-chart"></canvas>
+                    </div>
+                    <div id="group-result-description" class="text-slate-300 my-6 max-w-md mx-auto text-sm"></div>
+                    
+                    <div class="flex justify-center flex-wrap gap-4 mt-6">
+                        <button id="back-to-individual-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all">Volver a Mi Perfil</button>
+                        <button id="reset-group-pensamiento-btn" class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all flex items-center gap-2">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Resetear Grupo (Admin)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Password Verification Modal -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center z-50 hidden opacity-0">
+        <div class="bg-slate-900 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-sky-500/30">
+            <div class="w-12 h-12 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto mb-4 text-xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 class="font-bold text-xl mb-2 text-white font-orbitron">Acción Protegida</h3>
+            <p class="text-slate-400 text-sm mb-6">Introduce la clave de administración para continuar.</p>
+            <input type="password" id="password-input" class="w-full text-center tracking-widest text-lg font-mono mb-2" placeholder="********">
+            <p id="password-error" class="text-red-400 text-xs font-semibold h-5"></p>
+            <div class="mt-4 flex gap-3">
+                <button id="password-cancel" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-all">Cancelar</button>
+                <button id="password-submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-sky-500/30 transition-all">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration Header -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCHBOA0tixmSnoxABwwVWoxrXsBljvomNA",
+        authDomain: "mentalidad-7752e.firebaseapp.com",
+        projectId: "mentalidad-7752e",
+        storageBucket: "mentalidad-7752e.firebasestorage.app",
+        messagingSenderId: "485164590441",
+        appId: "1:485164590441:web:0161a806a16577977ac9f8",
+        measurementId: "G-2SC4L6MQ56"
+      };
+
+      var __firebase_config = JSON.stringify(firebaseConfig);
+      var __app_id = 'sesion-comfamiliar-2026-agosto-limpia'; 
+    </script>
+
+    <!-- Main Module Script -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let db, auth, userId, appId;
+
+    // --- Gemini AI Generator Helper ---
+    async function generateAIAnalysis(promptText) {
+        const defaultApiKey = atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
+        const apiKey = window.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || defaultApiKey;
+        if (!apiKey) return null;
+
+        const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        
+        for (const model of models) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (resultText) return resultText;
+                }
+            } catch (err) {
+                console.warn(`Attempt with ${model} failed:`, err);
+            }
+        }
+        return null;
+    }
+
+    // --- Web Audio API Synth Sound Generator ---
+    class SoundFX {
+        constructor() {
+            this.ctx = null;
+            this.muted = false;
+        }
+
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+        }
+
+        playClick() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.05);
+        }
+    }
+
+    const sound = new SoundFX();
+
+    function showToast(message, icon = 'fa-check-circle') {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toast-message');
+        const iconEl = document.getElementById('toast-icon');
+        msgEl.textContent = message;
+        iconEl.className = `fas ${icon} text-sky-400 text-lg`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function waitForFirebaseConfig(timeout = 4000) {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+            const interval = setInterval(() => {
+                if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
+                    clearInterval(interval);
+                    resolve();
+                } else if (Date.now() - startTime > timeout) {
+                    clearInterval(interval);
+                    reject(new Error("Configuración de red no disponible (Modo Offline Activado)."));
+                }
+            }, 100);
+        });
+    }
+
+    window.onload = async () => {
+        const statusEl = document.getElementById('init-status');
+        const statusText = document.getElementById('init-status-text');
+        
+        let isConnected = false;
+        try {
+            statusText.textContent = 'Conectando servicio...';
+            await waitForFirebaseConfig();
+            await initializeAndAuth();
+            statusText.textContent = 'En vivo & Sincronizado';
+            setTimeout(() => {
+                statusEl.style.opacity = '0';
+                setTimeout(() => statusEl.classList.add('hidden'), 500);
+            }, 2500);
+            isConnected = true;
+        } catch (error) {
+            console.warn("Iniciando en modo offline de alto rendimiento:", error.message);
+            statusText.textContent = 'Modo Offline (Local)';
+            statusEl.classList.remove('text-sky-400');
+            statusEl.classList.add('text-amber-400', 'border-amber-500/30');
+            setTimeout(() => {
+                statusEl.style.opacity = '0';
+                setTimeout(() => statusEl.classList.add('hidden'), 500);
+            }, 3000);
+        }
+        runApp(isConnected);
+    };
+
+    async function initializeAndAuth() {
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        await new Promise((resolve, reject) => {
+            const unsubscribe = onAuthStateChanged(auth, user => {
+                unsubscribe(); 
+                if (user) {
+                    userId = user.uid;
+                    resolve(user);
+                } else {
+                    signInAnonymously(auth).then(userCred => {
+                        userId = userCred.user?.uid;
+                        resolve(userCred.user);
+                    }).catch(reject);
+                }
+            }, reject);
+        });
+    }
+
+    function runApp(isConnected = false) {
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('password-input');
+        const passwordError = document.getElementById('password-error');
+        const passwordCancel = document.getElementById('password-cancel');
+        const passwordSubmit = document.getElementById('password-submit');
+
+        const defaultApiKey = window.GEMINI_API_KEY || atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
+        if (!localStorage.getItem('gemini_api_key') && defaultApiKey) {
+            localStorage.setItem('gemini_api_key', defaultApiKey);
+        }
+
+        function promptPassword(onSuccess) {
+            passwordModal.classList.remove('hidden');
+            setTimeout(() => passwordModal.classList.remove('opacity-0'), 10);
+            passwordInput.value = '';
+            passwordError.textContent = '';
+            passwordInput.focus();
+
+            const handleSubmit = () => {
+                if (passwordInput.value === 'Comfa2025') {
+                    sound.playClick();
+                    onSuccess();
+                    closeModal();
+                } else {
+                    passwordError.textContent = 'Clave incorrecta';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            };
+
+            const closeModal = () => {
+                passwordModal.classList.add('opacity-0');
+                setTimeout(() => passwordModal.classList.add('hidden'), 300);
+                passwordSubmit.removeEventListener('click', handleSubmit);
+                passwordCancel.removeEventListener('click', closeModal);
+            };
+
+            passwordSubmit.addEventListener('click', handleSubmit);
+            passwordCancel.addEventListener('click', closeModal);
+        }
+
+        function toggleFullScreen() {
+            sound.playClick();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                fullscreenBtn.innerHTML = `<i class="fas fa-compress text-lg"></i>`;
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = `<i class="fas fa-expand text-lg"></i>`;
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullScreen);
+        soundToggleBtn.addEventListener('click', () => {
+            sound.muted = !sound.muted;
+            soundToggleBtn.innerHTML = sound.muted ? `<i class="fas fa-volume-mute text-lg text-rose-400"></i>` : `<i class="fas fa-volume-up text-lg text-sky-400"></i>`;
+            showToast(sound.muted ? "Efectos de sonido silenciados" : "Efectos de sonido activados");
+        });
+
+        setupPensamientoAssessment(isConnected, promptPassword);
+
+        // --- Interactive Plexus Background Canvas ---
+        const canvas = document.getElementById('plexus-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.6;
+                this.vy = (Math.random() - 0.5) * 0.6;
+                this.radius = Math.random() * 1.5 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                if (mouse.x && mouse.y) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        let force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= (dx / dist) * force * 2;
+                        this.y -= (dy / dist) * force * 2;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+                ctx.fill();
+            }
+        }
+
+        function initPlexus() {
+            resizeCanvas();
+            particles = [];
+            let count = Math.floor((canvas.width * canvas.height) / 18000);
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animatePlexus() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 110) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.45 * (1 - dist / 110)})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animatePlexus);
+        }
+
+        window.addEventListener('resize', initPlexus);
+        initPlexus();
+        animatePlexus();
+    }
+
+    function setupPensamientoAssessment(isConnected = false, promptPassword) {
+        const container = document.getElementById('quiz-container');
+        if (!container) return;
+
+        const screens = {
+            start: container.querySelector('#start-screen'),
+            question: container.querySelector('#question-screen'),
+            result: container.querySelector('#result-screen'),
+            groupResult: container.querySelector('#group-result-screen')
+        };
+
+        const elements = {
+            startBtn: container.querySelector('#start-btn'),
+            restartBtn: container.querySelector('#restart-btn'),
+            nextBtn: container.querySelector('#next-q-btn'),
+            showGroupBtn: container.querySelector('#show-group-btn'),
+            backToIndividualBtn: container.querySelector('#back-to-individual-btn'),
+            resetGroupBtn: container.querySelector('#reset-group-pensamiento-btn'),
+            progressText: container.querySelector('#progress-text'),
+            progressBar: container.querySelector('#progress-bar'),
+            timer: container.querySelector('#timer'),
+            qTitle: container.querySelector('#question-title'),
+            qText: container.querySelector('#question-text'),
+            answerArea: container.querySelector('#answer-area'),
+            resultViz: container.querySelector('#result-viz'),
+            resultBar: container.querySelector('#result-bar'),
+            resultTitle: container.querySelector('#result-title'),
+            resultDescription: container.querySelector('#result-description'),
+            aiContainer: container.querySelector('#ai-pensamiento-container'),
+            aiText: container.querySelector('#ai-pensamiento-text'),
+            groupTotalParticipants: container.querySelector('#group-total-participants'),
+            groupResultDescription: container.querySelector('#group-result-description')
+        };
+
+        let scores = { divergent: 0, convergent: 0 };
+        let currentQIndex = 0;
+        let timerInterval;
+        let questions = [];
+        let userResponses = [];
+        let groupPieChartInstance = null;
+        let groupUnsubscribe = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const participantName = (urlParams.get('name') || localStorage.getItem('intercajas_participant_name') || '').trim();
+        const participantMood = (urlParams.get('mood') || localStorage.getItem('intercajas_participant_mood') || '').trim();
+        if (participantName) localStorage.setItem('intercajas_participant_name', participantName);
+        if (participantMood) localStorage.setItem('intercajas_participant_mood', participantMood);
+
+        const greetingBadge = container.querySelector('#participant-greeting-badge');
+        const greetingText = container.querySelector('#participant-greeting-text');
+        if (participantName && greetingBadge && greetingText) {
+            greetingBadge.classList.remove('hidden');
+            greetingText.textContent = `¡Hola, ${participantName}! Tu registro está conectado`;
+        }
+
+        const questionBank = {
+            convergent: [
+                { title: "Acertijo Lógico", text: "Tengo ciudades, pero no casas. Tengo montañas, pero no árboles. Tengo agua, pero no peces. ¿Qué soy?", acceptedAnswers: ["mapa", "planisferio", "atlas"], time: 45 },
+                { title: "Acertijo Clásico", text: "Aliméntame y viviré, pero dame de beber y moriré. ¿Qué soy?", acceptedAnswers: ["fuego", "llama", "candela", "incendio"], time: 45 },
+                { title: "Secuencia Numérica", text: "¿Qué número sigue en esta secuencia: 1, 4, 9, 16, 25, ...?", acceptedAnswers: ["36", "treinta y seis"], time: 30 },
+                { title: "Deducción Analítica", text: "El padre de Ana tiene 4 hijas: Lala, Lele, Lili y... ¿quién es la cuarta hija?", acceptedAnswers: ["ana"], time: 30 },
+                { title: "Lógica de Procesos", text: "Si 5 máquinas tardan 5 minutos en fabricar 5 piezas, ¿cuántos minutos tardarán 100 máquinas en fabricar 100 piezas?", acceptedAnswers: ["5", "cinco"], time: 40 },
+                { title: "Posicionamiento Lógico", text: "En una carrera adelantas al corredor que va en segundo lugar. ¿En qué posición quedas ahora?", acceptedAnswers: ["segundo", "segunda", "2", "2do"], time: 35 },
+                { title: "Paradoja Verbal", text: "¿Qué palabra de 5 letras se vuelve más corta cuando le añades dos letras al final?", acceptedAnswers: ["corta", "corto"], time: 40 },
+                { title: "Progresión Matemática", text: "¿Qué número continúa la serie lógica: 2, 6, 12, 20, 30, ...?", acceptedAnswers: ["42", "cuarenta y dos"], time: 40 }
+            ],
+            divergent: [
+                { title: "Usos Inusuales", text: "Escribe la mayor cantidad de usos creativos posibles para un clip metálico común fuera de la oficina. Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Escenario Hipotético", text: "Imagina que a partir de hoy todos los seres humanos pueden levitar hasta 2 metros. ¿Qué tres cambios o innovaciones ocurrirían en las ciudades?", type: "text", time: 60 },
+                { title: "Reinvención de Objetos", text: "Escribe todos los usos alternativos y creativos que podrías darle a un ladrillo común (sin usarlo para construir muros). Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Conexión Disruptiva", text: "Si fusionaras una cafetería, una biblioteca digital y un gimnasio en un solo concepto, ¿qué experiencias únicas ofrecerías?", type: "text", time: 60 },
+                { title: "Nuevos Usos: Botella Plástica", text: "Escribe la mayor cantidad de usos creativos y útiles que podrías darle a una botella plástica vacía (sin usarla para guardar líquidos). Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Experiencia de Servicio", text: "¿Cómo diseñarías un restaurante donde los clientes no eligen su plato de un menú tradicional, pero todos salen encantados? Describe tu propuesta.", type: "text", time: 60 }
+            ]
+        };
+
+        function normalizeText(str) {
+            return str
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^\w\s]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function isConvergentCorrect(userValue, acceptedAnswers) {
+            const normUser = normalizeText(userValue);
+            if (!normUser) return false;
+            const userWords = normUser.split(" ");
+            return acceptedAnswers.some(ans => {
+                const normAns = normalizeText(ans);
+                if (normUser === normAns) return true;
+                if (normAns.includes(" ")) return normUser.includes(normAns);
+                return userWords.includes(normAns);
+            });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function generateQuiz() {
+            shuffleArray(questionBank.convergent);
+            shuffleArray(questionBank.divergent);
+            const selectedConv = questionBank.convergent.slice(0, 3).map(q => ({...q, questionType: 'convergent'}));
+            const selectedDiv = questionBank.divergent.slice(0, 3).map(q => ({...q, questionType: 'divergent'}));
+            questions = [...selectedConv, ...selectedDiv];
+            shuffleArray(questions);
+            userResponses = [];
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.style.display = 'none');
+            screens[screenName].style.display = 'block';
+        }
+
+        function startTimer(duration, onComplete) {
+            let timeLeft = duration;
+            clearInterval(timerInterval);
+            elements.timer.textContent = `${timeLeft}s`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                elements.timer.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            if (currentQIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQIndex];
+            elements.progressText.textContent = `Pregunta ${currentQIndex + 1} de ${questions.length}`;
+            elements.progressBar.style.width = `${((currentQIndex) / questions.length) * 100}%`;
+            elements.qTitle.textContent = q.title;
+            elements.qText.textContent = q.text;
+            elements.answerArea.innerHTML = '';
+
+            if (q.questionType === 'convergent') {
+                elements.answerArea.innerHTML = `
+                    <input type="text" id="answer-input" class="w-full text-sm" placeholder="Escribe tu solución concreta...">
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+                        <i class="fas fa-keyboard text-sky-400"></i> Presiona <b>Enter</b> o haz clic en Siguiente para confirmar.
+                    </p>
+                `;
+                const inputEl = document.getElementById('answer-input');
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        elements.nextBtn.click();
+                    }
+                });
+                inputEl.focus();
+            } else {
+                const helperMsg = q.type === 'list'
+                    ? 'Escribe una idea por línea (Enter). <span id="idea-counter" class="text-pink-400 font-semibold ml-1">0 ideas detectadas</span>'
+                    : 'Desarrolla tus propuestas con libertad creativa (Ctrl + Enter para avanzar).';
+                elements.answerArea.innerHTML = `
+                    <textarea id="answer-input" rows="4" class="w-full text-sm" placeholder="Desarrolla tus ideas creativas aquí..."></textarea>
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+                        <i class="fas fa-lightbulb text-pink-400"></i> <span>${helperMsg}</span>
+                    </p>
+                `;
+                const textareaEl = document.getElementById('answer-input');
+                if (q.type === 'list') {
+                    const counterEl = document.getElementById('idea-counter');
+                    textareaEl.addEventListener('input', () => {
+                        const count = new Set(
+                            textareaEl.value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
+                        ).size;
+                        if (counterEl) counterEl.textContent = `${count} ${count === 1 ? 'idea detectada' : 'ideas detectadas'}`;
+                    });
+                }
+                textareaEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        elements.nextBtn.click();
+                    }
+                });
+                textareaEl.focus();
+            }
+
+            startTimer(q.time || 45, () => elements.nextBtn.click());
+        }
+
+        function processAnswer() {
+            const q = questions[currentQIndex];
+            const input = document.getElementById('answer-input');
+            if (!input) return;
+            const value = input.value.trim();
+
+            let questionScore = 0;
+            if (q.questionType === 'convergent') {
+                if (isConvergentCorrect(value, q.acceptedAnswers || [])) {
+                    questionScore = 25;
+                    scores.convergent += questionScore;
+                }
+            } else if (q.type === 'list') {
+                const uniqueIdeas = Array.from(new Set(
+                    value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
+                ));
+                questionScore = Math.min(25, uniqueIdeas.length * 5);
+                scores.divergent += questionScore;
+            } else if (q.type === 'text') {
+                const words = normalizeText(value).split(' ').filter(w => w.length > 2);
+                const uniqueWords = new Set(words);
+                if (uniqueWords.size >= 15) questionScore = 25;
+                else if (uniqueWords.size >= 8) questionScore = 18;
+                else if (uniqueWords.size >= 4) questionScore = 10;
+                scores.divergent += questionScore;
+            }
+
+            userResponses.push({
+                title: q.title,
+                questionType: q.questionType,
+                prompt: q.text,
+                answer: value || "(Sin respuesta)",
+                heuristicScore: questionScore
+            });
+        }
+
+        function handleNext() {
+            sound.playClick();
+            processAnswer();
+            currentQIndex++;
+            loadQuestion();
+        }
+
+        function renderScoreUI() {
+            const totalScore = scores.convergent + scores.divergent;
+            const divergentWeight = totalScore > 0 ? (scores.divergent / totalScore) * 100 : 50;
+
+            const { title, description } = getProfileText(divergentWeight);
+            elements.resultTitle.textContent = title;
+            elements.resultDescription.textContent = description;
+            updateProfileBar(elements.resultBar, divergentWeight);
+            return divergentWeight;
+        }
+
+        async function showResults() {
+            clearInterval(timerInterval);
+            showScreen('result');
+            elements.progressBar.style.width = '100%';
+
+            let divergentWeight = renderScoreUI();
+
+            if (db && userId && isConnected) {
+                const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+            }
+
+            if (localStorage.getItem('gemini_api_key')) {
+                elements.aiContainer.classList.remove('hidden');
+                elements.aiText.textContent = "Descubriendo tus fortalezas creativas con IA...";
+                
+                const divergentSummary = userResponses
+                    .filter(r => r.questionType === 'divergent')
+                    .map(r => `- Reto "${r.title}": Respuesta del usuario: "${r.answer}"`)
+                    .join('\n');
+
+                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} que acaba de realizar un ejercicio contrarreloj de pensamiento:
+Puntaje Convergente (Enfoque práctico y analítico, máx 75): ${scores.convergent}
+Puntaje Divergente preliminar (Exploración creativa, máx 75): ${scores.divergent}
+Ideas compartidas por el participante en los retos abiertos:
+${divergentSummary}
+
+Instrucciones clave de tono:
+1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre.` : 'Saluda con calidez al participante.'} NUNCA uses palabras negativas, clínicas o críticas (prohibido decir "bajo puntaje", "poca fluidez", "respuestas breves", "falta de", "limitado" o "sin respuesta").
+2. Si alguna respuesta fue corta o quedó en blanco por el reto del tiempo, compréndelo con total empatía sin mencionarlo como falla y enfócate 100% en celebrar su talento natural (ya sea su agudeza práctica para ir al grano o su chispa imaginativa).
+3. Rescata con entusiasmo algún detalle o intención positiva de lo que escribió y regálale una invitación sencilla, cálida e inspiradora (máximo 3 frases en total) para potenciar su estilo en el día a día.
+4. Estima con generosidad su puntaje divergente ajustado entre ${Math.max(15, scores.divergent)} y 75.
+Devuelve ÚNICAMENTE un objeto JSON válido sin bloques markdown con este formato exacto:
+{"adjustedDivergentScore": ${scores.divergent}, "feedback": "Tu mensaje cálido, apreciativo y motivador en español aquí."}`;
+
+                const aiResponse = await generateAIAnalysis(prompt);
+                if (aiResponse) {
+                    try {
+                        const cleanJson = aiResponse.replace(/```json|```/g, '').trim();
+                        const parsed = JSON.parse(cleanJson);
+                        if (typeof parsed.adjustedDivergentScore === 'number' && !isNaN(parsed.adjustedDivergentScore)) {
+                            scores.divergent = Math.max(0, Math.min(75, Math.round(parsed.adjustedDivergentScore)));
+                            renderScoreUI();
+                            if (db && userId && isConnected) {
+                                const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+                                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+                            }
+                        }
+                        elements.aiText.textContent = parsed.feedback || aiResponse;
+                    } catch {
+                        elements.aiText.textContent = aiResponse;
+                    }
+                } else {
+                    elements.aiContainer.classList.add('hidden');
+                }
+            } else {
+                elements.aiContainer.classList.add('hidden');
+            }
+        }
+
+        function getProfileText(divergentWeight) {
+            if (divergentWeight > 60) {
+                return { title: "El Innovador Disruptivo", description: "Tu mente genera un océano continuo de posibilidades originales. Tu mayor poder es pensar fuera del molde habitual." };
+            } else if (divergentWeight > 40) {
+                return { title: "El Arquitecto Estratégico", description: "Mantienes un equilibrio virtuoso entre la generación libre de ideas y la capacidad analítica para estructurar soluciones reales." };
+            } else {
+                return { title: "El Solucionador de Precisión", description: "Sobresales analizando datos complejos y hallando la ruta directa y lógica hacia la solución óptima." };
+            }
+        }
+
+        function updateProfileBar(barElement, divergentWeight) {
+            const balancePoint = 50;
+            let pull = Math.abs(divergentWeight - balancePoint);
+            if (divergentWeight > balancePoint) {
+                barElement.style.left = `50%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to right, #a78bfa, #ec4899)';
+            } else {
+                barElement.style.left = `${50 - pull}%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to right, #38bdf8, #a78bfa)';
+            }
+        }
+
+        function showGroupResults() {
+            if (!isConnected || !db) {
+                elements.groupResultDescription.textContent = "Resultados grupales consolidados no disponibles en modo fuera de línea.";
+                showScreen('groupResult');
+                return;
+            }
+
+            showScreen('groupResult');
+            const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+
+            if (groupUnsubscribe) {
+                groupUnsubscribe();
+                groupUnsubscribe = null;
+            }
+
+            groupUnsubscribe = onSnapshot(collection(db, collectionPath), (snapshot) => {
+                const results = snapshot.docs.map(doc => doc.data().scores).filter(Boolean);
+                elements.groupTotalParticipants.textContent = results.length;
+                
+                const profileCounts = { "Disruptivo": 0, "Estratégico": 0, "Solucionador": 0 };
+                results.forEach(s => {
+                    const tot = s.convergent + s.divergent;
+                    const w = tot > 0 ? (s.divergent / tot) * 100 : 50;
+                    if (w > 60) profileCounts["Disruptivo"]++;
+                    else if (w > 40) profileCounts["Estratégico"]++;
+                    else profileCounts["Solucionador"]++;
+                });
+
+                const ctx = document.getElementById('group-profile-pie-chart')?.getContext('2d');
+                if (!ctx) return;
+                if (groupPieChartInstance) groupPieChartInstance.destroy();
+
+                groupPieChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(profileCounts),
+                        datasets: [{
+                            data: Object.values(profileCounts),
+                            backgroundColor: ['#ec4899', '#a78bfa', '#38bdf8'],
+                            borderWidth: 2,
+                            borderColor: '#0f172a'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 12 } } } }
+                    }
+                });
+            });
+        }
+
+        async function resetGroupPensamiento() {
+            if (!isConnected || !db) return;
+            const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+            const querySnapshot = await getDocs(collection(db, collectionPath));
+            const deletePromises = [];
+            querySnapshot.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+            await Promise.all(deletePromises);
+            showToast("Evaluaciones del grupo reseteadas.");
+            showGroupResults();
+        }
+
+        elements.startBtn.addEventListener('click', () => { sound.playClick(); generateQuiz(); showScreen('question'); loadQuestion(); });
+        elements.nextBtn.addEventListener('click', handleNext);
+        elements.restartBtn.addEventListener('click', () => { 
+            sound.playClick(); 
+            scores = { divergent: 0, convergent: 0 };
+            currentQIndex = 0;
+            showScreen('start'); 
+        });
+        elements.showGroupBtn.addEventListener('click', () => { sound.playClick(); showGroupResults(); });
+        elements.backToIndividualBtn.addEventListener('click', () => { sound.playClick(); showScreen('result'); });
+        elements.resetGroupBtn.addEventListener('click', () => promptPassword(resetGroupPensamiento));
+
+        showScreen('start');
+    }
+    </script>
+</body>
+</html>
