@@ -240,6 +240,9 @@
 
             <!-- Action Buttons -->
             <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-800">
+                <button id="welcomeCoverBtn" title="Ver Portada de Bienvenida" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-home text-xs sm:text-sm"></i>
+                </button>
                 <button id="qrShareBtn" title="Compartir con Código QR para Móviles" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
                     <i class="fas fa-qrcode text-xs sm:text-sm"></i>
                 </button>
@@ -259,8 +262,80 @@
         </div>
     </header>
 
+    <!-- Portada de Bienvenida (Encuentro de Líderes de Talento Humano) -->
+    <section id="welcome-cover" class="w-full max-w-5xl mx-auto px-4 py-6 sm:py-12 flex-1 flex flex-col items-center justify-center z-20">
+        <div class="glass-card w-full p-6 sm:p-10 md:p-12 border border-sky-500/30 shadow-2xl relative overflow-hidden text-center">
+            <!-- Decorative ambient glows -->
+            <div class="absolute -top-24 -left-24 w-64 h-64 bg-sky-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-pink-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Institutional Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sky-500/15 via-indigo-500/15 to-pink-500/15 border border-sky-400/30 text-sky-300 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-5 shadow-inner">
+                <i class="fas fa-sparkles text-amber-400"></i>
+                <span>Encuentro Intercajas • Líderes de Talento Humano</span>
+            </div>
+
+            <!-- Main Inspiring Title -->
+            <h1 class="font-orbitron text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight mb-4">
+                ¡Bienvenidos, Líderes que <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-pink-400">Transforman Vidas!</span>
+            </h1>
+
+            <!-- Warm Greeting Copy -->
+            <p class="text-sm sm:text-base md:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8">
+                Hoy nos conectamos quienes tenemos el propósito de cuidar, inspirar y potenciar el talento en las <strong class="text-white font-semibold">Cajas de Compensación Familiar</strong>. Antes de iniciar nuestra conversación estratégica, viviremos una experiencia interactiva en <strong class="text-sky-300 font-semibold">dos momentos</strong> para sintonizar nuestras emociones y descubrir cómo piensa nuestro equipo.
+            </p>
+
+            <!-- 2-Stage Experience Journey Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto mb-8 text-left">
+                <!-- Momento 1: Team Mood -->
+                <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/75 border border-sky-500/30 hover:border-sky-400/60 transition-all group relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-sky-500/25 flex-shrink-0">
+                            <i class="fas fa-tree"></i>
+                        </div>
+                        <div>
+                            <span class="inline-block text-[10px] font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20 mb-1.5">Momento 1 • Conexión Emocional</span>
+                            <h3 class="font-orbitron text-base sm:text-lg font-bold text-white mb-1">El Árbol de Emociones</h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                Reconoce cómo llegas hoy al encuentro, elige la emoción que te representa y ocupa tu lugar en nuestro árbol colectivo en vivo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Momento 2: El Prisma del Pensamiento -->
+                <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/75 border border-pink-500/30 hover:border-pink-400/60 transition-all group relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shadow-pink-500/25 flex-shrink-0">
+                            <i class="fas fa-gem"></i>
+                        </div>
+                        <div>
+                            <span class="inline-block text-[10px] font-bold uppercase tracking-wider text-pink-400 bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/20 mb-1.5">Momento 2 • Agilidad e Innovación</span>
+                            <h3 class="font-orbitron text-base sm:text-lg font-bold text-white mb-1">El Prisma del Pensamiento</h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                Pon a prueba tu mente entre acertijos de enfoque e ideas disruptivas para descubrir tu estilo cognitivo con retroalimentación IA.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primary & Secondary Call-To-Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+                <button id="btn-start-experience" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-pink-500 hover:from-sky-400 hover:via-indigo-400 hover:to-pink-400 text-white font-orbitron font-bold text-sm sm:text-base shadow-xl shadow-sky-500/25 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3">
+                    <span>Comenzar la Experiencia</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="btn-cover-qr" class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-sky-300 border border-slate-700/80 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-qrcode text-sky-400"></i>
+                    <span>Mostrar Código QR en Pantalla</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
     <!-- Mobile Screen View Switcher Tabs (Only visible on screens < 1024px) -->
-    <div id="team-mood-mobile-tabs" class="lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
+    <div id="team-mood-mobile-tabs" class="hidden lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
         <div class="flex items-center p-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl">
             <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
                 <i class="fas fa-tree"></i> Ver Árbol (30)
@@ -272,7 +347,7 @@
     </div>
 
     <!-- Main Workspace (Ejercicio 1: Team Mood) -->
-    <main id="team-mood-main" class="w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
+    <main id="team-mood-main" class="hidden w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
         
         <!-- Left Column: Controls & Participation -->
         <aside id="aside-panel" class="w-full lg:w-[380px] flex flex-col gap-4 order-2 lg:order-1 hidden lg:flex">
@@ -865,10 +940,12 @@
         sound.playChime();
         const { name } = getCurrentParticipantContext();
 
+        const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
         const prismaMain = document.getElementById('prisma-main');
 
+        if (welcomeCover) welcomeCover.classList.add('hidden');
         if (teamMoodMain) teamMoodMain.classList.add('hidden');
         if (teamMoodTabs) teamMoodTabs.classList.add('hidden');
         if (prismaMain) prismaMain.classList.remove('hidden');
@@ -890,13 +967,30 @@
 
     function navigateToTeamMood() {
         sound.playClick();
+        const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
         const prismaMain = document.getElementById('prisma-main');
 
+        if (welcomeCover) welcomeCover.classList.add('hidden');
         if (prismaMain) prismaMain.classList.add('hidden');
         if (teamMoodMain) teamMoodMain.classList.remove('hidden');
         if (teamMoodTabs) teamMoodTabs.classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navigateToWelcomeCover() {
+        sound.playClick();
+        const welcomeCover = document.getElementById('welcome-cover');
+        const teamMoodMain = document.getElementById('team-mood-main');
+        const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
+        const prismaMain = document.getElementById('prisma-main');
+
+        if (teamMoodMain) teamMoodMain.classList.add('hidden');
+        if (teamMoodTabs) teamMoodTabs.classList.add('hidden');
+        if (prismaMain) prismaMain.classList.add('hidden');
+        if (welcomeCover) welcomeCover.classList.remove('hidden');
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1555,6 +1649,13 @@
         if (btnTreeContinuePrisma) btnTreeContinuePrisma.onclick = navigateToPrisma;
         const btnBackToMood = document.getElementById('btn-back-to-mood');
         if (btnBackToMood) btnBackToMood.onclick = navigateToTeamMood;
+
+        const btnStartExperience = document.getElementById('btn-start-experience');
+        if (btnStartExperience) btnStartExperience.onclick = navigateToTeamMood;
+        const btnCoverQr = document.getElementById('btn-cover-qr');
+        if (btnCoverQr) btnCoverQr.onclick = openQrModal;
+        const welcomeCoverBtn = document.getElementById('welcomeCoverBtn');
+        if (welcomeCoverBtn) welcomeCoverBtn.onclick = navigateToWelcomeCover;
     }
 
     function setupPensamientoAssessment() {
