@@ -73,7 +73,7 @@
             background-clip: text;
         }
 
-        input[type="text"] {
+        input[type="text"], input[type="password"], textarea {
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 0.75rem;
             padding: 0.65rem 1rem;
@@ -84,13 +84,29 @@
         }
 
         @media (min-width: 640px) {
-            input[type="text"] { font-size: 0.875rem; }
+            input[type="text"], textarea { font-size: 0.875rem; }
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-sky);
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .assessment-screen {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-glow-card {
+            background: rgba(147, 51, 234, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.2);
         }
 
         /* Tree Placeholders & Touch Hitbox */
@@ -244,7 +260,7 @@
     </header>
 
     <!-- Mobile Screen View Switcher Tabs (Only visible on screens < 1024px) -->
-    <div class="lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
+    <div id="team-mood-mobile-tabs" class="lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
         <div class="flex items-center p-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl">
             <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
                 <i class="fas fa-tree"></i> Ver Árbol (30)
@@ -255,8 +271,8 @@
         </div>
     </div>
 
-    <!-- Main Workspace -->
-    <main class="w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
+    <!-- Main Workspace (Ejercicio 1: Team Mood) -->
+    <main id="team-mood-main" class="w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
         
         <!-- Left Column: Controls & Participation -->
         <aside id="aside-panel" class="w-full lg:w-[380px] flex flex-col gap-4 order-2 lg:order-1 hidden lg:flex">
@@ -494,6 +510,103 @@
         </section>
     </main>
 
+    <!-- Ejercicio 2: El Prisma del Pensamiento (Integrado en la misma página sin recarga ni 404) -->
+    <section id="prisma-main" class="hidden w-full max-w-3xl mx-auto p-4 sm:p-8 flex-1 flex flex-col items-center justify-center z-10">
+        <div class="w-full flex items-center justify-between mb-4">
+            <button id="btn-back-to-mood" class="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-sky-400 hover:border-sky-500/50 transition text-xs font-semibold flex items-center gap-2 shadow-lg">
+                <i class="fas fa-arrow-left text-sky-400"></i>
+                <i class="fas fa-tree text-emerald-400"></i>
+                <span>Volver al Ejercicio 1 (Árbol Team Mood)</span>
+            </button>
+            <span class="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold uppercase tracking-wider">
+                Ejercicio 2 de 2
+            </span>
+        </div>
+
+        <div id="quiz-container" class="w-full">
+            <div class="glass-card p-6 md:p-10">
+                <div id="start-screen" class="assessment-screen text-center">
+                    <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider">Ejercicio 2 • Actividad Interactiva</span>
+                    <div id="participant-greeting-badge" class="hidden mt-4 mb-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/15 border border-sky-400/40 text-sky-300 text-sm font-semibold">
+                        <i class="fas fa-user-check text-sky-400"></i>
+                        <span id="participant-greeting-text">¡Hola!</span>
+                    </div>
+                    <h1 class="font-orbitron text-2xl sm:text-3xl font-bold gradient-text mt-3 mb-3">El Prisma del Pensamiento</h1>
+                    <p class="text-slate-400 italic my-4 text-sm sm:text-base">"Las personas que están lo suficientemente locas como para pensar que pueden cambiar el mundo, son las que lo hacen."</p>
+                    <p class="text-slate-300 mb-8 leading-relaxed text-justify text-sm sm:text-base">Este ejercicio revela tu estilo dominante de pensamiento. ¿Generas un universo de alternativas ilimitadas o hallas con precisión quirúrgica la única solución brillante? Descúbrelo.</p>
+                    <button id="start-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 px-10 rounded-full text-base sm:text-lg shadow-lg shadow-purple-500/30 hover:scale-105 transition-all">Comenzar el Viaje</button>
+                </div>
+
+                <div id="question-screen" class="assessment-screen">
+                    <div class="flex justify-between items-center mb-4">
+                        <div id="progress-text" class="text-sm font-semibold text-slate-400"></div>
+                        <div id="timer" class="font-orbitron text-2xl text-sky-400 ml-4 font-bold"></div>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 mb-6 p-0.5 border border-slate-700">
+                        <div id="progress-bar" class="bg-gradient-to-r from-sky-400 to-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <h2 id="question-title" class="text-xl font-bold text-white mb-2 font-orbitron"></h2>
+                    <p id="question-text" class="text-slate-300 mb-6 leading-relaxed text-base"></p>
+                    <div id="answer-area"></div>
+                    <div class="mt-8 flex justify-end">
+                        <button id="next-q-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-8 rounded-xl shadow-lg shadow-sky-500/30 transition-all flex items-center gap-2">
+                            <span>Siguiente</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result-screen" class="assessment-screen text-center">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-4 font-orbitron gradient-text">Tu Perfil de Pensamiento</h2>
+                    
+                    <div id="result-viz" class="w-full h-20 my-8 flex items-center justify-center space-x-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                        <div class="text-right w-28"><div class="font-bold text-pink-400 text-sm">Divergente</div><div class="text-xs text-slate-400">El Innovador</div></div>
+                        <div class="w-full h-4 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700">
+                            <div id="result-bar" class="absolute top-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500" style="left: 50%; width: 0%;"></div>
+                            <div class="absolute top-0 left-1/2 w-0.5 h-full bg-slate-400"></div>
+                        </div>
+                        <div class="text-left w-28"><div class="font-bold text-sky-400 text-sm">Convergente</div><div class="text-xs text-slate-400">El Solucionador</div></div>
+                    </div>
+
+                    <h3 id="result-title" class="text-2xl font-semibold mb-3 text-sky-300 font-orbitron"></h3>
+                    <p id="result-description" class="text-slate-300 mb-6 max-w-md mx-auto text-sm leading-relaxed"></p>
+
+                    <div id="ai-pensamiento-container" class="my-6 hidden">
+                        <div class="ai-glow-card p-5 rounded-2xl text-left space-y-2">
+                            <div class="flex items-center gap-2 text-purple-300 font-semibold text-xs font-orbitron uppercase">
+                                <i class="fas fa-sparkles text-pink-400"></i> Impulso de Innovación (Coaching IA)
+                            </div>
+                            <p id="ai-pensamiento-text" class="text-slate-200 text-xs leading-relaxed italic"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        <button id="restart-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-full text-sm transition-all">Intentar de Nuevo</button>
+                        <button id="show-group-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-6 rounded-full text-sm shadow-lg shadow-purple-500/30 transition-all">Ver Perfil del Grupo</button>
+                    </div>
+                </div>
+
+                <div id="group-result-screen" class="assessment-screen text-center">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-2 font-orbitron gradient-text">Perfil Colectivo del Grupo</h2>
+                    <p class="mb-4 text-slate-400 text-sm">Total de Participantes Registrados: <span id="group-total-participants" class="font-bold text-sky-400">0</span></p>
+                    
+                    <div id="group-profile-pie-chart-container" class="relative mx-auto" style="height:280px; max-width:380px;">
+                        <canvas id="group-profile-pie-chart"></canvas>
+                    </div>
+                    <div id="group-result-description" class="text-slate-300 my-6 max-w-md mx-auto text-sm"></div>
+                    
+                    <div class="flex justify-center flex-wrap gap-4 mt-6">
+                        <button id="back-to-individual-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all">Volver a Mi Perfil</button>
+                        <button id="reset-group-pensamiento-btn" class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all flex items-center gap-2">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Resetear Grupo (Admin)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Modal: Compartir / Código QR para Conectar Celulares -->
     <div id="qr-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 hidden opacity-0 flex items-center justify-center p-4 transition-all duration-300">
         <div class="bg-slate-900 border border-sky-500/30 w-full max-w-sm p-6 rounded-3xl shadow-2xl space-y-4 text-center relative">
@@ -697,24 +810,92 @@
     let currentZoom = 1.0;
     const sessionLoadedAt = Date.now();
 
-    function navigateToPrisma() {
-        sound.playChime();
+    let prismaInitialized = false;
+
+    async function generateAIAnalysis(promptText) {
+        const defaultApiKey = atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
+        const apiKey = window.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || defaultApiKey;
+        if (!apiKey) return null;
+
+        const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        for (const model of models) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (resultText) return resultText;
+                }
+            } catch (err) {
+                console.warn(`Attempt with ${model} failed:`, err);
+            }
+        }
+        return null;
+    }
+
+    function getCurrentParticipantContext() {
         const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
         const nameInput = document.getElementById('participant-name');
-        const name = (mySlotEntry && mySlotEntry[1]?.name) || nameInput?.value.trim() || localStorage.getItem('intercajas_participant_name') || '';
-        const mood = (mySlotEntry && mySlotEntry[1]?.mood) || selectedMood || localStorage.getItem('intercajas_participant_mood') || '';
-
+        const name = ((mySlotEntry && mySlotEntry[1]?.name) || nameInput?.value.trim() || localStorage.getItem('intercajas_participant_name') || '').trim();
+        const mood = ((mySlotEntry && mySlotEntry[1]?.mood) || selectedMood || localStorage.getItem('intercajas_participant_mood') || '').trim();
         if (name) localStorage.setItem('intercajas_participant_name', name);
         if (mood) localStorage.setItem('intercajas_participant_mood', mood);
+        return { name, mood };
+    }
 
-        const params = new URLSearchParams();
-        if (name) params.set('name', name);
-        if (mood) params.set('mood', mood);
-        const query = params.toString() ? `?${params.toString()}` : '';
-        window.location.href = `./prisma.html${query}`;
+    function navigateToPrisma() {
+        sound.playChime();
+        const { name } = getCurrentParticipantContext();
+
+        const teamMoodMain = document.getElementById('team-mood-main');
+        const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
+        const prismaMain = document.getElementById('prisma-main');
+
+        if (teamMoodMain) teamMoodMain.classList.add('hidden');
+        if (teamMoodTabs) teamMoodTabs.classList.add('hidden');
+        if (prismaMain) prismaMain.classList.remove('hidden');
+
+        if (!prismaInitialized) {
+            setupPensamientoAssessment();
+            prismaInitialized = true;
+        }
+
+        const greetingBadge = document.getElementById('participant-greeting-badge');
+        const greetingText = document.getElementById('participant-greeting-text');
+        if (name && greetingBadge && greetingText) {
+            greetingBadge.classList.remove('hidden');
+            greetingText.textContent = `¡Hola, ${name}! Tu registro está conectado`;
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navigateToTeamMood() {
+        sound.playClick();
+        const teamMoodMain = document.getElementById('team-mood-main');
+        const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
+        const prismaMain = document.getElementById('prisma-main');
+
+        if (prismaMain) prismaMain.classList.add('hidden');
+        if (teamMoodMain) teamMoodMain.classList.remove('hidden');
+        if (teamMoodTabs) teamMoodTabs.classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     window.onload = async () => {
+        const defaultApiKey = window.GEMINI_API_KEY || atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
+        if (!localStorage.getItem('gemini_api_key') && defaultApiKey) {
+            localStorage.setItem('gemini_api_key', defaultApiKey);
+        }
+
         setupMoodPalette();
         renderTreePlaceholders();
         setupControls();
@@ -731,6 +912,8 @@
             initOfflineStorage();
         }
 
+        setupPensamientoAssessment();
+        prismaInitialized = true;
         updateMoodAnalytics();
     };
 
@@ -1326,6 +1509,417 @@
         if (btnContinuePrisma) btnContinuePrisma.onclick = navigateToPrisma;
         const btnTreeContinuePrisma = document.getElementById('btn-tree-continue-prisma');
         if (btnTreeContinuePrisma) btnTreeContinuePrisma.onclick = navigateToPrisma;
+        const btnBackToMood = document.getElementById('btn-back-to-mood');
+        if (btnBackToMood) btnBackToMood.onclick = navigateToTeamMood;
+    }
+
+    function setupPensamientoAssessment() {
+        const container = document.getElementById('quiz-container');
+        if (!container) return;
+
+        const screens = {
+            start: container.querySelector('#start-screen'),
+            question: container.querySelector('#question-screen'),
+            result: container.querySelector('#result-screen'),
+            groupResult: container.querySelector('#group-result-screen')
+        };
+
+        const elements = {
+            startBtn: container.querySelector('#start-btn'),
+            restartBtn: container.querySelector('#restart-btn'),
+            nextBtn: container.querySelector('#next-q-btn'),
+            showGroupBtn: container.querySelector('#show-group-btn'),
+            backToIndividualBtn: container.querySelector('#back-to-individual-btn'),
+            resetGroupBtn: container.querySelector('#reset-group-pensamiento-btn'),
+            progressText: container.querySelector('#progress-text'),
+            progressBar: container.querySelector('#progress-bar'),
+            timer: container.querySelector('#timer'),
+            qTitle: container.querySelector('#question-title'),
+            qText: container.querySelector('#question-text'),
+            answerArea: container.querySelector('#answer-area'),
+            resultViz: container.querySelector('#result-viz'),
+            resultBar: container.querySelector('#result-bar'),
+            resultTitle: container.querySelector('#result-title'),
+            resultDescription: container.querySelector('#result-description'),
+            aiContainer: container.querySelector('#ai-pensamiento-container'),
+            aiText: container.querySelector('#ai-pensamiento-text'),
+            groupTotalParticipants: container.querySelector('#group-total-participants'),
+            groupResultDescription: container.querySelector('#group-result-description')
+        };
+
+        let scores = { divergent: 0, convergent: 0 };
+        let currentQIndex = 0;
+        let timerInterval;
+        let questions = [];
+        let userResponses = [];
+        let groupPieChartInstance = null;
+        let groupUnsubscribe = null;
+
+        const { name: initialName } = getCurrentParticipantContext();
+        const greetingBadge = container.querySelector('#participant-greeting-badge');
+        const greetingText = container.querySelector('#participant-greeting-text');
+        if (initialName && greetingBadge && greetingText) {
+            greetingBadge.classList.remove('hidden');
+            greetingText.textContent = `¡Hola, ${initialName}! Tu registro está conectado`;
+        }
+
+        const questionBank = {
+            convergent: [
+                { title: "Acertijo Lógico", text: "Tengo ciudades, pero no casas. Tengo montañas, pero no árboles. Tengo agua, pero no peces. ¿Qué soy?", acceptedAnswers: ["mapa", "planisferio", "atlas"], time: 45 },
+                { title: "Acertijo Clásico", text: "Aliméntame y viviré, pero dame de beber y moriré. ¿Qué soy?", acceptedAnswers: ["fuego", "llama", "candela", "incendio"], time: 45 },
+                { title: "Secuencia Numérica", text: "¿Qué número sigue en esta secuencia: 1, 4, 9, 16, 25, ...?", acceptedAnswers: ["36", "treinta y seis"], time: 30 },
+                { title: "Deducción Analítica", text: "El padre de Ana tiene 4 hijas: Lala, Lele, Lili y... ¿quién es la cuarta hija?", acceptedAnswers: ["ana"], time: 30 },
+                { title: "Lógica de Procesos", text: "Si 5 máquinas tardan 5 minutos en fabricar 5 piezas, ¿cuántos minutos tardarán 100 máquinas en fabricar 100 piezas?", acceptedAnswers: ["5", "cinco"], time: 40 },
+                { title: "Posicionamiento Lógico", text: "En una carrera adelantas al corredor que va en segundo lugar. ¿En qué posición quedas ahora?", acceptedAnswers: ["segundo", "segunda", "2", "2do"], time: 35 },
+                { title: "Paradoja Verbal", text: "¿Qué palabra de 5 letras se vuelve más corta cuando le añades dos letras al final?", acceptedAnswers: ["corta", "corto"], time: 40 },
+                { title: "Progresión Matemática", text: "¿Qué número continúa la serie lógica: 2, 6, 12, 20, 30, ...?", acceptedAnswers: ["42", "cuarenta y dos"], time: 40 }
+            ],
+            divergent: [
+                { title: "Usos Inusuales", text: "Escribe la mayor cantidad de usos creativos posibles para un clip metálico común fuera de la oficina. Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Escenario Hipotético", text: "Imagina que a partir de hoy todos los seres humanos pueden levitar hasta 2 metros. ¿Qué tres cambios o innovaciones ocurrirían en las ciudades?", type: "text", time: 60 },
+                { title: "Reinvención de Objetos", text: "Escribe todos los usos alternativos y creativos que podrías darle a un ladrillo común (sin usarlo para construir muros). Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Conexión Disruptiva", text: "Si fusionaras una cafetería, una biblioteca digital y un gimnasio en un solo concepto, ¿qué experiencias únicas ofrecerías?", type: "text", time: 60 },
+                { title: "Nuevos Usos: Botella Plástica", text: "Escribe la mayor cantidad de usos creativos y útiles que podrías darle a una botella plástica vacía (sin usarla para guardar líquidos). Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Experiencia de Servicio", text: "¿Cómo diseñarías un restaurante donde los clientes no eligen su plato de un menú tradicional, pero todos salen encantados? Describe tu propuesta.", type: "text", time: 60 }
+            ]
+        };
+
+        function normalizeText(str) {
+            return str
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^\w\s]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function isConvergentCorrect(userValue, acceptedAnswers) {
+            const normUser = normalizeText(userValue);
+            if (!normUser) return false;
+            const userWords = normUser.split(" ");
+            return acceptedAnswers.some(ans => {
+                const normAns = normalizeText(ans);
+                if (normUser === normAns) return true;
+                if (normAns.includes(" ")) return normUser.includes(normAns);
+                return userWords.includes(normAns);
+            });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function generateQuiz() {
+            shuffleArray(questionBank.convergent);
+            shuffleArray(questionBank.divergent);
+            const selectedConv = questionBank.convergent.slice(0, 3).map(q => ({...q, questionType: 'convergent'}));
+            const selectedDiv = questionBank.divergent.slice(0, 3).map(q => ({...q, questionType: 'divergent'}));
+            questions = [...selectedConv, ...selectedDiv];
+            shuffleArray(questions);
+            userResponses = [];
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.style.display = 'none');
+            screens[screenName].style.display = 'block';
+        }
+
+        function startTimer(duration, onComplete) {
+            let timeLeft = duration;
+            clearInterval(timerInterval);
+            elements.timer.textContent = `${timeLeft}s`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                elements.timer.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            if (currentQIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQIndex];
+            elements.progressText.textContent = `Pregunta ${currentQIndex + 1} de ${questions.length}`;
+            elements.progressBar.style.width = `${((currentQIndex) / questions.length) * 100}%`;
+            elements.qTitle.textContent = q.title;
+            elements.qText.textContent = q.text;
+            elements.answerArea.innerHTML = '';
+
+            if (q.questionType === 'convergent') {
+                elements.answerArea.innerHTML = `
+                    <input type="text" id="answer-input" class="w-full text-sm" placeholder="Escribe tu solución concreta...">
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+                        <i class="fas fa-keyboard text-sky-400"></i> Presiona <b>Enter</b> o haz clic en Siguiente para confirmar.
+                    </p>
+                `;
+                const inputEl = document.getElementById('answer-input');
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        elements.nextBtn.click();
+                    }
+                });
+                inputEl.focus();
+            } else {
+                const helperMsg = q.type === 'list'
+                    ? 'Escribe una idea por línea (Enter). <span id="idea-counter" class="text-pink-400 font-semibold ml-1">0 ideas detectadas</span>'
+                    : 'Desarrolla tus propuestas con libertad creativa (Ctrl + Enter para avanzar).';
+                elements.answerArea.innerHTML = `
+                    <textarea id="answer-input" rows="4" class="w-full text-sm" placeholder="Desarrolla tus ideas creativas aquí..."></textarea>
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+                        <i class="fas fa-lightbulb text-pink-400"></i> <span>${helperMsg}</span>
+                    </p>
+                `;
+                const textareaEl = document.getElementById('answer-input');
+                if (q.type === 'list') {
+                    const counterEl = document.getElementById('idea-counter');
+                    textareaEl.addEventListener('input', () => {
+                        const count = new Set(
+                            textareaEl.value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
+                        ).size;
+                        if (counterEl) counterEl.textContent = `${count} ${count === 1 ? 'idea detectada' : 'ideas detectadas'}`;
+                    });
+                }
+                textareaEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        elements.nextBtn.click();
+                    }
+                });
+                textareaEl.focus();
+            }
+
+            startTimer(q.time || 45, () => elements.nextBtn.click());
+        }
+
+        function processAnswer() {
+            const q = questions[currentQIndex];
+            const input = document.getElementById('answer-input');
+            if (!input) return;
+            const value = input.value.trim();
+
+            let questionScore = 0;
+            if (q.questionType === 'convergent') {
+                if (isConvergentCorrect(value, q.acceptedAnswers || [])) {
+                    questionScore = 25;
+                    scores.convergent += questionScore;
+                }
+            } else if (q.type === 'list') {
+                const uniqueIdeas = Array.from(new Set(
+                    value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
+                ));
+                questionScore = Math.min(25, uniqueIdeas.length * 5);
+                scores.divergent += questionScore;
+            } else if (q.type === 'text') {
+                const words = normalizeText(value).split(' ').filter(w => w.length > 2);
+                const uniqueWords = new Set(words);
+                if (uniqueWords.size >= 15) questionScore = 25;
+                else if (uniqueWords.size >= 8) questionScore = 18;
+                else if (uniqueWords.size >= 4) questionScore = 10;
+                scores.divergent += questionScore;
+            }
+
+            userResponses.push({
+                title: q.title,
+                questionType: q.questionType,
+                prompt: q.text,
+                answer: value || "(Sin respuesta)",
+                heuristicScore: questionScore
+            });
+        }
+
+        function handleNext() {
+            sound.playClick();
+            processAnswer();
+            currentQIndex++;
+            loadQuestion();
+        }
+
+        function renderScoreUI() {
+            const totalScore = scores.convergent + scores.divergent;
+            const divergentWeight = totalScore > 0 ? (scores.divergent / totalScore) * 100 : 50;
+
+            const { title, description } = getProfileText(divergentWeight);
+            elements.resultTitle.textContent = title;
+            elements.resultDescription.textContent = description;
+            updateProfileBar(elements.resultBar, divergentWeight);
+            return divergentWeight;
+        }
+
+        async function showResults() {
+            clearInterval(timerInterval);
+            showScreen('result');
+            elements.progressBar.style.width = '100%';
+
+            const { name: participantName, mood: participantMood } = getCurrentParticipantContext();
+            renderScoreUI();
+
+            if (db && userId && isConnected) {
+                const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+            }
+
+            if (localStorage.getItem('gemini_api_key')) {
+                elements.aiContainer.classList.remove('hidden');
+                elements.aiText.textContent = "Descubriendo tus fortalezas creativas con IA...";
+                
+                const divergentSummary = userResponses
+                    .filter(r => r.questionType === 'divergent')
+                    .map(r => `- Reto "${r.title}": Respuesta del usuario: "${r.answer}"`)
+                    .join('\n');
+
+                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} que acaba de realizar un ejercicio contrarreloj de pensamiento:
+Puntaje Convergente (Enfoque práctico y analítico, máx 75): ${scores.convergent}
+Puntaje Divergente preliminar (Exploración creativa, máx 75): ${scores.divergent}
+Ideas compartidas por el participante en los retos abiertos:
+${divergentSummary}
+
+Instrucciones clave de tono:
+1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre.` : 'Saluda con calidez al participante.'} NUNCA uses palabras negativas, clínicas o críticas (prohibido decir "bajo puntaje", "poca fluidez", "respuestas breves", "falta de", "limitado" o "sin respuesta").
+2. Si alguna respuesta fue corta o quedó en blanco por el reto del tiempo, compréndelo con total empatía sin mencionarlo como falla y enfócate 100% en celebrar su talento natural (ya sea su agudeza práctica para ir al grano o su chispa imaginativa).
+3. Rescata con entusiasmo algún detalle o intención positiva de lo que escribió y regálale una invitación sencilla, cálida e inspiradora (máximo 3 frases en total) para potenciar su estilo en el día a día.
+4. Estima con generosidad su puntaje divergente ajustado entre ${Math.max(15, scores.divergent)} y 75.
+Devuelve ÚNICAMENTE un objeto JSON válido sin bloques markdown con este formato exacto:
+{"adjustedDivergentScore": ${scores.divergent}, "feedback": "Tu mensaje cálido, apreciativo y motivador en español aquí."}`;
+
+                const aiResponse = await generateAIAnalysis(prompt);
+                if (aiResponse) {
+                    try {
+                        const cleanJson = aiResponse.replace(/```json|```/g, '').trim();
+                        const parsed = JSON.parse(cleanJson);
+                        if (typeof parsed.adjustedDivergentScore === 'number' && !isNaN(parsed.adjustedDivergentScore)) {
+                            scores.divergent = Math.max(0, Math.min(75, Math.round(parsed.adjustedDivergentScore)));
+                            renderScoreUI();
+                            if (db && userId && isConnected) {
+                                const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+                                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+                            }
+                        }
+                        elements.aiText.textContent = parsed.feedback || aiResponse;
+                    } catch {
+                        elements.aiText.textContent = aiResponse;
+                    }
+                } else {
+                    elements.aiContainer.classList.add('hidden');
+                }
+            } else {
+                elements.aiContainer.classList.add('hidden');
+            }
+        }
+
+        function getProfileText(divergentWeight) {
+            if (divergentWeight > 60) {
+                return { title: "El Innovador Disruptivo", description: "Tu mente genera un océano continuo de posibilidades originales. Tu mayor poder es pensar fuera del molde habitual." };
+            } else if (divergentWeight > 40) {
+                return { title: "El Arquitecto Estratégico", description: "Mantienes un equilibrio virtuoso entre la generación libre de ideas y la capacidad analítica para estructurar soluciones reales." };
+            } else {
+                return { title: "El Solucionador de Precisión", description: "Sobresales analizando datos complejos y hallando la ruta directa y lógica hacia la solución óptima." };
+            }
+        }
+
+        function updateProfileBar(barElement, divergentWeight) {
+            const balancePoint = 50;
+            let pull = Math.abs(divergentWeight - balancePoint);
+            if (divergentWeight > balancePoint) {
+                barElement.style.left = `50%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to right, #a78bfa, #ec4899)';
+            } else {
+                barElement.style.left = `${50 - pull}%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to right, #38bdf8, #a78bfa)';
+            }
+        }
+
+        function showGroupResults() {
+            if (!isConnected || !db) {
+                elements.groupResultDescription.textContent = "Resultados grupales consolidados no disponibles en modo fuera de línea.";
+                showScreen('groupResult');
+                return;
+            }
+
+            showScreen('groupResult');
+            const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+
+            if (groupUnsubscribe) {
+                groupUnsubscribe();
+                groupUnsubscribe = null;
+            }
+
+            groupUnsubscribe = onSnapshot(collection(db, collectionPath), (snapshot) => {
+                const results = snapshot.docs.map(doc => doc.data().scores).filter(Boolean);
+                elements.groupTotalParticipants.textContent = results.length;
+                
+                const profileCounts = { "Disruptivo": 0, "Estratégico": 0, "Solucionador": 0 };
+                results.forEach(s => {
+                    const tot = s.convergent + s.divergent;
+                    const w = tot > 0 ? (s.divergent / tot) * 100 : 50;
+                    if (w > 60) profileCounts["Disruptivo"]++;
+                    else if (w > 40) profileCounts["Estratégico"]++;
+                    else profileCounts["Solucionador"]++;
+                });
+
+                const ctx = document.getElementById('group-profile-pie-chart')?.getContext('2d');
+                if (!ctx) return;
+                if (groupPieChartInstance) groupPieChartInstance.destroy();
+
+                groupPieChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(profileCounts),
+                        datasets: [{
+                            data: Object.values(profileCounts),
+                            backgroundColor: ['#ec4899', '#a78bfa', '#38bdf8'],
+                            borderWidth: 2,
+                            borderColor: '#0f172a'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 12 } } } }
+                    }
+                });
+            });
+        }
+
+        async function resetGroupPensamiento() {
+            if (!isConnected || !db) return;
+            const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+            const querySnapshot = await getDocs(collection(db, collectionPath));
+            const deletePromises = [];
+            querySnapshot.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+            await Promise.all(deletePromises);
+            showToast("Evaluaciones del grupo reseteadas.");
+            showGroupResults();
+        }
+
+        elements.startBtn.addEventListener('click', () => { sound.playClick(); generateQuiz(); showScreen('question'); loadQuestion(); });
+        elements.nextBtn.addEventListener('click', handleNext);
+        elements.restartBtn.addEventListener('click', () => { 
+            sound.playClick(); 
+            scores = { divergent: 0, convergent: 0 };
+            currentQIndex = 0;
+            showScreen('start'); 
+        });
+        elements.showGroupBtn.addEventListener('click', () => { sound.playClick(); showGroupResults(); });
+        elements.backToIndividualBtn.addEventListener('click', () => { sound.playClick(); showScreen('result'); });
+        elements.resetGroupBtn.addEventListener('click', () => promptAdminAction(resetGroupPensamiento, {
+            title: 'Resetear Evaluaciones (Prisma)',
+            description: 'Introduce la clave de facilitador para borrar los resultados grupales de El Prisma del Pensamiento.'
+        }));
+
+        showScreen('start');
     }
 
     function initPlexus() {
