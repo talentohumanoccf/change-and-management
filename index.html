@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#080c14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Team Mood - Árbol de Emociones | Comfamiliar Risaralda</title>
+    
+    <!-- External Libraries & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuración de ambiente local -->
+    <script src="env.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #080c14;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --accent-sky: #38bdf8;
+            --accent-purple: #a78bfa;
+            --accent-pink: #ec4899;
+            --accent-emerald: #34d399;
+            --accent-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-radius: 1.25rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.25);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #a78bfa 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        input[type="text"], input[type="password"], textarea {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.65rem 1rem;
+            background-color: rgba(15, 23, 42, 0.95);
+            color: #f3f4f6;
+            transition: all 0.3s ease;
+            font-size: 16px; /* Evita zoom automático en iOS Safari */
+        }
+
+        @media (min-width: 640px) {
+            input[type="text"], textarea { font-size: 0.875rem; }
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-sky);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .assessment-screen {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-glow-card {
+            background: rgba(147, 51, 234, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.2);
+        }
+
+        /* Tree Placeholders & Touch Hitbox */
+        .tree-placeholder {
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            touch-action: manipulation;
+        }
+
+        /* Hitbox invisible ampliada para toques móviles precisos */
+        .tree-placeholder::after {
+            content: '';
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+        }
+
+        .tree-placeholder:hover, .tree-placeholder:active {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 30;
+            filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.85));
+        }
+
+        .avatar-occupied {
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.2); opacity: 0; }
+            80% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #plexus-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        #toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            left: 16px;
+            max-width: 420px;
+            margin: 0 auto;
+            z-index: 100;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(-90px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        @media (min-width: 640px) {
+            #toast { left: auto; right: 24px; top: 24px; }
+        }
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+
+        .mood-chip {
+            touch-action: manipulation;
+        }
+        .mood-chip.selected {
+            border-color: #38bdf8 !important;
+            background: rgba(56, 189, 248, 0.22) !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+            transform: translateY(-2px);
+        }
+
+        /* Zoom Container for Mobile/Desktop */
+        #tree-zoom-viewport {
+            touch-action: pinch-zoom;
+            transform-origin: center center;
+            transition: transform 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col justify-between">
+    <canvas id="plexus-bg"></canvas>
+    
+    <div id="toast" class="bg-slate-900/95 text-white border border-sky-500/40 backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+        <i id="toast-icon" class="fas fa-check-circle text-sky-400 text-lg flex-shrink-0"></i>
+        <span id="toast-message" class="text-xs sm:text-sm font-medium leading-tight">Notificación</span>
+    </div>
+    <!-- Top Responsive Header -->
+    <header class="w-full px-3 py-2.5 sm:px-6 sm:py-3 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 flex-shrink-0">
+                <i class="fas fa-tree text-sm sm:text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-orbitron text-base sm:text-xl font-bold tracking-wide text-white">Team Mood</h1>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/30 uppercase tracking-wider">30 Slots</span>
+                </div>
+                <p class="text-[10px] sm:text-xs text-slate-400 hidden xs:block">Árbol de Emociones • Comfamiliar Risaralda</p>
+            </div>
+        </div>
+
+        <!-- Connection Badge & Global Quick Actions -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5">
+            <div id="connection-badge" class="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+                <span id="connection-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span id="connection-text" class="text-slate-300 hidden sm:inline text-[11px]">Conectando...</span>
+            </div>
+
+            <div class="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+                <i class="fas fa-users text-sky-400 text-xs"></i>
+                <span class="text-slate-300 text-[11px]"><strong id="total-participants-badge" class="text-sky-400 font-bold">0</strong><span class="text-slate-500">/30</span></span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-800">
+                <button id="welcomeCoverBtn" title="Ver Portada de Bienvenida" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-home text-xs sm:text-sm"></i>
+                </button>
+                <button id="qrShareBtn" title="Compartir con Código QR para Móviles" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-qrcode text-xs sm:text-sm"></i>
+                </button>
+                <button id="openStatsBtn" title="Ver Estadísticas del Clima" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-purple-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-chart-pie text-xs sm:text-sm"></i>
+                </button>
+                <button id="exportTreeBtn" title="Exportar Árbol como Imagen (PNG)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-camera text-xs sm:text-sm"></i>
+                </button>
+                <button id="soundToggleBtn" title="Sonido" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-volume-up text-xs sm:text-sm"></i>
+                </button>
+                <button id="fullscreenBtn" title="Pantalla Completa" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                    <i class="fas fa-expand text-xs sm:text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Portada de Bienvenida (Encuentro de Líderes de Talento Humano) -->
+    <section id="welcome-cover" class="w-full max-w-5xl mx-auto px-4 py-6 sm:py-12 flex-1 flex flex-col items-center justify-center z-20">
+        <div class="glass-card w-full p-6 sm:p-10 md:p-12 border border-sky-500/30 shadow-2xl relative overflow-hidden text-center">
+            <!-- Decorative ambient glows -->
+            <div class="absolute -top-24 -left-24 w-64 h-64 bg-sky-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-pink-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Institutional Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sky-500/15 via-indigo-500/15 to-pink-500/15 border border-sky-400/30 text-sky-300 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-5 shadow-inner">
+                <i class="fas fa-sparkles text-amber-400"></i>
+                <span>Encuentro Intercajas • Líderes de Talento Humano</span>
+            </div>
+
+            <!-- Main Inspiring Title -->
+            <h1 class="font-orbitron text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight mb-4">
+                ¡Bienvenidos, Líderes que <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-pink-400">Transforman Vidas!</span>
+            </h1>
+
+            <!-- Warm Greeting Copy -->
+            <p class="text-sm sm:text-base md:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8">
+                Hoy nos conectamos quienes tenemos el propósito de cuidar, inspirar y potenciar el talento en las <strong class="text-white font-semibold">Cajas de Compensación Familiar</strong>. Antes de iniciar nuestra conversación estratégica, viviremos una experiencia interactiva en <strong class="text-sky-300 font-semibold">dos momentos</strong> para sintonizar nuestras emociones y descubrir cómo piensa nuestro equipo.
+            </p>
+
+            <!-- 2-Stage Experience Journey Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto mb-8 text-left">
+                <!-- Momento 1: Team Mood -->
+                <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/75 border border-sky-500/30 hover:border-sky-400/60 transition-all group relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-sky-500/25 flex-shrink-0">
+                            <i class="fas fa-tree"></i>
+                        </div>
+                        <div>
+                            <span class="inline-block text-[10px] font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20 mb-1.5">Momento 1 • Conexión Emocional</span>
+                            <h3 class="font-orbitron text-base sm:text-lg font-bold text-white mb-1">El Árbol de Emociones</h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                Reconoce cómo llegas hoy al encuentro, elige la emoción que te representa y ocupa tu lugar en nuestro árbol colectivo en vivo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Momento 2: El Prisma del Pensamiento -->
+                <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/75 border border-pink-500/30 hover:border-pink-400/60 transition-all group relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shadow-pink-500/25 flex-shrink-0">
+                            <i class="fas fa-gem"></i>
+                        </div>
+                        <div>
+                            <span class="inline-block text-[10px] font-bold uppercase tracking-wider text-pink-400 bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/20 mb-1.5">Momento 2 • Agilidad e Innovación</span>
+                            <h3 class="font-orbitron text-base sm:text-lg font-bold text-white mb-1">El Prisma del Pensamiento</h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                Pon a prueba tu mente entre acertijos de enfoque e ideas disruptivas para descubrir tu estilo cognitivo con retroalimentación IA.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primary & Secondary Call-To-Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+                <button id="btn-start-experience" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-pink-500 hover:from-sky-400 hover:via-indigo-400 hover:to-pink-400 text-white font-orbitron font-bold text-sm sm:text-base shadow-xl shadow-sky-500/25 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3">
+                    <span>Comenzar la Experiencia</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="btn-cover-qr" class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-sky-300 border border-slate-700/80 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-qrcode text-sky-400"></i>
+                    <span>Mostrar Código QR en Pantalla</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mobile Screen View Switcher Tabs (Only visible on screens < 1024px) -->
+    <div id="team-mood-mobile-tabs" class="hidden lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
+        <div class="flex items-center p-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl">
+            <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
+                <i class="fas fa-tree"></i> Ver Árbol (30)
+            </button>
+            <button id="tab-btn-form" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                <i class="fas fa-user-edit"></i> Mi Registro & Clima
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Workspace (Ejercicio 1: Team Mood) -->
+    <main id="team-mood-main" class="hidden w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
+        
+        <!-- Left Column: Controls & Participation -->
+        <aside id="aside-panel" class="w-full lg:w-[380px] flex flex-col gap-4 order-2 lg:order-1 hidden lg:flex">
+            
+            <!-- Registration Card -->
+            <div class="glass-card p-4 sm:p-5 space-y-3.5">
+                <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+                    <div>
+                        <h2 class="font-orbitron font-bold text-xs sm:text-sm text-white flex items-center gap-2">
+                            <i class="fas fa-user-check text-sky-400"></i> Tu Registro
+                        </h2>
+                        <p class="text-[11px] text-slate-400">Ubica tu estado en una rama del árbol</p>
+                    </div>
+                    <span class="text-[10px] font-mono bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-md border border-sky-500/30">Paso a paso</span>
+                </div>
+
+                <div>
+                    <label for="participant-name" class="block text-xs font-semibold text-slate-300 mb-1">
+                        1. Tu Nombre o Alias:
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="participant-name" placeholder="Ej: Diana Valencia..." class="w-full py-2 px-3 pl-8 text-xs sm:text-sm">
+                        <i class="fas fa-user absolute left-2.5 top-3 text-slate-500 text-xs"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">
+                        2. ¿Cómo te sientes hoy?:
+                    </label>
+                    <div id="mood-palette" class="grid grid-cols-3 gap-1.5 sm:gap-2"></div>
+                </div>
+
+                <!-- Call to action Step 3 -->
+                <div class="bg-sky-500/10 border border-sky-500/30 p-2.5 rounded-xl text-xs text-sky-300 flex items-start gap-2">
+                    <i class="fas fa-hand-pointer text-base text-sky-400 mt-0.5 flex-shrink-0 animate-bounce"></i>
+                    <div class="flex-1">
+                        <strong class="font-bold block">3. Toca una rama vacía (+)</strong>
+                        <p class="text-[10px] sm:text-[11px] text-sky-300/80 mt-0.5">Toca cualquiera de los 30 círculos vacíos del árbol para colgar tu avatar.</p>
+                        <button id="btn-goto-tree-mobile" class="lg:hidden mt-2 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-md">
+                            <span>Ir al Árbol a elegir mi rama</span>
+                            <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Estado del Usuario Actual (Confirmación Fija + Paso al Ejercicio 2 controlado por Facilitador) -->
+                <div id="my-avatar-status" class="hidden bg-slate-900/90 border border-emerald-500/30 p-3 rounded-xl space-y-2.5 shadow-lg shadow-emerald-500/5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div id="my-avatar-icon-box" class="w-8 h-8 rounded-full bg-slate-950 border border-sky-400 flex items-center justify-center text-sm flex-shrink-0">
+                                <i class="fas fa-smile text-amber-400"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-white truncate" id="my-avatar-name">Mi Avatar</p>
+                                <p class="text-[10px] text-slate-400 truncate" id="my-avatar-slot">Rama: #</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1.5 flex-shrink-0">
+                            <i class="fas fa-check-circle text-xs"></i> Registrado
+                        </span>
+                    </div>
+                    <div id="waiting-facilitator-msg" class="bg-slate-950/80 border border-sky-500/20 rounded-xl p-2.5 text-[11px] text-slate-300 flex items-center gap-2.5">
+                        <i class="fas fa-lock text-sky-400 animate-pulse"></i>
+                        <span>Observa cómo crece el árbol del equipo. El facilitador abrirá el <strong>Ejercicio 2</strong> en breve.</span>
+                    </div>
+                    <button id="btn-continue-prisma" class="hidden w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+                        <span>Continuar al Ejercicio 2: Prisma del Pensamiento</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Team Emotional Pulse Card -->
+            <div class="glass-card p-4 sm:p-5 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-orbitron font-bold text-xs uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                        <i class="fas fa-heartbeat text-rose-400"></i> Clima en Vivo
+                    </h3>
+                    <button id="view-stats-link" class="text-[11px] text-sky-400 hover:underline">Ver gráfica</button>
+                </div>
+
+                <div class="w-full bg-slate-900 rounded-full h-3 flex overflow-hidden border border-slate-800 p-0.5" id="mood-distribution-bar">
+                    <div class="h-full bg-slate-800 w-full text-center text-[8px] text-slate-500">Esperando participantes...</div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1 text-[11px]" id="mood-summary-badges"></div>
+            </div>
+
+            <!-- Facilitator Control Card -->
+            <div class="glass-card p-3.5 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                            <i class="fas fa-sliders-h text-purple-400"></i> Zona Facilitador
+                        </h4>
+                        <p class="text-[10px] text-slate-500">Control de sesión en vivo</p>
+                    </div>
+                    <button id="reset-tree-btn" class="bg-red-500/15 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold py-1.5 px-3 rounded-xl transition text-xs flex items-center gap-1.5">
+                        <i class="fas fa-trash-alt text-[10px]"></i> Reset (Admin)
+                    </button>
+                </div>
+                <button id="launch-prisma-btn" class="w-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 hover:text-white font-semibold py-2 px-3 rounded-xl transition text-xs flex items-center justify-center gap-2">
+                    <i class="fas fa-broadcast-tower text-pink-400"></i>
+                    <span>Enviar Grupo al Ejercicio 2 (Prisma)</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Right Column: Interactive 30-Participant Emotional Tree -->
+        <section id="tree-section" class="flex-1 glass-card p-2 sm:p-5 flex flex-col items-center justify-between relative overflow-hidden min-h-[520px] lg:min-h-[720px] order-1 lg:order-2">
+            
+            <!-- Floating Zoom Controls for Mobile & Precision Navigation -->
+            <div class="absolute top-3 right-3 z-30 flex flex-col sm:flex-row items-center gap-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl shadow-xl backdrop-blur-md">
+                <button id="zoom-in-btn" title="Acercar Árbol (+)" class="w-7 h-7 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800 transition flex items-center justify-center font-bold text-sm">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button id="zoom-reset-btn" title="Restablecer Vista (100%)" class="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center justify-center text-[10px] font-mono font-bold">
+                    1x
+                </button>
+                <button id="zoom-out-btn" title="Alejar Árbol (-)" class="w-7 h-7 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800 transition flex items-center justify-center font-bold text-sm">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+
+            <div id="tree-export-wrapper" class="w-full h-full relative flex flex-col items-center justify-center flex-1">
+                
+                <div class="text-center z-20 mb-1 pointer-events-none px-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-[9px] sm:text-[11px] font-bold uppercase tracking-widest">
+                        Sesión Colectiva en Tiempo Real
+                    </span>
+                    <h2 class="font-orbitron text-base sm:text-2xl font-black text-white mt-1">
+                        Árbol de Emociones del Equipo
+                    </h2>
+                    <p class="text-slate-400 text-[11px] sm:text-xs">
+                        Capacidad: <strong class="text-sky-400">30 integrantes</strong> • Toca un círculo vacío (+) para colgarte
+                    </p>
+                </div>
+
+                <!-- Tree Viewport with Pinch/Button Zooming -->
+                <div id="tree-zoom-viewport" class="w-full max-w-[920px] aspect-[1/1] relative flex items-center justify-center flex-1 overflow-visible select-none transition-transform duration-200">
+                    
+                    <svg viewBox="0 0 900 900" preserveAspectRatio="xMidYMid meet" class="w-full h-full absolute top-0 left-0 pointer-events-none">
+                        <defs>
+                            <linearGradient id="trunkGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" stop-color="#1c140e" />
+                                <stop offset="35%" stop-color="#3b2b20" />
+                                <stop offset="70%" stop-color="#5a4232" />
+                                <stop offset="100%" stop-color="#805d46" />
+                            </linearGradient>
+
+                            <radialGradient id="foliageGlowCenter" cx="50%" cy="40%" r="50%">
+                                <stop offset="0%" stop-color="rgba(56, 189, 248, 0.22)" />
+                                <stop offset="60%" stop-color="rgba(167, 139, 250, 0.12)" />
+                                <stop offset="100%" stop-color="rgba(56, 189, 248, 0)" />
+                            </radialGradient>
+
+                            <radialGradient id="foliageGlowLeft" cx="30%" cy="40%" r="40%">
+                                <stop offset="0%" stop-color="rgba(52, 211, 153, 0.18)" />
+                                <stop offset="80%" stop-color="rgba(52, 211, 153, 0)" />
+                            </radialGradient>
+
+                            <radialGradient id="foliageGlowRight" cx="70%" cy="40%" r="40%">
+                                <stop offset="0%" stop-color="rgba(236, 72, 153, 0.18)" />
+                                <stop offset="80%" stop-color="rgba(236, 72, 153, 0)" />
+                            </radialGradient>
+                            
+                            <radialGradient id="foliageGlowTop" cx="50%" cy="20%" r="35%">
+                                <stop offset="0%" stop-color="rgba(245, 158, 11, 0.18)" />
+                                <stop offset="80%" stop-color="rgba(245, 158, 11, 0)" />
+                            </radialGradient>
+                        </defs>
+
+                        <!-- Canopy Ambient Glows -->
+                        <circle cx="450" cy="380" r="380" fill="url(#foliageGlowCenter)" />
+                        <circle cx="280" cy="360" r="260" fill="url(#foliageGlowLeft)" />
+                        <circle cx="620" cy="360" r="260" fill="url(#foliageGlowRight)" />
+                        <circle cx="450" cy="220" r="220" fill="url(#foliageGlowTop)" />
+
+                        <!-- Aesthetic Foliage Cloud Rings -->
+                        <g opacity="0.22" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1.5" fill="none" stroke-dasharray="4 8">
+                            <circle cx="450" cy="180" r="140" />
+                            <circle cx="280" cy="300" r="160" />
+                            <circle cx="620" cy="300" r="160" />
+                            <circle cx="450" cy="380" r="240" />
+                        </g>
+
+                        <!-- Main Trunk -->
+                        <path d="M450 900 Q 450 680 450 540" stroke="url(#trunkGradient)" stroke-width="38" fill="none" stroke-linecap="round" />
+                        
+                        <!-- Base Branches -->
+                        <path d="M450 590 Q 340 580 200 620" stroke="url(#trunkGradient)" stroke-width="18" fill="none" stroke-linecap="round" />
+                        <path d="M450 590 Q 560 580 700 620" stroke="url(#trunkGradient)" stroke-width="18" fill="none" stroke-linecap="round" />
+                        
+                        <!-- Mid-Low Branches -->
+                        <path d="M450 540 Q 300 480 180 430" stroke="url(#trunkGradient)" stroke-width="24" fill="none" stroke-linecap="round" />
+                        <path d="M450 540 Q 600 480 720 430" stroke="url(#trunkGradient)" stroke-width="24" fill="none" stroke-linecap="round" />
+
+                        <!-- Mid Branches -->
+                        <path d="M450 520 Q 360 410 230 330 Q 140 270 120 220" stroke="url(#trunkGradient)" stroke-width="22" fill="none" stroke-linecap="round" />
+                        <path d="M450 520 Q 540 410 670 330 Q 760 270 780 220" stroke="url(#trunkGradient)" stroke-width="22" fill="none" stroke-linecap="round" />
+
+                        <!-- High Central Branch & Crown -->
+                        <path d="M450 520 Q 450 340 450 180 Q 450 120 450 70" stroke="url(#trunkGradient)" stroke-width="24" fill="none" stroke-linecap="round" />
+                        <path d="M450 350 Q 350 250 260 140" stroke="url(#trunkGradient)" stroke-width="16" fill="none" stroke-linecap="round" />
+                        <path d="M450 350 Q 550 250 640 140" stroke="url(#trunkGradient)" stroke-width="16" fill="none" stroke-linecap="round" />
+
+                        <path d="M350 250 Q 380 160 350 80" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+                        <path d="M550 250 Q 520 160 550 80" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+                        <path d="M230 330 Q 260 230 380 180" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+                        <path d="M670 330 Q 640 230 520 180" stroke="url(#trunkGradient)" stroke-width="12" fill="none" stroke-linecap="round" />
+
+                        <path d="M450 900 Q 380 880 320 900" stroke="#1c140e" stroke-width="14" fill="none" stroke-linecap="round" />
+                        <path d="M450 900 Q 520 880 580 900" stroke="#1c140e" stroke-width="14" fill="none" stroke-linecap="round" />
+                    </svg>
+
+                    <!-- 30 Interactive Slots Layer -->
+                    <div id="tree-placeholders" class="w-full h-full absolute top-0 left-0 pointer-events-auto"></div>
+                </div>
+
+                <!-- Legend of Mood Colors -->
+                <div class="flex items-center justify-center gap-2 sm:gap-5 flex-wrap mt-1 pt-2 border-t border-slate-800/60 text-[10px] sm:text-xs text-slate-400 z-20">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Feliz</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Motivado</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Neutro</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Triste</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Retado</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Curioso</span>
+                </div>
+
+                <!-- Banner de Espera / Avance al Ejercicio 2 tras registrarse en el árbol -->
+                <div id="tree-waiting-banner" class="hidden w-full max-w-md mx-auto mt-3 z-30">
+                    <div class="w-full bg-slate-900/90 border border-sky-500/30 text-slate-200 py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-lg">
+                        <i class="fas fa-check-circle text-emerald-400"></i>
+                        <span>¡Tu emoción ya está en el árbol! Espera la señal del facilitador para iniciar el Ejercicio 2.</span>
+                    </div>
+                </div>
+                <div id="tree-continue-banner" class="hidden w-full max-w-md mx-auto mt-3 z-30">
+                    <button id="btn-tree-continue-prisma" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold py-2.5 px-5 rounded-2xl text-xs sm:text-sm shadow-xl shadow-purple-500/30 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02] border border-white/20">
+                        <i class="fas fa-unlock text-emerald-300"></i>
+                        <span>¡Ejercicio 2 Habilitado! Ir al Prisma del Pensamiento</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Ejercicio 2: El Prisma del Pensamiento (Integrado en la misma página sin recarga ni 404) -->
+    <section id="prisma-main" class="hidden w-full max-w-3xl mx-auto p-4 sm:p-8 flex-1 flex flex-col items-center justify-center z-10">
+        <div class="w-full flex items-center justify-between mb-4">
+            <button id="btn-back-to-mood" class="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-sky-400 hover:border-sky-500/50 transition text-xs font-semibold flex items-center gap-2 shadow-lg">
+                <i class="fas fa-arrow-left text-sky-400"></i>
+                <i class="fas fa-tree text-emerald-400"></i>
+                <span>Volver al Ejercicio 1 (Árbol Team Mood)</span>
+            </button>
+            <span class="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold uppercase tracking-wider">
+                Ejercicio 2 de 2
+            </span>
+        </div>
+
+        <div id="quiz-container" class="w-full">
+            <div class="glass-card p-6 md:p-10">
+                <div id="start-screen" class="assessment-screen text-center">
+                    <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider">Ejercicio 2 • Actividad Interactiva</span>
+                    <div id="participant-greeting-badge" class="hidden mt-4 mb-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/15 border border-sky-400/40 text-sky-300 text-sm font-semibold">
+                        <i class="fas fa-user-check text-sky-400"></i>
+                        <span id="participant-greeting-text">¡Hola!</span>
+                    </div>
+                    <h1 class="font-orbitron text-2xl sm:text-3xl font-bold gradient-text mt-3 mb-3">El Prisma del Pensamiento</h1>
+                    <p class="text-slate-400 italic my-4 text-sm sm:text-base">"Las personas que están lo suficientemente locas como para pensar que pueden cambiar el mundo, son las que lo hacen."</p>
+                    <p class="text-slate-300 mb-8 leading-relaxed text-justify text-sm sm:text-base">Este ejercicio revela tu estilo dominante de pensamiento. ¿Generas un universo de alternativas ilimitadas o hallas con precisión quirúrgica la única solución brillante? Descúbrelo.</p>
+                    <button id="start-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 px-10 rounded-full text-base sm:text-lg shadow-lg shadow-purple-500/30 hover:scale-105 transition-all">Comenzar el Viaje</button>
+                </div>
+
+                <div id="question-screen" class="assessment-screen">
+                    <div class="flex justify-between items-center mb-4">
+                        <div id="progress-text" class="text-sm font-semibold text-slate-400"></div>
+                        <div id="timer" class="font-orbitron text-2xl text-sky-400 ml-4 font-bold"></div>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 mb-6 p-0.5 border border-slate-700">
+                        <div id="progress-bar" class="bg-gradient-to-r from-sky-400 to-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <h2 id="question-title" class="text-xl font-bold text-white mb-2 font-orbitron"></h2>
+                    <p id="question-text" class="text-slate-300 mb-6 leading-relaxed text-base"></p>
+                    <div id="answer-area"></div>
+                    <div class="mt-8 flex justify-end">
+                        <button id="next-q-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-8 rounded-xl shadow-lg shadow-sky-500/30 transition-all flex items-center gap-2">
+                            <span>Siguiente</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result-screen" class="assessment-screen text-center">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-4 font-orbitron gradient-text">Tu Perfil de Pensamiento</h2>
+                    
+                    <div id="result-viz" class="w-full h-20 my-8 flex items-center justify-center space-x-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                        <div class="text-right w-28"><div class="font-bold text-pink-400 text-sm">Divergente</div><div class="text-xs text-slate-400">El Innovador</div></div>
+                        <div class="w-full h-4 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700">
+                            <div id="result-bar" class="absolute top-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500" style="left: 50%; width: 0%;"></div>
+                            <div class="absolute top-0 left-1/2 w-0.5 h-full bg-slate-400"></div>
+                        </div>
+                        <div class="text-left w-28"><div class="font-bold text-sky-400 text-sm">Convergente</div><div class="text-xs text-slate-400">El Solucionador</div></div>
+                    </div>
+
+                    <h3 id="result-title" class="text-2xl font-semibold mb-3 text-sky-300 font-orbitron"></h3>
+                    <p id="result-description" class="text-slate-300 mb-6 max-w-md mx-auto text-sm leading-relaxed"></p>
+
+                    <div id="ai-pensamiento-container" class="my-6 hidden">
+                        <div class="ai-glow-card p-5 rounded-2xl text-left space-y-2">
+                            <div class="flex items-center gap-2 text-purple-300 font-semibold text-xs font-orbitron uppercase">
+                                <i class="fas fa-sparkles text-pink-400"></i> Impulso de Innovación (Coaching IA)
+                            </div>
+                            <p id="ai-pensamiento-text" class="text-slate-200 text-xs leading-relaxed italic"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        <button id="restart-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-full text-sm transition-all">Intentar de Nuevo</button>
+                        <button id="show-group-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-6 rounded-full text-sm shadow-lg shadow-purple-500/30 transition-all">Ver Perfil del Grupo</button>
+                    </div>
+                </div>
+
+                <div id="group-result-screen" class="assessment-screen text-center">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-2 font-orbitron gradient-text">Perfil Colectivo del Grupo</h2>
+                    <p class="mb-4 text-slate-400 text-sm">Total de Participantes Registrados: <span id="group-total-participants" class="font-bold text-sky-400">0</span></p>
+                    
+                    <div id="group-profile-pie-chart-container" class="relative mx-auto" style="height:280px; max-width:380px;">
+                        <canvas id="group-profile-pie-chart"></canvas>
+                    </div>
+                    <div id="group-result-description" class="text-slate-300 my-6 max-w-md mx-auto text-sm"></div>
+                    
+                    <div class="flex justify-center flex-wrap gap-4 mt-6">
+                        <button id="back-to-individual-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all">Volver a Mi Perfil</button>
+                        <button id="reset-group-pensamiento-btn" class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all flex items-center gap-2">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Resetear Grupo (Admin)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal: Compartir / Código QR para Conectar Celulares -->
+    <div id="qr-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 hidden opacity-0 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-slate-900 border border-sky-500/30 w-full max-w-sm p-6 rounded-3xl shadow-2xl space-y-4 text-center relative">
+            <button id="close-qr-btn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+            <div>
+                <span class="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold uppercase tracking-wider">Unirse al Árbol</span>
+                <h3 class="text-xl font-bold font-orbitron text-white mt-2">Escanea con tu Móvil</h3>
+                <p class="text-slate-400 text-xs mt-1">Apunta la cámara de tu celular para registrar tu estado de ánimo</p>
+            </div>
+
+            <!-- Contenedor del Código QR generado dinámicamente -->
+            <div class="bg-white p-3.5 rounded-2xl w-48 h-48 mx-auto flex items-center justify-center shadow-lg shadow-sky-500/20">
+                <img id="qr-image" src="" alt="Código QR de Conexión" class="w-full h-full object-contain">
+            </div>
+
+            <div class="space-y-1">
+                <p class="text-[11px] text-slate-400 break-all font-mono bg-slate-950 p-2 rounded-xl border border-slate-800" id="qr-url-text"></p>
+                <button id="copy-url-btn" class="text-xs text-sky-400 hover:underline flex items-center justify-center gap-1.5 mx-auto pt-1">
+                    <i class="far fa-copy"></i> Copiar enlace de la sesión
+                </button>
+            </div>
+
+            <button id="btn-close-qr-footer" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2.5 rounded-xl transition">Listo</button>
+        </div>
+    </div>
+
+    <!-- Modal: Estadísticas y Diagnóstico -->
+    <div id="stats-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 hidden opacity-0 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-slate-900 border border-purple-500/30 w-full max-w-xl p-5 sm:p-8 rounded-3xl shadow-2xl space-y-4 sm:space-y-6 relative">
+            <button id="close-stats-btn" class="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center">
+                <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider">Análisis Colectivo</span>
+                <h3 class="text-xl sm:text-2xl font-bold font-orbitron text-white mt-1">Diagnóstico de Clima de Equipo</h3>
+                <p class="text-slate-400 text-xs mt-0.5">Consolidado de las emociones registradas en el árbol</p>
+            </div>
+            <div class="relative w-full h-56 sm:h-64 mx-auto">
+                <canvas id="stats-chart"></canvas>
+            </div>
+            <div class="bg-purple-950/20 border border-purple-500/30 p-3.5 sm:p-4 rounded-2xl flex items-start gap-3 text-xs text-purple-200">
+                <i class="fas fa-sparkles text-pink-400 text-base mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <strong class="font-bold text-white block mb-0.5">Lectura Facilitadora:</strong>
+                    <p id="stats-insight-text" class="leading-relaxed text-slate-300">Esperando participantes para formular diagnóstico.</p>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button id="btn-close-stats-footer" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2 px-5 rounded-xl transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Password de Administración (Reset Tree) -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center z-50 hidden opacity-0 transition-all duration-300 p-4">
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-sky-500/30 space-y-4">
+            <div class="w-12 h-12 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 id="password-modal-title" class="font-bold text-lg sm:text-xl text-white font-orbitron">Acción Protegida</h3>
+            <p id="password-modal-desc" class="text-slate-400 text-xs">Introduce la clave de facilitador para continuar.</p>
+            <div>
+                <input type="password" id="password-input" class="w-full text-center tracking-widest text-lg font-mono mb-1" placeholder="********">
+                <p id="password-error" class="text-red-400 text-xs font-semibold h-4"></p>
+            </div>
+            <div class="flex gap-3 pt-1">
+                <button id="password-cancel" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-xl text-xs transition">Cancelar</button>
+                <button id="password-submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-sky-500/30 text-xs transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Participante en Rama -->
+    <div id="participant-detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 hidden opacity-0 transition-all duration-200 p-4">
+        <div class="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-xs w-full text-center space-y-3 shadow-2xl relative">
+            <button id="close-participant-modal" class="absolute top-3 right-3 text-slate-500 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="detail-avatar-icon" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-2xl shadow-lg"></div>
+            <div>
+                <h4 id="detail-participant-name" class="font-bold text-base text-white">Nombre</h4>
+            </div>
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300">
+                <p>Estado: <strong id="detail-mood-name" class="capitalize">Feliz</strong></p>
+                <p class="text-[10px] text-slate-500 mt-0.5" id="detail-slot-number">Rama #1</p>
+            </div>
+            <button id="btn-close-detail" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2 rounded-xl transition">Volver al Árbol</button>
+        </div>
+    </div>
+    <!-- Script Module: Multi-Device Engine (Part A) -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    class SoundFX {
+        constructor() {
+            this.ctx = null;
+            this.muted = false;
+        }
+
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        }
+
+        playClick() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.05);
+        }
+
+        playChime() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                }, i * 65);
+            });
+        }
+
+        playWhoosh() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.15);
+        }
+    }
+
+    const sound = new SoundFX();
+
+    function showToast(message, icon = 'fa-check-circle') {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toast-message');
+        const iconEl = document.getElementById('toast-icon');
+        msgEl.textContent = message;
+        iconEl.className = `fas ${icon} text-sky-400 text-lg flex-shrink-0`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    const MOODS = {
+        feliz: { id: 'feliz', label: 'Feliz', icon: 'fa-smile', color: 'text-amber-400', bgColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', description: 'Optimista' },
+        motivado: { id: 'motivado', label: 'Motivado', icon: 'fa-star', color: 'text-emerald-400', bgColor: 'rgba(52, 211, 153, 0.2)', borderColor: '#34d399', description: 'Con energía' },
+        neutro: { id: 'neutro', label: 'Neutro', icon: 'fa-meh', color: 'text-slate-400', bgColor: 'rgba(148, 163, 184, 0.2)', borderColor: '#94a3b8', description: 'En pausa' },
+        triste: { id: 'triste', label: 'Triste', icon: 'fa-frown', color: 'text-sky-400', bgColor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38bdf8', description: 'Baja energía' },
+        retado: { id: 'retado', label: 'Retado', icon: 'fa-fire', color: 'text-rose-500', bgColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e', description: 'En desafío' },
+        curioso: { id: 'curioso', label: 'Curioso', icon: 'fa-lightbulb', color: 'text-purple-400', bgColor: 'rgba(192, 132, 252, 0.2)', borderColor: '#c084fc', description: 'Descubriendo' }
+    };
+
+    const TREE_POSITIONS_30 = [
+        { top: '8%', left: '25%' }, { top: '6%', left: '38%' }, { top: '5%', left: '50%' }, { top: '6%', left: '62%' }, { top: '8%', left: '75%' },
+        { top: '17%', left: '16%' }, { top: '16%', left: '28%' }, { top: '15%', left: '40%' }, { top: '14%', left: '50%' }, { top: '15%', left: '60%' }, { top: '16%', left: '72%' }, { top: '17%', left: '84%' },
+        { top: '28%', left: '12%' }, { top: '27%', left: '24%' }, { top: '26%', left: '37%' }, { top: '25%', left: '50%' }, { top: '26%', left: '63%' }, { top: '27%', left: '76%' }, { top: '28%', left: '88%' },
+        { top: '41%', left: '15%' }, { top: '39%', left: '27%' }, { top: '37%', left: '41%' }, { top: '37%', left: '59%' }, { top: '39%', left: '73%' }, { top: '41%', left: '85%' },
+        { top: '55%', left: '20%' }, { top: '53%', left: '34%' }, { top: '51%', left: '50%' }, { top: '53%', left: '66%' }, { top: '55%', left: '80%' }
+    ];
+
+    let db = null, auth = null, userId = null, appId = 'sesion-comfamiliar-team-mood-30', isConnected = false;
+    let selectedMood = null, participantsState = {}, statsChartInstance = null;
+    let currentZoom = 1.0;
+    const sessionLoadedAt = Date.now();
+
+    let prismaInitialized = false;
+    let isPrismaUnlocked = false;
+
+    async function generateAIAnalysis(promptText) {
+        const defaultApiKey = atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
+        const apiKey = window.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || defaultApiKey;
+        if (!apiKey) return null;
+
+        const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        for (const model of models) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (resultText) return resultText;
+                }
+            } catch (err) {
+                console.warn(`Attempt with ${model} failed:`, err);
+            }
+        }
+        return null;
+    }
+
+    function getCurrentParticipantContext() {
+        const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+        const nameInput = document.getElementById('participant-name');
+        const name = ((mySlotEntry && mySlotEntry[1]?.name) || nameInput?.value.trim() || localStorage.getItem('intercajas_participant_name') || '').trim();
+        const mood = ((mySlotEntry && mySlotEntry[1]?.mood) || selectedMood || localStorage.getItem('intercajas_participant_mood') || '').trim();
+        if (name) localStorage.setItem('intercajas_participant_name', name);
+        if (mood) localStorage.setItem('intercajas_participant_mood', mood);
+        return { name, mood };
+    }
+
+    function navigateToPrisma() {
+        sound.playChime();
+        const { name } = getCurrentParticipantContext();
+
+        const welcomeCover = document.getElementById('welcome-cover');
+        const teamMoodMain = document.getElementById('team-mood-main');
+        const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
+        const prismaMain = document.getElementById('prisma-main');
+
+        if (welcomeCover) welcomeCover.classList.add('hidden');
+        if (teamMoodMain) teamMoodMain.classList.add('hidden');
+        if (teamMoodTabs) teamMoodTabs.classList.add('hidden');
+        if (prismaMain) prismaMain.classList.remove('hidden');
+
+        if (!prismaInitialized) {
+            setupPensamientoAssessment();
+            prismaInitialized = true;
+        }
+
+        const greetingBadge = document.getElementById('participant-greeting-badge');
+        const greetingText = document.getElementById('participant-greeting-text');
+        if (name && greetingBadge && greetingText) {
+            greetingBadge.classList.remove('hidden');
+            greetingText.textContent = `¡Hola, ${name}! Tu registro está conectado`;
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navigateToTeamMood() {
+        sound.playClick();
+        const welcomeCover = document.getElementById('welcome-cover');
+        const teamMoodMain = document.getElementById('team-mood-main');
+        const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
+        const prismaMain = document.getElementById('prisma-main');
+
+        if (welcomeCover) welcomeCover.classList.add('hidden');
+        if (prismaMain) prismaMain.classList.add('hidden');
+        if (teamMoodMain) teamMoodMain.classList.remove('hidden');
+        if (teamMoodTabs) teamMoodTabs.classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navigateToWelcomeCover() {
+        sound.playClick();
+        const welcomeCover = document.getElementById('welcome-cover');
+        const teamMoodMain = document.getElementById('team-mood-main');
+        const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
+        const prismaMain = document.getElementById('prisma-main');
+
+        if (teamMoodMain) teamMoodMain.classList.add('hidden');
+        if (teamMoodTabs) teamMoodTabs.classList.add('hidden');
+        if (prismaMain) prismaMain.classList.add('hidden');
+        if (welcomeCover) welcomeCover.classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.onload = async () => {
+        const defaultApiKey = window.GEMINI_API_KEY || atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
+        if (!localStorage.getItem('gemini_api_key') && defaultApiKey) {
+            localStorage.setItem('gemini_api_key', defaultApiKey);
+        }
+
+        setupMoodPalette();
+        renderTreePlaceholders();
+        setupControls();
+        setupMobileTabs();
+        setupZoomControls();
+        initPlexus();
+
+        try {
+            await initFirebase();
+            updateConnectionStatus(true);
+        } catch (err) {
+            console.warn("Modo local offline activado:", err.message);
+            updateConnectionStatus(false);
+            initOfflineStorage();
+        }
+
+        setupPensamientoAssessment();
+        prismaInitialized = true;
+        updateMoodAnalytics();
+    };
+
+    function updateConnectionStatus(connected) {
+        isConnected = connected;
+        const dot = document.getElementById('connection-dot');
+        const text = document.getElementById('connection-text');
+        if (connected) {
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+            text.textContent = 'En vivo (Sincronizado)';
+        } else {
+            dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+            text.textContent = 'Modo Local (Offline)';
+        }
+    }
+
+    async function initFirebase() {
+        const DEFAULT_CONFIG = {
+            apiKey: "AIzaSyCHBOA0tixmSnoxABwwVWoxrXsBljvomNA",
+            authDomain: "mentalidad-7752e.firebaseapp.com",
+            projectId: "mentalidad-7752e",
+            storageBucket: "mentalidad-7752e.firebasestorage.app",
+            messagingSenderId: "485164590441",
+            appId: "1:485164590441:web:0161a806a16577977ac9f8",
+            measurementId: "G-2SC4L6MQ56"
+        };
+        let config = DEFAULT_CONFIG;
+        if (typeof __firebase_config !== 'undefined') {
+            try { config = JSON.parse(__firebase_config); } catch(e) {}
+        } else if (window.__firebase_config) {
+            try { config = JSON.parse(window.__firebase_config); } catch(e) {}
+        }
+
+        const app = initializeApp(config);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        appId = typeof __app_id !== 'undefined' ? __app_id : (window.__app_id || 'sesion-comfamiliar-team-mood-30');
+
+        await new Promise((resolve, reject) => {
+            const unsub = onAuthStateChanged(auth, user => {
+                unsub();
+                if (user) { userId = user.uid; resolve(user); }
+                else { signInAnonymously(auth).then(res => { userId = res.user.uid; resolve(res.user); }).catch(reject); }
+            }, reject);
+        });
+
+        const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+        onSnapshot(collection(db, collectionPath), (snapshot) => {
+            participantsState = {};
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.index !== undefined) participantsState[data.index] = data;
+            });
+            renderOccupiedSlots();
+            updateMoodAnalytics();
+            checkUserCurrentAvatar();
+        });
+
+        const routingDocRef = doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing');
+        onSnapshot(routingDocRef, (docSnap) => {
+            if (!docSnap.exists()) return;
+            const data = docSnap.data();
+            const isRecentSession = data.launchedAt && (Date.now() - data.launchedAt < 30 * 60 * 1000);
+            const isJustLaunched = data.launchedAt && data.launchedAt > (sessionLoadedAt - 4000);
+
+            if (data.activeActivity === 'prisma' && isRecentSession) {
+                isPrismaUnlocked = true;
+                checkUserCurrentAvatar();
+                if (isJustLaunched) {
+                    if (data.facilitatorId === userId) {
+                        showToast("¡Grupo enviado en vivo al Ejercicio 2 (Prisma)!", "fa-broadcast-tower");
+                    } else {
+                        showToast("¡El facilitador inició el Ejercicio 2! Abriendo Prisma del Pensamiento...", "fa-rocket");
+                        setTimeout(() => navigateToPrisma(), 1200);
+                    }
+                }
+            } else if (data.activeActivity === 'team-mood') {
+                isPrismaUnlocked = false;
+                checkUserCurrentAvatar();
+                if (isJustLaunched) {
+                    navigateToTeamMood();
+                }
+            }
+        });
+    }
+
+    function initOfflineStorage() {
+        userId = localStorage.getItem('team_mood_local_uid') || ('local-' + Math.random().toString(36).substr(2, 9));
+        localStorage.setItem('team_mood_local_uid', userId);
+        const saved = localStorage.getItem(`team_mood_state_${appId}`);
+        if (saved) {
+            try { participantsState = JSON.parse(saved); } catch(e) { participantsState = {}; }
+        }
+        renderOccupiedSlots();
+        updateMoodAnalytics();
+        checkUserCurrentAvatar();
+    }
+
+    function saveOfflineState() {
+        localStorage.setItem(`team_mood_state_${appId}`, JSON.stringify(participantsState));
+        renderOccupiedSlots();
+        updateMoodAnalytics();
+        checkUserCurrentAvatar();
+    }
+    // --- Mobile Tabs Switcher ---
+    function setupMobileTabs() {
+        const tabTree = document.getElementById('tab-btn-tree');
+        const tabForm = document.getElementById('tab-btn-form');
+        const treeSection = document.getElementById('tree-section');
+        const asidePanel = document.getElementById('aside-panel');
+        const btnGotoTree = document.getElementById('btn-goto-tree-mobile');
+
+        function showTreeTab() {
+            sound.playClick();
+            tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
+            tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+            treeSection.classList.remove('hidden');
+            asidePanel.classList.add('hidden');
+        }
+
+        function showFormTab() {
+            sound.playClick();
+            tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
+            tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+            asidePanel.classList.remove('hidden');
+            treeSection.classList.add('hidden');
+        }
+
+        tabTree.addEventListener('click', showTreeTab);
+        tabForm.addEventListener('click', showFormTab);
+        if (btnGotoTree) btnGotoTree.addEventListener('click', showTreeTab);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                treeSection.classList.remove('hidden');
+                asidePanel.classList.remove('hidden');
+            } else {
+                if (tabTree.classList.contains('text-white')) {
+                    treeSection.classList.remove('hidden');
+                    asidePanel.classList.add('hidden');
+                } else {
+                    asidePanel.classList.remove('hidden');
+                    treeSection.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    // --- Zoom & Pan Engine for Mobile/Desktop ---
+    function setupZoomControls() {
+        const viewport = document.getElementById('tree-zoom-viewport');
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const zoomResetBtn = document.getElementById('zoom-reset-btn');
+
+        function applyZoom(newZoom) {
+            currentZoom = Math.min(Math.max(newZoom, 0.75), 2.2);
+            viewport.style.transform = `scale(${currentZoom})`;
+            zoomResetBtn.textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        zoomInBtn.addEventListener('click', () => {
+            sound.playClick();
+            applyZoom(currentZoom + 0.25);
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            sound.playClick();
+            applyZoom(currentZoom - 0.25);
+        });
+
+        zoomResetBtn.addEventListener('click', () => {
+            sound.playClick();
+            applyZoom(1.0);
+        });
+    }
+
+    function setupMoodPalette() {
+        const container = document.getElementById('mood-palette');
+        container.innerHTML = Object.entries(MOODS).map(([key, mood]) => `
+            <div class="mood-chip p-2 bg-slate-950/90 border border-slate-800 rounded-xl text-center cursor-pointer hover:border-sky-500/50 transition-all flex flex-col items-center justify-center group select-none" data-mood="${key}">
+                <i class="fas ${mood.icon} ${mood.color} text-lg sm:text-xl group-hover:scale-110 transition-transform"></i>
+                <span class="text-[10px] sm:text-[11px] font-bold text-slate-200 mt-1">${mood.label}</span>
+                <span class="text-[8px] text-slate-500 hidden sm:block">${mood.description}</span>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.mood-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                sound.playClick();
+                container.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedMood = chip.dataset.mood;
+            });
+        });
+    }
+
+    function renderTreePlaceholders() {
+        const container = document.getElementById('tree-placeholders');
+        container.innerHTML = TREE_POSITIONS_30.map((pos, i) => `
+            <div class="tree-placeholder w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12" style="left: ${pos.left}; top: ${pos.top};" data-index="${i}" title="Rama #${i + 1}">
+                <div class="placeholder-empty w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-slate-950/85 border-2 border-dashed border-sky-400/40 hover:border-sky-400 hover:bg-sky-500/20 flex flex-col items-center justify-center text-sky-400/70 shadow-lg backdrop-blur-sm transition-all duration-300">
+                    <i class="fas fa-plus text-[9px] sm:text-xs"></i>
+                    <span class="text-[7px] sm:text-[8px] font-mono text-slate-400 font-bold leading-none mt-0.5">${i + 1}</span>
+                </div>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.tree-placeholder').forEach(placeholder => {
+            placeholder.addEventListener('click', () => {
+                handleSlotClick(parseInt(placeholder.dataset.index));
+            });
+        });
+    }
+
+    async function handleSlotClick(index) {
+        const existing = participantsState[index];
+        if (existing) {
+            sound.playClick();
+            openParticipantDetail(existing, index);
+            return;
+        }
+
+        // Evitar desorden en clase: si el participante ya tiene una rama asignada, mantener fija su posición
+        const alreadyRegistered = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+        if (alreadyRegistered) {
+            sound.playClick();
+            showToast(`Ya estás registrado en la Rama #${parseInt(alreadyRegistered[0]) + 1}. Tu posición está asegurada.`, "fa-check-circle");
+            return;
+        }
+
+        const nameInput = document.getElementById('participant-name');
+        const name = nameInput.value.trim();
+
+        if (!name) {
+            showToast("Escribe tu nombre en el formulario", "fa-exclamation-triangle");
+            if (window.innerWidth < 1024) document.getElementById('tab-btn-form').click();
+            nameInput.focus();
+            return;
+        }
+        if (!selectedMood) {
+            showToast("Selecciona tu estado de ánimo", "fa-smile-beam");
+            if (window.innerWidth < 1024) document.getElementById('tab-btn-form').click();
+            return;
+        }
+
+        sound.playChime();
+        const newRecord = { index, name, mood: selectedMood, userId, timestamp: new Date().toISOString() };
+
+        if (isConnected && db) {
+            const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+            await setDoc(doc(db, collectionPath, `${index}`), newRecord);
+        } else {
+            participantsState[index] = newRecord;
+            saveOfflineState();
+        }
+
+        showToast(`¡Avatar colgado con éxito por ${name}!`, "fa-heart");
+    }
+
+    async function freeSlot(slotIndex) {
+        if (isConnected && db) {
+            const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+            await deleteDoc(doc(db, collectionPath, `${slotIndex}`));
+        } else {
+            delete participantsState[slotIndex];
+            saveOfflineState();
+        }
+    }
+    function renderOccupiedSlots() {
+        const container = document.getElementById('tree-placeholders');
+        TREE_POSITIONS_30.forEach((_, i) => {
+            const placeholder = container.querySelector(`.tree-placeholder[data-index="${i}"]`);
+            if (!placeholder) return;
+            const data = participantsState[i];
+            if (data && MOODS[data.mood]) {
+                const mood = MOODS[data.mood];
+                const isMine = data.userId === userId;
+                placeholder.innerHTML = `
+                    <div class="avatar-occupied flex flex-col items-center justify-center relative cursor-pointer group">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-slate-950 border-2 shadow-xl transition-transform group-hover:scale-115"
+                             style="border-color: ${mood.borderColor}; box-shadow: 0 0 12px ${mood.borderColor}66;">
+                            <i class="fas ${mood.icon} ${mood.color} text-sm sm:text-base md:text-xl"></i>
+                            ${isMine ? '<span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sky-400 border-2 border-slate-900 rounded-full"></span>' : ''}
+                        </div>
+                        <div class="bg-slate-900/95 border border-slate-700/80 px-1 py-0.5 rounded-md mt-0.5 max-w-[55px] sm:max-w-[70px] truncate text-center shadow-md pointer-events-none">
+                            <span class="text-[7px] sm:text-[9px] font-bold text-white block truncate leading-tight">${data.name}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                placeholder.innerHTML = `
+                    <div class="placeholder-empty w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-slate-950/85 border-2 border-dashed border-sky-400/40 hover:border-sky-400 hover:bg-sky-500/20 flex flex-col items-center justify-center text-sky-400/70 shadow-lg backdrop-blur-sm transition-all duration-300">
+                        <i class="fas fa-plus text-[9px] sm:text-xs"></i>
+                        <span class="text-[7px] sm:text-[8px] font-mono text-slate-400 font-bold leading-none mt-0.5">${i + 1}</span>
+                    </div>
+                `;
+            }
+        });
+        document.getElementById('total-participants-badge').textContent = Object.keys(participantsState).length;
+    }
+
+    function checkUserCurrentAvatar() {
+        const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+        const myStatusBox = document.getElementById('my-avatar-status');
+        const waitingMsg = document.getElementById('waiting-facilitator-msg');
+        const btnContinuePrisma = document.getElementById('btn-continue-prisma');
+        const treeWaitingBanner = document.getElementById('tree-waiting-banner');
+        const treeContinueBanner = document.getElementById('tree-continue-banner');
+        const myIconBox = document.getElementById('my-avatar-icon-box');
+        const myNameEl = document.getElementById('my-avatar-name');
+        const mySlotEl = document.getElementById('my-avatar-slot');
+
+        if (mySlotEntry) {
+            const [slotIdx, data] = mySlotEntry;
+            const mood = MOODS[data.mood];
+            if (data.name) localStorage.setItem('intercajas_participant_name', data.name);
+            if (data.mood) localStorage.setItem('intercajas_participant_mood', data.mood);
+            myStatusBox.classList.remove('hidden');
+
+            if (isPrismaUnlocked) {
+                if (waitingMsg) waitingMsg.classList.add('hidden');
+                if (btnContinuePrisma) btnContinuePrisma.classList.remove('hidden');
+                if (treeWaitingBanner) treeWaitingBanner.classList.add('hidden');
+                if (treeContinueBanner) treeContinueBanner.classList.remove('hidden');
+            } else {
+                if (waitingMsg) waitingMsg.classList.remove('hidden');
+                if (btnContinuePrisma) btnContinuePrisma.classList.add('hidden');
+                if (treeWaitingBanner) treeWaitingBanner.classList.remove('hidden');
+                if (treeContinueBanner) treeContinueBanner.classList.add('hidden');
+            }
+
+            myNameEl.textContent = data.name;
+            mySlotEl.textContent = `Rama #${parseInt(slotIdx) + 1} • ${mood ? mood.label : ''}`;
+            if (mood) {
+                myIconBox.innerHTML = `<i class="fas ${mood.icon} ${mood.color}"></i>`;
+                myIconBox.style.borderColor = mood.borderColor;
+            }
+        } else {
+            myStatusBox.classList.add('hidden');
+            if (treeWaitingBanner) treeWaitingBanner.classList.add('hidden');
+            if (treeContinueBanner) treeContinueBanner.classList.add('hidden');
+        }
+    }
+
+    function updateMoodAnalytics() {
+        const total = Object.keys(participantsState).length;
+        const counts = { feliz: 0, motivado: 0, neutro: 0, triste: 0, retado: 0, curioso: 0 };
+        Object.values(participantsState).forEach(p => { if (counts[p.mood] !== undefined) counts[p.mood]++; });
+
+        const barContainer = document.getElementById('mood-distribution-bar');
+        if (total === 0) {
+            barContainer.innerHTML = `<div class="h-full bg-slate-800 w-full text-center text-[8px] text-slate-500">Esperando participantes...</div>`;
+        } else {
+            barContainer.innerHTML = Object.entries(counts).map(([moodKey, count]) => {
+                if (count === 0) return '';
+                const pct = ((count / total) * 100).toFixed(1);
+                return `<div class="h-full" style="width: ${pct}%; background-color: ${MOODS[moodKey].borderColor};" title="${MOODS[moodKey].label}: ${count} (${pct}%)"></div>`;
+            }).join('');
+        }
+
+        const badgesContainer = document.getElementById('mood-summary-badges');
+        badgesContainer.innerHTML = Object.entries(MOODS).map(([key, mood]) => {
+            const c = counts[key];
+            const pct = total > 0 ? Math.round((c / total) * 100) : 0;
+            return `
+                <div class="bg-slate-950/80 border border-slate-800/80 p-1 sm:p-1.5 rounded-lg flex items-center justify-between">
+                    <span class="flex items-center gap-1">
+                        <i class="fas ${mood.icon} ${mood.color} text-[10px] sm:text-xs"></i>
+                        <span class="text-slate-300 text-[9px] sm:text-[10px]">${mood.label}</span>
+                    </span>
+                    <strong class="font-bold text-white text-[9px] sm:text-[10px]">${c} <span class="text-slate-500 font-normal">(${pct}%)</span></strong>
+                </div>
+            `;
+        }).join('');
+
+        const dominantEntry = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        const insightEl = document.getElementById('stats-insight-text');
+        if (total === 0) {
+            insightEl.textContent = "Aún no hay participantes registrados. Invita al equipo a elegir su emoción.";
+        } else {
+            const dominantMood = MOODS[dominantEntry[0]];
+            const posPct = Math.round(((counts.feliz + counts.motivado + counts.curioso) / total) * 100);
+            if (posPct >= 65) {
+                insightEl.innerHTML = `El equipo presenta una <strong>energía altamente positiva y proactiva (${posPct}%)</strong>, con predominio de <em>${dominantMood.label}</em>. Es propicio para retos de innovación y co-creación estratégica.`;
+            } else if (counts.retado + counts.triste > counts.feliz + counts.motivado) {
+                insightEl.innerHTML = `Existe una cuota importante de <strong>incertidumbre o tensión operativa</strong> (${counts.retado} retados, ${counts.triste} desanimados). Se recomienda iniciar con un espacio de empatía.`;
+            } else {
+                insightEl.innerHTML = `Clima equilibrado con estado dominante en <strong>${dominantMood.label} (${dominantEntry[1]} personas)</strong>. Una dinámica reflexiva permitirá canalizar la curiosidad hacia los objetivos.`;
+            }
+        }
+    }
+
+    function openStatsModal() {
+        sound.playClick();
+        const modal = document.getElementById('stats-modal');
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        const labels = Object.values(MOODS).map(m => m.label);
+        const colors = Object.values(MOODS).map(m => m.borderColor);
+        const counts = { feliz: 0, motivado: 0, neutro: 0, triste: 0, retado: 0, curioso: 0 };
+        Object.values(participantsState).forEach(p => { if (counts[p.mood] !== undefined) counts[p.mood]++; });
+        const dataValues = Object.keys(MOODS).map(k => counts[k]);
+
+        if (statsChartInstance) statsChartInstance.destroy();
+        statsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Participantes', data: dataValues, backgroundColor: colors, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#f1f5f9', font: { weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function closeStatsModal() {
+        const modal = document.getElementById('stats-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function openParticipantDetail(data, slotIdx) {
+        const modal = document.getElementById('participant-detail-modal');
+        const mood = MOODS[data.mood];
+        document.getElementById('detail-participant-name').textContent = data.name;
+        document.getElementById('detail-mood-name').textContent = mood ? mood.label : data.mood;
+        document.getElementById('detail-slot-number').textContent = `Rama #${slotIdx + 1} de 30`;
+
+        const iconBox = document.getElementById('detail-avatar-icon');
+        iconBox.className = `w-12 h-12 rounded-full mx-auto flex items-center justify-center text-2xl shadow-lg bg-slate-950 border-2`;
+        iconBox.style.borderColor = mood ? mood.borderColor : '#38bdf8';
+        iconBox.innerHTML = `<i class="fas ${mood ? mood.icon : 'fa-smile'} ${mood ? mood.color : 'text-sky-400'}"></i>`;
+
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeParticipantDetail() {
+        const modal = document.getElementById('participant-detail-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function openQrModal() {
+        sound.playClick();
+        const modal = document.getElementById('qr-modal');
+        const qrImage = document.getElementById('qr-image');
+        const qrUrlText = document.getElementById('qr-url-text');
+        
+        const currentUrl = window.location.href.split('#')[0];
+        qrUrlText.textContent = currentUrl;
+        qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}&bgcolor=ffffff&color=080c14&margin=1`;
+
+        document.getElementById('copy-url-btn').onclick = () => {
+            navigator.clipboard.writeText(currentUrl);
+            showToast("Enlace copiado al portapapeles", "fa-copy");
+        };
+
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeQrModal() {
+        const modal = document.getElementById('qr-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function exportTreeImage() {
+        sound.playClick();
+        showToast("Generando captura de alta resolución...", "fa-camera");
+        const target = document.getElementById('tree-export-wrapper');
+        html2canvas(target, { backgroundColor: '#080c14', scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Team-Mood-Arbol-Comfamiliar-${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast("¡Imagen descargada con éxito!", "fa-check-circle");
+        }).catch(err => {
+            showToast("No se pudo generar la imagen", "fa-times-circle");
+        });
+    }
+
+    function promptAdminAction(onAuthorized, options = {}) {
+        const modal = document.getElementById('password-modal');
+        const titleEl = document.getElementById('password-modal-title');
+        const descEl = document.getElementById('password-modal-desc');
+        const input = document.getElementById('password-input');
+        const error = document.getElementById('password-error');
+        const cancelBtn = document.getElementById('password-cancel');
+        const submitBtn = document.getElementById('password-submit');
+
+        if (titleEl) titleEl.textContent = options.title || 'Acción Protegida';
+        if (descEl) descEl.textContent = options.description || 'Introduce la clave de facilitador para continuar.';
+
+        input.value = '';
+        error.textContent = '';
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        input.focus();
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            }
+        };
+
+        const closeModal = () => {
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            submitBtn.removeEventListener('click', handleSubmit);
+            cancelBtn.removeEventListener('click', closeModal);
+            input.removeEventListener('keydown', handleKeyDown);
+        };
+
+        const handleSubmit = async () => {
+            if (input.value === 'Comfa2025') {
+                sound.playWhoosh();
+                closeModal();
+                await onAuthorized();
+            } else {
+                error.textContent = "Clave incorrecta";
+                input.value = '';
+                input.focus();
+            }
+        };
+
+        submitBtn.addEventListener('click', handleSubmit);
+        cancelBtn.addEventListener('click', closeModal);
+        input.addEventListener('keydown', handleKeyDown);
+    }
+
+    function promptAdminReset() {
+        promptAdminAction(async () => {
+            isPrismaUnlocked = false;
+            if (isConnected && db) {
+                const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
+                const snap = await getDocs(collection(db, collectionPath));
+                const deletePromises = [];
+                snap.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
+                deletePromises.push(setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    activeActivity: 'team-mood',
+                    launchedAt: Date.now()
+                }));
+                await Promise.all(deletePromises);
+            } else {
+                participantsState = {};
+                saveOfflineState();
+            }
+            checkUserCurrentAvatar();
+            showToast("Árbol reiniciado para 30 nuevos participantes");
+        }, {
+            title: 'Reiniciar Árbol (30 Slots)',
+            description: 'Introduce la clave de facilitador para borrar los registros y reiniciar los 30 slots del árbol.'
+        });
+    }
+
+    function promptLaunchPrisma() {
+        promptAdminAction(async () => {
+            isPrismaUnlocked = true;
+            checkUserCurrentAvatar();
+            if (isConnected && db) {
+                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    activeActivity: 'prisma',
+                    launchedAt: Date.now(),
+                    facilitatorId: userId
+                });
+                showToast("¡Enviando a todos los participantes al Prisma del Pensamiento!", "fa-broadcast-tower");
+                setTimeout(() => navigateToPrisma(), 900);
+            } else {
+                navigateToPrisma();
+            }
+        }, {
+            title: 'Avanzar al Ejercicio 2',
+            description: 'Introduce la clave de facilitador para enviar a todo el grupo a El Prisma del Pensamiento.'
+        });
+    }
+
+    function setupControls() {
+        const soundBtn = document.getElementById('soundToggleBtn');
+        soundBtn.addEventListener('click', () => {
+            sound.muted = !sound.muted;
+            soundBtn.innerHTML = sound.muted ? `<i class="fas fa-volume-mute text-xs sm:text-sm text-rose-400"></i>` : `<i class="fas fa-volume-up text-xs sm:text-sm text-sky-400"></i>`;
+            showToast(sound.muted ? "Sonido silenciado" : "Sonido activado");
+        });
+
+        const fullBtn = document.getElementById('fullscreenBtn');
+        fullBtn.addEventListener('click', () => {
+            sound.playClick();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                fullBtn.innerHTML = `<i class="fas fa-compress text-xs sm:text-sm"></i>`;
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+                fullBtn.innerHTML = `<i class="fas fa-expand text-xs sm:text-sm"></i>`;
+            }
+        });
+
+        document.getElementById('openStatsBtn').onclick = openStatsModal;
+        document.getElementById('view-stats-link').onclick = openStatsModal;
+        document.getElementById('close-stats-btn').onclick = closeStatsModal;
+        document.getElementById('btn-close-stats-footer').onclick = closeStatsModal;
+
+        document.getElementById('qrShareBtn').onclick = openQrModal;
+        document.getElementById('close-qr-btn').onclick = closeQrModal;
+        document.getElementById('btn-close-qr-footer').onclick = closeQrModal;
+
+        document.getElementById('close-participant-modal').onclick = closeParticipantDetail;
+        document.getElementById('btn-close-detail').onclick = closeParticipantDetail;
+
+        document.getElementById('exportTreeBtn').onclick = exportTreeImage;
+        document.getElementById('reset-tree-btn').onclick = promptAdminReset;
+        document.getElementById('launch-prisma-btn').onclick = promptLaunchPrisma;
+
+        const btnContinuePrisma = document.getElementById('btn-continue-prisma');
+        if (btnContinuePrisma) btnContinuePrisma.onclick = navigateToPrisma;
+        const btnTreeContinuePrisma = document.getElementById('btn-tree-continue-prisma');
+        if (btnTreeContinuePrisma) btnTreeContinuePrisma.onclick = navigateToPrisma;
+        const btnBackToMood = document.getElementById('btn-back-to-mood');
+        if (btnBackToMood) btnBackToMood.onclick = navigateToTeamMood;
+
+        const btnStartExperience = document.getElementById('btn-start-experience');
+        if (btnStartExperience) btnStartExperience.onclick = navigateToTeamMood;
+        const btnCoverQr = document.getElementById('btn-cover-qr');
+        if (btnCoverQr) btnCoverQr.onclick = openQrModal;
+        const welcomeCoverBtn = document.getElementById('welcomeCoverBtn');
+        if (welcomeCoverBtn) welcomeCoverBtn.onclick = navigateToWelcomeCover;
+    }
+
+    function setupPensamientoAssessment() {
+        const container = document.getElementById('quiz-container');
+        if (!container) return;
+
+        const screens = {
+            start: container.querySelector('#start-screen'),
+            question: container.querySelector('#question-screen'),
+            result: container.querySelector('#result-screen'),
+            groupResult: container.querySelector('#group-result-screen')
+        };
+
+        const elements = {
+            startBtn: container.querySelector('#start-btn'),
+            restartBtn: container.querySelector('#restart-btn'),
+            nextBtn: container.querySelector('#next-q-btn'),
+            showGroupBtn: container.querySelector('#show-group-btn'),
+            backToIndividualBtn: container.querySelector('#back-to-individual-btn'),
+            resetGroupBtn: container.querySelector('#reset-group-pensamiento-btn'),
+            progressText: container.querySelector('#progress-text'),
+            progressBar: container.querySelector('#progress-bar'),
+            timer: container.querySelector('#timer'),
+            qTitle: container.querySelector('#question-title'),
+            qText: container.querySelector('#question-text'),
+            answerArea: container.querySelector('#answer-area'),
+            resultViz: container.querySelector('#result-viz'),
+            resultBar: container.querySelector('#result-bar'),
+            resultTitle: container.querySelector('#result-title'),
+            resultDescription: container.querySelector('#result-description'),
+            aiContainer: container.querySelector('#ai-pensamiento-container'),
+            aiText: container.querySelector('#ai-pensamiento-text'),
+            groupTotalParticipants: container.querySelector('#group-total-participants'),
+            groupResultDescription: container.querySelector('#group-result-description')
+        };
+
+        let scores = { divergent: 0, convergent: 0 };
+        let currentQIndex = 0;
+        let timerInterval;
+        let questions = [];
+        let userResponses = [];
+        let groupPieChartInstance = null;
+        let groupUnsubscribe = null;
+
+        const { name: initialName } = getCurrentParticipantContext();
+        const greetingBadge = container.querySelector('#participant-greeting-badge');
+        const greetingText = container.querySelector('#participant-greeting-text');
+        if (initialName && greetingBadge && greetingText) {
+            greetingBadge.classList.remove('hidden');
+            greetingText.textContent = `¡Hola, ${initialName}! Tu registro está conectado`;
+        }
+
+        const questionBank = {
+            convergent: [
+                { title: "El Reto de la Meta", text: "Participas en la maratón recreativa de la Caja y, justo antes de la meta, adelantas a la persona que va en segundo lugar. ¿En qué posición cruzas la meta?", acceptedAnswers: ["segundo", "segunda", "2", "2do"], time: 40 },
+                { title: "Atención al Detalle", text: "El papá de Ana tiene 4 hijas muy talentosas: Lala, Lele, Lili y... ¿cómo se llama la cuarta hija?", acceptedAnswers: ["ana"], time: 35 },
+                { title: "Identidad en Equipo", text: "Pertenezco solo a ti, pero tus compañeros de trabajo me usan mucho más que tú todos los días. ¿Qué soy?", acceptedAnswers: ["nombre", "apodo", "alias"], time: 45 },
+                { title: "Agilidad en Selección", text: "Si 5 psicólogos entrevistan a 5 candidatos en 5 minutos, ¿cuántos minutos tardarán 50 psicólogos en entrevistar a 50 candidatos al mismo tiempo?", acceptedAnswers: ["5", "cinco"], time: 45 },
+                { title: "Efecto Contagio", text: "Todos me saben abrir, nadie me sabe cerrar y cuando aparezco en medio de una reunión larga soy súper contagioso. ¿Qué soy?", acceptedAnswers: ["bostezo", "bostezar", "risa", "sonrisa"], time: 45 },
+                { title: "Acertijo del Viajero", text: "Tengo ciudades llenas de nombres, pero ninguna casa. Tengo ríos largos, pero ni una gota de agua. Tengo bosques, pero ningún árbol. ¿Qué soy?", acceptedAnswers: ["mapa", "planisferio", "atlas", "globo"], time: 45 },
+                { title: "Energía Vital", text: "Si me alimentas crezco con fuerza y doy calor, pero si me das de beber agua me apago al instante. ¿Qué soy?", acceptedAnswers: ["fuego", "llama", "candela", "fogata", "incendio"], time: 45 },
+                { title: "Paradoja Lógica", text: "Cuanto más me quitas, más grande me vuelvo. ¿Qué soy?", acceptedAnswers: ["hueco", "agujero", "hoyo", "pozo", "vacio"], time: 45 }
+            ],
+            divergentObjects: [
+                { title: "Nuevos Usos: Botella Plástica", text: "Escribe la mayor cantidad de usos creativos, divertidos o útiles que podrías darle a una botella plástica vacía (sin usarla para guardar líquidos). Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Usos Inusuales del Clip", text: "Escribe la mayor cantidad de usos creativos posibles para un clip metálico fuera de la oficina. Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "Reinvención del Ladrillo", text: "Escribe todos los usos alternativos y creativos que podrías darle a un ladrillo común (sin usarlo para construir muros). Separa cada idea con un Enter.", type: "list", time: 60 }
+            ],
+            divergentPeople: [
+                { title: "Lunes Inolvidables", text: "Si pudieras reinventar los lunes por la mañana para que sean el momento favorito de la semana en tu equipo, ¿qué ideas locas o geniales implementarías? Separa cada idea con un Enter.", type: "list", time: 60 },
+                { title: "La Sala de Espera Feliz", text: "¿Qué experiencias o detalles inesperados pondrías en una sala de espera para que las personas deseen quedarse 15 minutos más aunque ya sea su turno?", type: "text", time: 60 },
+                { title: "Bienvenida Memorables", text: "Inventa ideas creativas y fuera de lo común para recibir a un nuevo integrante en su primer día de trabajo y que nunca lo olvide. Separa cada idea con un Enter.", type: "list", time: 60 }
+            ],
+            divergentDisruptive: [
+                { title: "Fusión Intercajas", text: "Si fusionaras un centro recreativo, una cafetería y el área de Talento Humano en un solo lugar mágico, ¿qué experiencias únicas vivirían las personas allí?", type: "text", time: 60 },
+                { title: "Superpoder en el Equipo", text: "Imagina que a partir de mañana las personas pudieran ver una chispa de color sobre los demás cada vez que tienen una buena idea. ¿Qué cambiaría en las reuniones y en el trabajo?", type: "text", time: 60 }
+            ]
+        };
+
+        function normalizeText(str) {
+            return str
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^\w\s]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function isConvergentCorrect(userValue, acceptedAnswers) {
+            const normUser = normalizeText(userValue);
+            if (!normUser) return false;
+            const userWords = normUser.split(" ");
+            return acceptedAnswers.some(ans => {
+                const normAns = normalizeText(ans);
+                if (normUser === normAns) return true;
+                if (normAns.includes(" ")) return normUser.includes(normAns);
+                return userWords.includes(normAns);
+            });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function generateQuiz() {
+            shuffleArray(questionBank.convergent);
+            shuffleArray(questionBank.divergentObjects);
+            shuffleArray(questionBank.divergentPeople);
+            shuffleArray(questionBank.divergentDisruptive);
+
+            const selectedConv = questionBank.convergent.slice(0, 3).map(q => ({...q, questionType: 'convergent'}));
+            const selectedDiv = [
+                { ...questionBank.divergentObjects[0], questionType: 'divergent' },
+                { ...questionBank.divergentPeople[0], questionType: 'divergent' },
+                { ...questionBank.divergentDisruptive[0], questionType: 'divergent' }
+            ];
+            questions = [...selectedConv, ...selectedDiv];
+            shuffleArray(questions);
+            userResponses = [];
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.style.display = 'none');
+            screens[screenName].style.display = 'block';
+        }
+
+        function startTimer(duration, onComplete) {
+            let timeLeft = duration;
+            clearInterval(timerInterval);
+            elements.timer.textContent = `${timeLeft}s`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                elements.timer.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            if (currentQIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQIndex];
+            elements.progressText.textContent = `Pregunta ${currentQIndex + 1} de ${questions.length}`;
+            elements.progressBar.style.width = `${((currentQIndex) / questions.length) * 100}%`;
+            elements.qTitle.textContent = q.title;
+            elements.qText.textContent = q.text;
+            elements.answerArea.innerHTML = '';
+
+            if (q.questionType === 'convergent') {
+                elements.answerArea.innerHTML = `
+                    <input type="text" id="answer-input" class="w-full text-sm" placeholder="Escribe tu solución concreta...">
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+                        <i class="fas fa-keyboard text-sky-400"></i> Presiona <b>Enter</b> o haz clic en Siguiente para confirmar.
+                    </p>
+                `;
+                const inputEl = document.getElementById('answer-input');
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        elements.nextBtn.click();
+                    }
+                });
+                inputEl.focus();
+            } else {
+                const helperMsg = q.type === 'list'
+                    ? 'Escribe una idea por línea (Enter). <span id="idea-counter" class="text-pink-400 font-semibold ml-1">0 ideas detectadas</span>'
+                    : 'Desarrolla tus propuestas con libertad creativa (Ctrl + Enter para avanzar).';
+                elements.answerArea.innerHTML = `
+                    <textarea id="answer-input" rows="4" class="w-full text-sm" placeholder="Desarrolla tus ideas creativas aquí..."></textarea>
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+                        <i class="fas fa-lightbulb text-pink-400"></i> <span>${helperMsg}</span>
+                    </p>
+                `;
+                const textareaEl = document.getElementById('answer-input');
+                if (q.type === 'list') {
+                    const counterEl = document.getElementById('idea-counter');
+                    textareaEl.addEventListener('input', () => {
+                        const count = new Set(
+                            textareaEl.value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
+                        ).size;
+                        if (counterEl) counterEl.textContent = `${count} ${count === 1 ? 'idea detectada' : 'ideas detectadas'}`;
+                    });
+                }
+                textareaEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        elements.nextBtn.click();
+                    }
+                });
+                textareaEl.focus();
+            }
+
+            startTimer(q.time || 45, () => advanceQuestion(true));
+        }
+
+        function processAnswer() {
+            const q = questions[currentQIndex];
+            const input = document.getElementById('answer-input');
+            if (!input) return;
+            const value = input.value.trim();
+
+            let questionScore = 0;
+            if (q.questionType === 'convergent') {
+                if (isConvergentCorrect(value, q.acceptedAnswers || [])) {
+                    questionScore = 25;
+                    scores.convergent += questionScore;
+                }
+            } else if (q.type === 'list') {
+                const uniqueIdeas = Array.from(new Set(
+                    value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
+                ));
+                questionScore = Math.min(25, uniqueIdeas.length * 5);
+                scores.divergent += questionScore;
+            } else if (q.type === 'text') {
+                const words = normalizeText(value).split(' ').filter(w => w.length > 2);
+                const uniqueWords = new Set(words);
+                if (uniqueWords.size >= 15) questionScore = 25;
+                else if (uniqueWords.size >= 8) questionScore = 18;
+                else if (uniqueWords.size >= 4) questionScore = 10;
+                scores.divergent += questionScore;
+            }
+
+            userResponses.push({
+                title: q.title,
+                questionType: q.questionType,
+                prompt: q.text,
+                answer: value || "(Sin respuesta)",
+                heuristicScore: questionScore
+            });
+        }
+
+        function advanceQuestion(forcedByTimer = false) {
+            const input = document.getElementById('answer-input');
+            const value = input ? input.value.trim() : '';
+            if (!forcedByTimer && !value) {
+                showToast("Escribe tu respuesta antes de avanzar", "fa-pen");
+                if (input) input.focus();
+                return;
+            }
+            sound.playClick();
+            processAnswer();
+            currentQIndex++;
+            loadQuestion();
+        }
+
+        function handleNext() {
+            advanceQuestion(false);
+        }
+
+        function calculateDivergentWeight(s) {
+            const div = Math.max(0, Number(s?.divergent) || 0);
+            const conv = Math.max(0, Number(s?.convergent) || 0);
+            if (div === 0 && conv === 0) return 50;
+            const smoothedDiv = div + 20;
+            const smoothedConv = conv + 20;
+            return (smoothedDiv / (smoothedDiv + smoothedConv)) * 100;
+        }
+
+        function renderScoreUI() {
+            const divergentWeight = calculateDivergentWeight(scores);
+            const { title, description, colorClass } = getProfileText(divergentWeight);
+            elements.resultTitle.textContent = title;
+            elements.resultTitle.className = `text-2xl font-semibold mb-3 font-orbitron ${colorClass || 'text-sky-300'}`;
+            elements.resultDescription.textContent = description;
+            updateProfileBar(elements.resultBar, divergentWeight);
+            return { divergentWeight, profileTitle: title };
+        }
+
+        async function showResults() {
+            clearInterval(timerInterval);
+            showScreen('result');
+            elements.progressBar.style.width = '100%';
+
+            const answeredCount = userResponses.filter(r => r.answer && r.answer !== "(Sin respuesta)").length;
+            const totalScore = scores.convergent + scores.divergent;
+
+            if (answeredCount === 0 || totalScore === 0) {
+                if (elements.resultViz) elements.resultViz.classList.add('hidden');
+                if (elements.aiContainer) elements.aiContainer.classList.add('hidden');
+                elements.resultTitle.textContent = "¡Nos faltó leer tus ideas!";
+                elements.resultTitle.className = "text-2xl font-semibold mb-3 font-orbitron text-amber-400";
+                elements.resultDescription.textContent = "En esta ronda no se alcanzaron a registrar respuestas válidas para calcular tu estilo de pensamiento. Haz clic en 'Intentar de Nuevo' para vivir el reto y descubrir tu perfil.";
+                return;
+            }
+
+            if (elements.resultViz) elements.resultViz.classList.remove('hidden');
+
+            const { name: participantName, mood: participantMood } = getCurrentParticipantContext();
+            const { profileTitle } = renderScoreUI();
+
+            if (db && userId && isConnected) {
+                const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+            }
+
+            if (localStorage.getItem('gemini_api_key')) {
+                elements.aiContainer.classList.remove('hidden');
+                elements.aiText.textContent = "Descubriendo tus fortalezas creativas con IA...";
+                
+                const divergentSummary = userResponses
+                    .filter(r => r.questionType === 'divergent' && r.answer !== "(Sin respuesta)")
+                    .map(r => `- Reto "${r.title}": "${r.answer}"`)
+                    .join('\n');
+
+                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} cuyo resultado definitivo en El Prisma del Pensamiento es "${profileTitle}".
+Ideas escritas por el participante en los retos abiertos:
+${divergentSummary || "(Se enfocó principalmente en los retos de agudeza convergente)"}
+
+Reglas estrictas para tu mensaje:
+1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre` : 'Saluda con calidez'} y felicítalo mencionando exactamente su perfil obtenido: "${profileTitle}".
+2. PROHIBIDO mencionar números, puntajes o frases técnicas como "puntaje preliminar", "bajo puntaje", "poca fluidez" o "sin respuesta".
+3. Si escribió ideas en los retos abiertos, cita con naturalidad 1 o 2 de ellas para destacar su estilo; y cierra con una invitación breve e inspiradora para su rol de liderazgo.
+4. Sé conciso: máximo 3 oraciones breves (alrededor de 45 a 60 palabras en total). Responde únicamente con el texto del mensaje en español (sin comillas ni bloques JSON).`;
+
+                const aiResponse = await generateAIAnalysis(prompt);
+                if (aiResponse) {
+                    elements.aiText.textContent = aiResponse.replace(/```json|```/g, '').trim();
+                } else {
+                    elements.aiContainer.classList.add('hidden');
+                }
+            } else {
+                elements.aiContainer.classList.add('hidden');
+            }
+        }
+
+        function getProfileText(divergentWeight) {
+            if (divergentWeight > 58) {
+                return { title: "El Innovador Disruptivo", colorClass: "text-pink-400", description: "Tu mente genera un océano continuo de posibilidades originales. Tu mayor poder es pensar fuera del molde habitual." };
+            } else if (divergentWeight >= 42) {
+                return { title: "El Arquitecto Estratégico", colorClass: "text-purple-300", description: "Mantienes un equilibrio virtuoso entre la generación libre de ideas y la capacidad analítica para estructurar soluciones reales." };
+            } else {
+                return { title: "El Solucionador de Precisión", colorClass: "text-sky-300", description: "Sobresales analizando datos complejos y hallando la ruta directa y lógica hacia la solución óptima." };
+            }
+        }
+
+        function updateProfileBar(barElement, divergentWeight) {
+            const balancePoint = 50;
+            let pull = Math.min(50, Math.max(4, Math.abs(divergentWeight - balancePoint)));
+            if (divergentWeight >= balancePoint) {
+                // Divergente está a la IZQUIERDA (0% a 50%)
+                barElement.style.left = `${50 - pull}%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to left, #a78bfa, #ec4899)';
+            } else {
+                // Convergente está a la DERECHA (50% a 100%)
+                barElement.style.left = `50%`;
+                barElement.style.width = `${pull}%`;
+                barElement.style.background = 'linear-gradient(to right, #a78bfa, #38bdf8)';
+            }
+        }
+
+        function showGroupResults() {
+            if (!isConnected || !db) {
+                elements.groupResultDescription.textContent = "Resultados grupales consolidados no disponibles en modo fuera de línea.";
+                showScreen('groupResult');
+                return;
+            }
+
+            showScreen('groupResult');
+            const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+
+            if (groupUnsubscribe) {
+                groupUnsubscribe();
+                groupUnsubscribe = null;
+            }
+
+            groupUnsubscribe = onSnapshot(collection(db, collectionPath), (snapshot) => {
+                const results = snapshot.docs.map(doc => doc.data().scores).filter(Boolean);
+                elements.groupTotalParticipants.textContent = results.length;
+                
+                const profileCounts = { "Disruptivo": 0, "Estratégico": 0, "Solucionador": 0 };
+                results.forEach(s => {
+                    const w = calculateDivergentWeight(s);
+                    if (w > 58) profileCounts["Disruptivo"]++;
+                    else if (w >= 42) profileCounts["Estratégico"]++;
+                    else profileCounts["Solucionador"]++;
+                });
+
+                const ctx = document.getElementById('group-profile-pie-chart')?.getContext('2d');
+                if (!ctx) return;
+                if (groupPieChartInstance) groupPieChartInstance.destroy();
+
+                groupPieChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(profileCounts),
+                        datasets: [{
+                            data: Object.values(profileCounts),
+                            backgroundColor: ['#ec4899', '#a78bfa', '#38bdf8'],
+                            borderWidth: 2,
+                            borderColor: '#0f172a'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 12 } } } }
+                    }
+                });
+            });
+        }
+
+        async function resetGroupPensamiento() {
+            if (!isConnected || !db) return;
+            const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
+            const querySnapshot = await getDocs(collection(db, collectionPath));
+            const deletePromises = [];
+            querySnapshot.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+            await Promise.all(deletePromises);
+            showToast("Evaluaciones del grupo reseteadas.");
+            showGroupResults();
+        }
+
+        elements.startBtn.addEventListener('click', () => { sound.playClick(); generateQuiz(); showScreen('question'); loadQuestion(); });
+        elements.nextBtn.addEventListener('click', handleNext);
+        elements.restartBtn.addEventListener('click', () => { 
+            sound.playClick(); 
+            scores = { divergent: 0, convergent: 0 };
+            currentQIndex = 0;
+            showScreen('start'); 
+        });
+        elements.showGroupBtn.addEventListener('click', () => { sound.playClick(); showGroupResults(); });
+        elements.backToIndividualBtn.addEventListener('click', () => { sound.playClick(); showScreen('result'); });
+        elements.resetGroupBtn.addEventListener('click', () => promptAdminAction(resetGroupPensamiento, {
+            title: 'Resetear Evaluaciones (Prisma)',
+            description: 'Introduce la clave de facilitador para borrar los resultados grupales de El Prisma del Pensamiento.'
+        }));
+
+        showScreen('start');
+    }
+
+    function initPlexus() {
+        const canvas = document.getElementById('plexus-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 120 };
+
+        window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 1.5 + 0.6;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                if (mouse.x && mouse.y) {
+                    let dx = mouse.x - this.x, dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        let force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= (dx / dist) * force * 1.5;
+                        this.y -= (dy / dist) * force * 1.5;
+                    }
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            resize();
+            particles = [];
+            const divisor = window.innerWidth < 768 ? 32000 : 20000;
+            let count = Math.min(Math.floor((canvas.width * canvas.height) / divisor), 45);
+            for (let i = 0; i < count; i++) particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 90) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.3 * (1 - dist / 90)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', createParticles);
+        createParticles();
+        animate();
+    }
+    </script>
+</body>
+</html>
