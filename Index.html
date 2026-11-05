@@ -555,8 +555,8 @@
             <div class="w-12 h-12 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto text-xl">
                 <i class="fas fa-lock"></i>
             </div>
-            <h3 class="font-bold text-lg sm:text-xl text-white font-orbitron">Acción Protegida</h3>
-            <p class="text-slate-400 text-xs">Introduce la clave de facilitador para reiniciar los 30 slots del árbol.</p>
+            <h3 id="password-modal-title" class="font-bold text-lg sm:text-xl text-white font-orbitron">Acción Protegida</h3>
+            <p id="password-modal-desc" class="text-slate-400 text-xs">Introduce la clave de facilitador para continuar.</p>
             <div>
                 <input type="password" id="password-input" class="w-full text-center tracking-widest text-lg font-mono mb-1" placeholder="********">
                 <p id="password-error" class="text-red-400 text-xs font-semibold h-4"></p>
@@ -1194,12 +1194,17 @@
         });
     }
 
-    function promptAdminAction(onAuthorized) {
+    function promptAdminAction(onAuthorized, options = {}) {
         const modal = document.getElementById('password-modal');
+        const titleEl = document.getElementById('password-modal-title');
+        const descEl = document.getElementById('password-modal-desc');
         const input = document.getElementById('password-input');
         const error = document.getElementById('password-error');
         const cancelBtn = document.getElementById('password-cancel');
         const submitBtn = document.getElementById('password-submit');
+
+        if (titleEl) titleEl.textContent = options.title || 'Acción Protegida';
+        if (descEl) descEl.textContent = options.description || 'Introduce la clave de facilitador para continuar.';
 
         input.value = '';
         error.textContent = '';
@@ -1207,11 +1212,19 @@
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
         input.focus();
 
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            }
+        };
+
         const closeModal = () => {
             modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
             submitBtn.removeEventListener('click', handleSubmit);
             cancelBtn.removeEventListener('click', closeModal);
+            input.removeEventListener('keydown', handleKeyDown);
         };
 
         const handleSubmit = async () => {
@@ -1228,6 +1241,7 @@
 
         submitBtn.addEventListener('click', handleSubmit);
         cancelBtn.addEventListener('click', closeModal);
+        input.addEventListener('keydown', handleKeyDown);
     }
 
     function promptAdminReset() {
@@ -1247,6 +1261,9 @@
                 saveOfflineState();
             }
             showToast("Árbol reiniciado para 30 nuevos participantes");
+        }, {
+            title: 'Reiniciar Árbol (30 Slots)',
+            description: 'Introduce la clave de facilitador para borrar los registros y reiniciar los 30 slots del árbol.'
         });
     }
 
@@ -1259,9 +1276,13 @@
                     facilitatorId: userId
                 });
                 showToast("¡Enviando a todos los participantes al Prisma del Pensamiento!", "fa-broadcast-tower");
+                setTimeout(() => navigateToPrisma(), 900);
             } else {
                 navigateToPrisma();
             }
+        }, {
+            title: 'Avanzar al Ejercicio 2',
+            description: 'Introduce la clave de facilitador para enviar a todo el grupo a El Prisma del Pensamiento.'
         });
     }
 
