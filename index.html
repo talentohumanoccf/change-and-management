@@ -1225,6 +1225,9 @@
     function navigateToColaborador(fromRemote = false) {
         sound.playChime();
         currentActiveActivity = 'colaborador';
+        if (!fromRemote) {
+            currentMentiStep = 0;
+        }
         const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
@@ -1329,11 +1332,23 @@
         });
 
         const routingDocRef = doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing');
+        let isInitialRoutingSnapshot = true;
         onSnapshot(routingDocRef, (docSnap) => {
-            if (!docSnap.exists()) return;
+            if (!docSnap.exists()) {
+                isInitialRoutingSnapshot = false;
+                return;
+            }
+            // Al abrir la aplicación, siempre respeta el inicio en la Portada de Bienvenida
+            // e ignora estados antiguos guardados en la base de datos antes de abrir la página.
+            if (isInitialRoutingSnapshot) {
+                isInitialRoutingSnapshot = false;
+                return;
+            }
+
             const data = docSnap.data();
             const ts = data.updatedAt || data.launchedAt || 0;
-            const isRecentSession = ts && (Date.now() - ts < 4 * 60 * 60 * 1000);
+            const isLiveUpdateAfterLoad = ts >= (sessionLoadedAt - 2000);
+            if (!isLiveUpdateAfterLoad) return;
 
             if (typeof data.mentiStep === 'number' && data.mentiStep !== currentMentiStep) {
                 currentMentiStep = data.mentiStep;
@@ -1351,13 +1366,12 @@
                 }
             }
 
-            if (!isRecentSession) return;
-
             if (data.activeActivity === 'colaborador') {
                 isPrismaUnlocked = true;
                 isColaboradorUnlocked = true;
                 checkUserCurrentAvatar();
                 if (!isFacilitatorMode && currentActiveActivity !== 'colaborador') {
+                    currentMentiStep = typeof data.mentiStep === 'number' ? data.mentiStep : 0;
                     navigateToColaborador(true);
                 } else if (currentActiveActivity === 'colaborador') {
                     renderColaboradorStep();
