@@ -794,6 +794,10 @@
                     <span class="text-xs text-slate-400">Al cambiar de etapa aquí, todos los celulares cambian automáticamente en tiempo real.</span>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button id="btn-menti-toggle-results" class="hidden px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fas fa-chart-bar"></i>
+                        <span id="btn-menti-toggle-results-label">Ver Resultados de esta Pregunta</span>
+                    </button>
                     <button id="btn-menti-reset" class="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-semibold transition flex items-center gap-1.5">
                         <i class="fas fa-trash-alt"></i>
                         <span>Reiniciar Votos</span>
@@ -1036,6 +1040,7 @@
     let isFacilitatorMode = sessionStorage.getItem('intercajas_facilitator_mode') === 'true';
     let currentActiveActivity = 'welcome';
     let currentMentiStep = 0;
+    let showAdminMentiResults = false;
     let mentiRevealed = {};
     let mentiVotesState = {};
     let myMentiVotes = JSON.parse(localStorage.getItem('intercajas_my_menti_votes') || '{}');
@@ -1225,6 +1230,7 @@
     function navigateToColaborador(fromRemote = false) {
         sound.playChime();
         currentActiveActivity = 'colaborador';
+        showAdminMentiResults = false;
         if (!fromRemote) {
             currentMentiStep = 0;
         }
@@ -2130,6 +2136,7 @@
     async function setMentiStep(newStepIndex) {
         const clamped = Math.max(0, Math.min(COLABORADOR_STEPS.length - 1, newStepIndex));
         currentMentiStep = clamped;
+        showAdminMentiResults = false;
         sound.playClick();
         renderColaboradorStep();
         if (isConnected && db) {
@@ -2238,6 +2245,24 @@
         const nextBtn = document.getElementById('btn-menti-next');
         if (prevBtn) prevBtn.disabled = step.index === 0;
         if (nextBtn) nextBtn.disabled = step.index === COLABORADOR_STEPS.length - 1;
+
+        const toggleResultsBtn = document.getElementById('btn-menti-toggle-results');
+        const toggleResultsLabel = document.getElementById('btn-menti-toggle-results-label');
+        if (toggleResultsBtn) {
+            if (isFacilitatorMode && step.index > 0) {
+                toggleResultsBtn.classList.remove('hidden');
+                if (toggleResultsLabel) {
+                    toggleResultsLabel.textContent = showAdminMentiResults ? 'Ocultar Resultados' : 'Ver Resultados de esta Pregunta';
+                }
+                toggleResultsBtn.onclick = () => {
+                    sound.playClick();
+                    showAdminMentiResults = !showAdminMentiResults;
+                    renderColaboradorStep();
+                };
+            } else {
+                toggleResultsBtn.classList.add('hidden');
+            }
+        }
 
         const pillsContainer = document.getElementById('menti-step-pills');
         if (pillsContainer) {
@@ -2372,6 +2397,120 @@
             ? 'Selecciona tu respuesta de forma individual.'
             : step.subtitle;
 
+        let adminResultsHtml = '';
+        if (isFacilitatorMode && showAdminMentiResults && step.index > 0) {
+            const evalOptions = step.type === 'ab_challenge'
+                ? [
+                    { key: 'A', label: 'Opción A (Texto A fue escrito por la IA)' },
+                    { key: 'B', label: 'Opción B (Texto B fue escrito por la IA)' }
+                  ]
+                : (step.options || []);
+            const { counts, total } = computePollStats(step.pollKey, evalOptions);
+
+            if (step.type === 'comparative_poll') {
+                const beforeStats = computePollStats(step.compareWithKey, evalOptions);
+                adminResultsHtml = `
+                    <div class="mt-6 pt-5 border-t border-sky-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold uppercase tracking-wider">
+                                <i class="fas fa-chart-bar mr-1.5"></i> Resultados Comparativos en Sala (Vista Facilitador)
+                            </span>
+                            <div class="flex items-center gap-4 text-xs font-mono">
+                                <span class="text-slate-400">${step.beforeLabel}: <strong class="text-white">${beforeStats.total}</strong></span>
+                                <span class="text-amber-300">${step.afterLabel}: <strong class="text-white">${total}</strong></span>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            ${evalOptions.map(opt => {
+                                const bCount = beforeStats.counts[opt.key] || 0;
+                                const bPct = beforeStats.total > 0 ? Math.round((bCount / beforeStats.total) * 100) : 0;
+                                const aCount = counts[opt.key] || 0;
+                                const aPct = total > 0 ? Math.round((aCount / total) * 100) : 0;
+                                return `
+                                    <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                                        <div class="flex items-center justify-between text-xs sm:text-sm font-semibold text-white">
+                                            <span><strong class="text-amber-400 font-orbitron mr-1.5">${opt.key}.</strong> ${opt.label}</span>
+                                            <span class="font-mono text-xs">
+                                                <span class="text-slate-400 mr-2">Antes: ${bPct}% (${bCount})</span>
+                                                <strong class="text-amber-300">Ahora: ${aPct}% (${aCount})</strong>
+                                            </span>
+                                        </div>
+                                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                                            <div class="h-full bg-slate-500 rounded-full transition-all duration-700" style="width:${bPct}%"></div>
+                                        </div>
+                                        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden">
+                                            <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-700" style="width:${aPct}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                let secAdminHtml = '';
+                if (step.secondaryPollKey) {
+                    const secOptions = [
+                        { key: 'A', label: 'Preferiría recibir la Respuesta A de mi jefe' },
+                        { key: 'B', label: 'Preferiría recibir la Respuesta B de mi jefe' }
+                    ];
+                    const secStats = computePollStats(step.secondaryPollKey, secOptions);
+                    secAdminHtml = `
+                        <div class="pt-4 mt-4 border-t border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between text-xs font-bold text-pink-300">
+                                <span>${step.secondaryQuestion}</span>
+                                <span class="font-mono text-slate-400">${secStats.total} votos</span>
+                            </div>
+                            ${secOptions.map(opt => {
+                                const c = secStats.counts[opt.key] || 0;
+                                const pct = secStats.total > 0 ? Math.round((c / secStats.total) * 100) : 0;
+                                return `
+                                    <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                                        <div class="flex items-center justify-between text-xs text-slate-200 font-semibold">
+                                            <span>${opt.label}</span>
+                                            <span class="font-orbitron text-pink-300 font-bold">${pct}% (${c})</span>
+                                        </div>
+                                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                                            <div class="h-full bg-pink-500 rounded-full transition-all duration-700" style="width:${pct}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+
+                adminResultsHtml = `
+                    <div class="mt-6 pt-5 border-t border-sky-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold uppercase tracking-wider">
+                                <i class="fas fa-chart-bar mr-1.5"></i> Resultados en Vivo de la Sala (Vista Facilitador)
+                            </span>
+                            <span class="text-xs font-mono text-slate-300">Total votos: <strong class="text-white">${total}</strong></span>
+                        </div>
+                        <div class="space-y-2.5">
+                            ${evalOptions.map(opt => {
+                                const count = counts[opt.key] || 0;
+                                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                return `
+                                    <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                                        <div class="flex items-center justify-between text-xs sm:text-sm font-semibold text-white">
+                                            <span><strong class="text-sky-400 font-orbitron mr-1.5">${opt.key}.</strong> ${opt.label}</span>
+                                            <span class="font-orbitron text-sky-300 font-bold">${pct}% <span class="text-xs font-mono text-slate-400 font-normal">(${count})</span></span>
+                                        </div>
+                                        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden">
+                                            <div class="h-full bg-gradient-to-r from-sky-500 to-amber-400 rounded-full transition-all duration-700" style="width:${pct}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        ${secAdminHtml}
+                    </div>
+                `;
+            }
+        }
+
         stage.innerHTML = `
             <div>
                 <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
@@ -2385,6 +2524,7 @@
             </div>
 
             ${bodyHtml}
+            ${adminResultsHtml}
         `;
 
         // Bind vote buttons
