@@ -1756,7 +1756,7 @@
                 textareaEl.focus();
             }
 
-            startTimer(q.time || 45, () => elements.nextBtn.click());
+            startTimer(q.time || 45, () => advanceQuestion(true));
         }
 
         function processAnswer() {
@@ -1795,11 +1795,22 @@
             });
         }
 
-        function handleNext() {
+        function advanceQuestion(forcedByTimer = false) {
+            const input = document.getElementById('answer-input');
+            const value = input ? input.value.trim() : '';
+            if (!forcedByTimer && !value) {
+                showToast("Escribe tu respuesta antes de avanzar", "fa-pen");
+                if (input) input.focus();
+                return;
+            }
             sound.playClick();
             processAnswer();
             currentQIndex++;
             loadQuestion();
+        }
+
+        function handleNext() {
+            advanceQuestion(false);
         }
 
         function calculateDivergentWeight(s) {
@@ -1826,6 +1837,20 @@
             showScreen('result');
             elements.progressBar.style.width = '100%';
 
+            const answeredCount = userResponses.filter(r => r.answer && r.answer !== "(Sin respuesta)").length;
+            const totalScore = scores.convergent + scores.divergent;
+
+            if (answeredCount === 0 || totalScore === 0) {
+                if (elements.resultViz) elements.resultViz.classList.add('hidden');
+                if (elements.aiContainer) elements.aiContainer.classList.add('hidden');
+                elements.resultTitle.textContent = "¡Nos faltó leer tus ideas!";
+                elements.resultTitle.className = "text-2xl font-semibold mb-3 font-orbitron text-amber-400";
+                elements.resultDescription.textContent = "En esta ronda no se alcanzaron a registrar respuestas válidas para calcular tu estilo de pensamiento. Haz clic en 'Intentar de Nuevo' para vivir el reto y descubrir tu perfil.";
+                return;
+            }
+
+            if (elements.resultViz) elements.resultViz.classList.remove('hidden');
+
             const { name: participantName, mood: participantMood } = getCurrentParticipantContext();
             const { profileTitle } = renderScoreUI();
 
@@ -1839,43 +1864,23 @@
                 elements.aiText.textContent = "Descubriendo tus fortalezas creativas con IA...";
                 
                 const divergentSummary = userResponses
-                    .filter(r => r.questionType === 'divergent')
+                    .filter(r => r.questionType === 'divergent' && r.answer !== "(Sin respuesta)")
                     .map(r => `- Reto "${r.title}": "${r.answer}"`)
                     .join('\n');
 
-                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} cuyo resultado en El Prisma del Pensamiento es "${profileTitle}".
-Datos internos de referencia (NO los menciones como números en tu respuesta):
-- Enfoque Convergente: ${scores.convergent}/75
-- Exploración Divergente: ${scores.divergent}/75
-- Ideas escritas en los retos creativos:
-${divergentSummary}
+                const prompt = `Actúa como un coach de innovación cercano, empático y motivador (con enfoque apreciativo y Growth Mindset). Acompaña a ${participantName ? `un participante llamado "${participantName}"` : 'un participante'} cuyo resultado definitivo en El Prisma del Pensamiento es "${profileTitle}".
+Ideas escritas por el participante en los retos abiertos:
+${divergentSummary || "(Se enfocó principalmente en los retos de agudeza convergente)"}
 
-Reglas estrictas para tu mensaje ("feedback"):
-1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre` : 'Saluda con calidez'} y felicítalo mencionando explícitamente su perfil obtenido ("${profileTitle}").
-2. PROHIBIDO mencionar números, puntajes o frases técnicas como "puntaje preliminar", "35 puntos", "bajo puntaje", "poca fluidez" o "sin respuesta".
-3. Cita con naturalidad 1 o 2 ideas concretas que haya escrito para destacar cómo se refleja su estilo de pensamiento, y cierra con una invitación breve e inspiradora.
-4. Sé conciso: máximo 3 oraciones breves (alrededor de 45 a 60 palabras en total).
-5. Estima internamente "adjustedDivergentScore" entre ${Math.max(15, scores.divergent)} y 75 manteniendo coherencia con su desempeño.
-Devuelve ÚNICAMENTE un objeto JSON válido sin bloques markdown con este formato exacto:
-{"adjustedDivergentScore": ${scores.divergent}, "feedback": "Tu mensaje cálido, coherente con el perfil y conciso aquí."}`;
+Reglas estrictas para tu mensaje:
+1. ${participantName ? `Saluda cálidamente a ${participantName} por su nombre` : 'Saluda con calidez'} y felicítalo mencionando exactamente su perfil obtenido: "${profileTitle}".
+2. PROHIBIDO mencionar números, puntajes o frases técnicas como "puntaje preliminar", "bajo puntaje", "poca fluidez" o "sin respuesta".
+3. Si escribió ideas en los retos abiertos, cita con naturalidad 1 o 2 de ellas para destacar su estilo; y cierra con una invitación breve e inspiradora para su rol de liderazgo.
+4. Sé conciso: máximo 3 oraciones breves (alrededor de 45 a 60 palabras en total). Responde únicamente con el texto del mensaje en español (sin comillas ni bloques JSON).`;
 
                 const aiResponse = await generateAIAnalysis(prompt);
                 if (aiResponse) {
-                    try {
-                        const cleanJson = aiResponse.replace(/```json|```/g, '').trim();
-                        const parsed = JSON.parse(cleanJson);
-                        if (typeof parsed.adjustedDivergentScore === 'number' && !isNaN(parsed.adjustedDivergentScore)) {
-                            scores.divergent = Math.max(0, Math.min(75, Math.round(parsed.adjustedDivergentScore)));
-                            renderScoreUI();
-                            if (db && userId && isConnected) {
-                                const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
-                                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
-                            }
-                        }
-                        elements.aiText.textContent = parsed.feedback || aiResponse;
-                    } catch {
-                        elements.aiText.textContent = aiResponse;
-                    }
+                    elements.aiText.textContent = aiResponse.replace(/```json|```/g, '').trim();
                 } else {
                     elements.aiContainer.classList.add('hidden');
                 }
