@@ -240,27 +240,59 @@
 
             <!-- Action Buttons -->
             <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-800">
-                <button id="welcomeCoverBtn" title="Ver Portada de Bienvenida" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center">
-                    <i class="fas fa-home text-xs sm:text-sm"></i>
-                </button>
-                <button id="qrShareBtn" title="Compartir con Código QR para Móviles" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
-                    <i class="fas fa-qrcode text-xs sm:text-sm"></i>
-                </button>
-                <button id="openStatsBtn" title="Ver Estadísticas del Clima" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-purple-400 hover:bg-slate-800/80 transition flex items-center justify-center">
-                    <i class="fas fa-chart-pie text-xs sm:text-sm"></i>
-                </button>
-                <button id="exportTreeBtn" title="Exportar Árbol como Imagen (PNG)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition flex items-center justify-center">
-                    <i class="fas fa-camera text-xs sm:text-sm"></i>
-                </button>
+                <div id="admin-header-tools" class="hidden items-center gap-1">
+                    <button id="welcomeCoverBtn" title="Ver Portada de Bienvenida" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                        <i class="fas fa-home text-xs sm:text-sm"></i>
+                    </button>
+                    <button id="qrShareBtn" title="Compartir con Código QR para Móviles" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                        <i class="fas fa-qrcode text-xs sm:text-sm"></i>
+                    </button>
+                    <button id="openStatsBtn" title="Ver Estadísticas del Clima" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-purple-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                        <i class="fas fa-chart-pie text-xs sm:text-sm"></i>
+                    </button>
+                    <button id="exportTreeBtn" title="Exportar Árbol como Imagen (PNG)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                        <i class="fas fa-camera text-xs sm:text-sm"></i>
+                    </button>
+                    <button id="fullscreenBtn" title="Pantalla Completa" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                        <i class="fas fa-expand text-xs sm:text-sm"></i>
+                    </button>
+                </div>
                 <button id="soundToggleBtn" title="Sonido" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
                     <i class="fas fa-volume-up text-xs sm:text-sm"></i>
                 </button>
-                <button id="fullscreenBtn" title="Pantalla Completa" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
-                    <i class="fas fa-expand text-xs sm:text-sm"></i>
+                <button id="adminAccessBtn" title="Acceso Administrador / Facilitador" class="px-2 h-7 sm:h-8 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center gap-1.5 text-[11px] font-semibold">
+                    <i id="admin-access-icon" class="fas fa-lock text-xs"></i>
+                    <span id="admin-access-label" class="hidden sm:inline">Admin</span>
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- Barra Global de Control del Administrador (Solo visible al ingresar contraseña de Facilitador) -->
+    <div id="global-facilitator-bar" class="hidden w-full bg-slate-950/95 border-b border-amber-500/40 px-3 py-2 z-30 shadow-xl">
+        <div class="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fas fa-broadcast-tower animate-pulse"></i> Control Maestro Activo
+                </span>
+                <span class="text-[11px] text-slate-400 hidden md:inline">Todos los participantes conectados avanzan automáticamente contigo:</span>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <button id="admin-nav-welcome" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-semibold transition flex items-center gap-1">
+                    <i class="fas fa-home text-sky-400"></i> Portada
+                </button>
+                <button id="admin-nav-mood" class="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-[11px] font-semibold transition flex items-center gap-1">
+                    <i class="fas fa-tree"></i> 1. Árbol
+                </button>
+                <button id="admin-nav-prisma" class="px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-[11px] font-semibold transition flex items-center gap-1">
+                    <i class="fas fa-gem"></i> 2. Prisma
+                </button>
+                <button id="admin-nav-colaborador" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-semibold transition flex items-center gap-1">
+                    <i class="fas fa-robot"></i> 3. Nuevo Colaborador
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Portada de Bienvenida (Encuentro de Líderes de Talento Humano) -->
     <section id="welcome-cover" class="w-full max-w-5xl mx-auto px-4 py-6 sm:py-12 flex-1 flex flex-col items-center justify-center z-20">
@@ -342,11 +374,15 @@
                     <span>Comenzar la Experiencia</span>
                     <i class="fas fa-arrow-right"></i>
                 </button>
-                <button id="btn-cover-qr" class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-sky-300 border border-slate-700/80 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
+                <button id="btn-cover-qr" class="hidden w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-sky-300 border border-slate-700/80 font-semibold text-xs sm:text-sm transition-all items-center justify-center gap-2">
                     <i class="fas fa-qrcode text-sky-400"></i>
                     <span>Mostrar Código QR en Pantalla</span>
                 </button>
             </div>
+            <p class="mt-4 text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Conectado en tiempo real • Tu pantalla avanzará automáticamente con el facilitador</span>
+            </p>
         </div>
     </section>
 
@@ -453,8 +489,8 @@
                 <div class="grid grid-cols-3 gap-1 text-[11px]" id="mood-summary-badges"></div>
             </div>
 
-            <!-- Facilitator Control Card -->
-            <div class="glass-card p-3.5 space-y-2.5">
+            <!-- Facilitator Control Card (Only visible in Admin/Facilitator mode) -->
+            <div id="team-mood-admin-card" class="hidden glass-card p-3.5 space-y-2.5">
                 <div class="flex items-center justify-between">
                     <div>
                         <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
@@ -617,14 +653,14 @@
 
     <!-- Ejercicio 2: El Prisma del Pensamiento (Integrado en la misma página sin recarga ni 404) -->
     <section id="prisma-main" class="hidden w-full max-w-3xl mx-auto p-4 sm:p-8 flex-1 flex flex-col items-center justify-center z-10">
-        <div class="w-full flex items-center justify-between mb-4">
+        <div id="prisma-top-bar" class="hidden w-full items-center justify-between mb-4">
             <button id="btn-back-to-mood" class="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-sky-400 hover:border-sky-500/50 transition text-xs font-semibold flex items-center gap-2 shadow-lg">
                 <i class="fas fa-arrow-left text-sky-400"></i>
                 <i class="fas fa-tree text-emerald-400"></i>
                 <span>Volver al Ejercicio 1 (Árbol Team Mood)</span>
             </button>
             <span class="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold uppercase tracking-wider">
-                Ejercicio 2 de 2
+                Momento 2 de 3
             </span>
         </div>
 
@@ -707,11 +743,11 @@
                     
                     <div class="flex justify-center flex-wrap gap-3 mt-6">
                         <button id="back-to-individual-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all">Volver a Mi Perfil</button>
-                        <button id="launch-colaborador-from-prisma-btn" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-2.5 px-6 rounded-full text-sm shadow-lg shadow-amber-500/30 transition-all flex items-center gap-2">
+                        <button id="launch-colaborador-from-prisma-btn" class="hidden bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-2.5 px-6 rounded-full text-sm shadow-lg shadow-amber-500/30 transition-all items-center gap-2">
                             <i class="fas fa-broadcast-tower"></i>
                             <span>Avanzar Grupo al Momento 3 (El Nuevo Colaborador)</span>
                         </button>
-                        <button id="reset-group-pensamiento-btn" class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all flex items-center gap-2">
+                        <button id="reset-group-pensamiento-btn" class="hidden bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold py-2.5 px-6 rounded-full text-sm transition-all items-center gap-2">
                             <i class="fas fa-trash-alt"></i>
                             <span>Resetear Grupo (Admin)</span>
                         </button>
@@ -722,9 +758,9 @@
     </section>
 
     <!-- Momento 3: El Nuevo Colaborador (Mentimeter en Vivo & Presentación Sincronizada) -->
-    <section id="colaborador-main" class="hidden w-full max-w-5xl mx-auto p-3 sm:p-6 flex-1 flex flex-col z-10">
-        <!-- Top Navigation & Status Bar -->
-        <div class="w-full flex items-center justify-between flex-wrap gap-2 mb-4">
+    <section id="colaborador-main" class="hidden w-full max-w-4xl mx-auto p-3 sm:p-6 flex-1 flex flex-col justify-center z-10">
+        <!-- Top Navigation & Status Bar (Only visible to Administrator/Facilitator) -->
+        <div id="colaborador-top-bar" class="hidden w-full items-center justify-between flex-wrap gap-2 mb-4">
             <div class="flex items-center gap-2">
                 <button id="btn-back-to-prisma" class="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-purple-400 hover:border-purple-500/50 transition text-xs font-semibold flex items-center gap-2 shadow-lg">
                     <i class="fas fa-arrow-left text-purple-400"></i>
@@ -732,7 +768,7 @@
                 </button>
                 <span class="px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Momento 3 de 3 • El Nuevo Colaborador</span>
+                    <span>Monitor Momento 3 • El Nuevo Colaborador</span>
                 </span>
             </div>
 
@@ -758,10 +794,6 @@
                     <span class="text-xs text-slate-400">Al cambiar de etapa aquí, todos los celulares cambian automáticamente en tiempo real.</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="btn-menti-reveal" class="hidden px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition flex items-center gap-1.5">
-                        <i class="fas fa-eye"></i>
-                        <span id="btn-menti-reveal-label">Revelar Respuesta en Sala</span>
-                    </button>
                     <button id="btn-menti-reset" class="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-semibold transition flex items-center gap-1.5">
                         <i class="fas fa-trash-alt"></i>
                         <span>Reiniciar Votos</span>
@@ -1001,11 +1033,76 @@
     let prismaInitialized = false;
     let isPrismaUnlocked = false;
     let isColaboradorUnlocked = false;
-    let isFacilitatorMode = false;
+    let isFacilitatorMode = sessionStorage.getItem('intercajas_facilitator_mode') === 'true';
+    let currentActiveActivity = 'welcome';
     let currentMentiStep = 0;
     let mentiRevealed = {};
     let mentiVotesState = {};
     let myMentiVotes = JSON.parse(localStorage.getItem('intercajas_my_menti_votes') || '{}');
+
+    async function broadcastFacilitatorRouting(activityOverride) {
+        const act = activityOverride || currentActiveActivity || 'welcome';
+        if (isConnected && db) {
+            try {
+                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    activeActivity: act,
+                    mentiStep: currentMentiStep || 0,
+                    mentiRevealed: mentiRevealed || {},
+                    launchedAt: Date.now(),
+                    updatedAt: Date.now(),
+                    facilitatorId: userId
+                }, { merge: true });
+            } catch (e) {
+                console.warn("Error sincronizando control de sala:", e);
+            }
+        }
+    }
+
+    function updateAdminUIVisibility() {
+        const headerTools = document.getElementById('admin-header-tools');
+        const globalBar = document.getElementById('global-facilitator-bar');
+        const adminBtn = document.getElementById('adminAccessBtn');
+        const adminIcon = document.getElementById('admin-access-icon');
+        const adminLabel = document.getElementById('admin-access-label');
+        const coverQrBtn = document.getElementById('btn-cover-qr');
+        const moodAdminCard = document.getElementById('team-mood-admin-card');
+        const prismaTopBar = document.getElementById('prisma-top-bar');
+        const prismaLaunchColab = document.getElementById('launch-colaborador-from-prisma-btn');
+        const prismaResetGroup = document.getElementById('reset-group-pensamiento-btn');
+        const prismaShowGroup = document.getElementById('show-group-btn');
+        const colabTopBar = document.getElementById('colaborador-top-bar');
+        const colabFacBar = document.getElementById('colaborador-facilitator-bar');
+
+        if (isFacilitatorMode) {
+            if (headerTools) { headerTools.classList.remove('hidden'); headerTools.classList.add('flex'); }
+            if (globalBar) globalBar.classList.remove('hidden');
+            if (adminBtn) adminBtn.className = 'px-2.5 h-7 sm:h-8 rounded-lg bg-amber-500/20 border border-amber-400/50 text-amber-300 transition flex items-center justify-center gap-1.5 text-[11px] font-bold shadow';
+            if (adminIcon) adminIcon.className = 'fas fa-user-shield text-xs text-amber-400';
+            if (adminLabel) { adminLabel.textContent = 'Facilitador'; adminLabel.classList.remove('hidden'); }
+            if (coverQrBtn) { coverQrBtn.classList.remove('hidden'); coverQrBtn.classList.add('flex'); }
+            if (moodAdminCard) moodAdminCard.classList.remove('hidden');
+            if (prismaTopBar) { prismaTopBar.classList.remove('hidden'); prismaTopBar.classList.add('flex'); }
+            if (prismaLaunchColab) { prismaLaunchColab.classList.remove('hidden'); prismaLaunchColab.classList.add('flex'); }
+            if (prismaResetGroup) { prismaResetGroup.classList.remove('hidden'); prismaResetGroup.classList.add('flex'); }
+            if (prismaShowGroup) prismaShowGroup.classList.remove('hidden');
+            if (colabTopBar) { colabTopBar.classList.remove('hidden'); colabTopBar.classList.add('flex'); }
+            if (colabFacBar) colabFacBar.classList.remove('hidden');
+        } else {
+            if (headerTools) { headerTools.classList.add('hidden'); headerTools.classList.remove('flex'); }
+            if (globalBar) globalBar.classList.add('hidden');
+            if (adminBtn) adminBtn.className = 'px-2 h-7 sm:h-8 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center gap-1.5 text-[11px] font-semibold';
+            if (adminIcon) adminIcon.className = 'fas fa-lock text-xs';
+            if (adminLabel) { adminLabel.textContent = 'Admin'; }
+            if (coverQrBtn) { coverQrBtn.classList.add('hidden'); coverQrBtn.classList.remove('flex'); }
+            if (moodAdminCard) moodAdminCard.classList.add('hidden');
+            if (prismaTopBar) { prismaTopBar.classList.add('hidden'); prismaTopBar.classList.remove('flex'); }
+            if (prismaLaunchColab) { prismaLaunchColab.classList.add('hidden'); prismaLaunchColab.classList.remove('flex'); }
+            if (prismaResetGroup) { prismaResetGroup.classList.add('hidden'); prismaResetGroup.classList.remove('flex'); }
+            if (prismaShowGroup) prismaShowGroup.classList.add('hidden');
+            if (colabTopBar) { colabTopBar.classList.add('hidden'); colabTopBar.classList.remove('flex'); }
+            if (colabFacBar) colabFacBar.classList.add('hidden');
+        }
+    }
 
     async function generateAIAnalysis(promptText) {
         const defaultApiKey = atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
@@ -1045,8 +1142,9 @@
         return { name, mood };
     }
 
-    function navigateToPrisma() {
+    function navigateToPrisma(fromRemote = false) {
         sound.playChime();
+        currentActiveActivity = 'prisma';
         const { name } = getCurrentParticipantContext();
 
         const welcomeCover = document.getElementById('welcome-cover');
@@ -1073,11 +1171,16 @@
             greetingText.textContent = `¡Hola, ${name}! Tu registro está conectado`;
         }
 
+        updateAdminUIVisibility();
+        if (isFacilitatorMode && !fromRemote) {
+            broadcastFacilitatorRouting('prisma');
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function navigateToTeamMood() {
+    function navigateToTeamMood(fromRemote = false) {
         sound.playClick();
+        currentActiveActivity = 'team-mood';
         const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
@@ -1090,11 +1193,16 @@
         if (teamMoodMain) teamMoodMain.classList.remove('hidden');
         if (teamMoodTabs) teamMoodTabs.classList.remove('hidden');
 
+        updateAdminUIVisibility();
+        if (isFacilitatorMode && !fromRemote) {
+            broadcastFacilitatorRouting('team-mood');
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function navigateToWelcomeCover() {
+    function navigateToWelcomeCover(fromRemote = false) {
         sound.playClick();
+        currentActiveActivity = 'welcome';
         const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
@@ -1107,11 +1215,16 @@
         if (colaboradorMain) colaboradorMain.classList.add('hidden');
         if (welcomeCover) welcomeCover.classList.remove('hidden');
 
+        updateAdminUIVisibility();
+        if (isFacilitatorMode && !fromRemote) {
+            broadcastFacilitatorRouting('welcome');
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function navigateToColaborador() {
+    function navigateToColaborador(fromRemote = false) {
         sound.playChime();
+        currentActiveActivity = 'colaborador';
         const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
@@ -1124,7 +1237,11 @@
         if (prismaMain) prismaMain.classList.add('hidden');
         if (colaboradorMain) colaboradorMain.classList.remove('hidden');
 
+        updateAdminUIVisibility();
         renderColaboradorStep();
+        if (isFacilitatorMode && !fromRemote) {
+            broadcastFacilitatorRouting('colaborador');
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -1140,6 +1257,7 @@
         setupMobileTabs();
         setupZoomControls();
         initPlexus();
+        updateAdminUIVisibility();
 
         try {
             await initFirebase();
@@ -1214,8 +1332,8 @@
         onSnapshot(routingDocRef, (docSnap) => {
             if (!docSnap.exists()) return;
             const data = docSnap.data();
-            const isRecentSession = data.launchedAt && (Date.now() - data.launchedAt < 90 * 60 * 1000);
-            const isJustLaunched = data.launchedAt && data.launchedAt > (sessionLoadedAt - 4000);
+            const ts = data.updatedAt || data.launchedAt || 0;
+            const isRecentSession = ts && (Date.now() - ts < 4 * 60 * 60 * 1000);
 
             if (typeof data.mentiStep === 'number' && data.mentiStep !== currentMentiStep) {
                 currentMentiStep = data.mentiStep;
@@ -1233,35 +1351,33 @@
                 }
             }
 
-            if (data.activeActivity === 'colaborador' && isRecentSession) {
+            if (!isRecentSession) return;
+
+            if (data.activeActivity === 'colaborador') {
                 isPrismaUnlocked = true;
                 isColaboradorUnlocked = true;
                 checkUserCurrentAvatar();
-                if (isJustLaunched) {
-                    if (data.facilitatorId === userId) {
-                        showToast("¡Grupo enviado en vivo al Momento 3 (El Nuevo Colaborador)!", "fa-broadcast-tower");
-                    } else {
-                        showToast("¡El facilitador inició el Momento 3: El Nuevo Colaborador!", "fa-robot");
-                        setTimeout(() => navigateToColaborador(), 900);
-                    }
+                if (!isFacilitatorMode && currentActiveActivity !== 'colaborador') {
+                    navigateToColaborador(true);
+                } else if (currentActiveActivity === 'colaborador') {
+                    renderColaboradorStep();
                 }
-            } else if (data.activeActivity === 'prisma' && isRecentSession) {
+            } else if (data.activeActivity === 'prisma') {
                 isPrismaUnlocked = true;
                 checkUserCurrentAvatar();
-                if (isJustLaunched) {
-                    if (data.facilitatorId === userId) {
-                        showToast("¡Grupo enviado en vivo al Ejercicio 2 (Prisma)!", "fa-broadcast-tower");
-                    } else {
-                        showToast("¡El facilitador inició el Ejercicio 2! Abriendo Prisma del Pensamiento...", "fa-rocket");
-                        setTimeout(() => navigateToPrisma(), 1200);
-                    }
+                if (!isFacilitatorMode && currentActiveActivity !== 'prisma') {
+                    navigateToPrisma(true);
                 }
             } else if (data.activeActivity === 'team-mood') {
                 isPrismaUnlocked = false;
                 isColaboradorUnlocked = false;
                 checkUserCurrentAvatar();
-                if (isJustLaunched) {
-                    navigateToTeamMood();
+                if (!isFacilitatorMode && currentActiveActivity !== 'team-mood') {
+                    navigateToTeamMood(true);
+                }
+            } else if (data.activeActivity === 'welcome') {
+                if (!isFacilitatorMode && currentActiveActivity !== 'welcome') {
+                    navigateToWelcomeCover(true);
                 }
             }
         });
@@ -1701,6 +1817,10 @@
     }
 
     function promptAdminAction(onAuthorized, options = {}) {
+        if (isFacilitatorMode && !options.requireReauth) {
+            onAuthorized();
+            return;
+        }
         const modal = document.getElementById('password-modal');
         const titleEl = document.getElementById('password-modal-title');
         const descEl = document.getElementById('password-modal-desc');
@@ -1709,8 +1829,8 @@
         const cancelBtn = document.getElementById('password-cancel');
         const submitBtn = document.getElementById('password-submit');
 
-        if (titleEl) titleEl.textContent = options.title || 'Acción Protegida';
-        if (descEl) descEl.textContent = options.description || 'Introduce la clave de facilitador para continuar.';
+        if (titleEl) titleEl.textContent = options.title || 'Acceso Administrador';
+        if (descEl) descEl.textContent = options.description || 'Introduce la clave de facilitador para activar el control sincronizado de la sala.';
 
         input.value = '';
         error.textContent = '';
@@ -1736,6 +1856,9 @@
         const handleSubmit = async () => {
             if (input.value === 'Comfa2025') {
                 sound.playWhoosh();
+                isFacilitatorMode = true;
+                sessionStorage.setItem('intercajas_facilitator_mode', 'true');
+                updateAdminUIVisibility();
                 closeModal();
                 await onAuthorized();
             } else {
@@ -1753,6 +1876,7 @@
     function promptAdminReset() {
         promptAdminAction(async () => {
             isPrismaUnlocked = false;
+            isColaboradorUnlocked = false;
             if (isConnected && db) {
                 const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
                 const snap = await getDocs(collection(db, collectionPath));
@@ -1760,8 +1884,10 @@
                 snap.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
                 deletePromises.push(setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
                     activeActivity: 'team-mood',
-                    launchedAt: Date.now()
-                }));
+                    launchedAt: Date.now(),
+                    updatedAt: Date.now(),
+                    facilitatorId: userId
+                }, { merge: true }));
                 await Promise.all(deletePromises);
             } else {
                 participantsState = {};
@@ -1779,17 +1905,8 @@
         promptAdminAction(async () => {
             isPrismaUnlocked = true;
             checkUserCurrentAvatar();
-            if (isConnected && db) {
-                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
-                    activeActivity: 'prisma',
-                    launchedAt: Date.now(),
-                    facilitatorId: userId
-                }, { merge: true });
-                showToast("¡Enviando a todos los participantes al Prisma del Pensamiento!", "fa-broadcast-tower");
-                setTimeout(() => navigateToPrisma(), 900);
-            } else {
-                navigateToPrisma();
-            }
+            showToast("¡Enviando a todos los participantes al Ejercicio 2 (Prisma)!", "fa-broadcast-tower");
+            navigateToPrisma(false);
         }, {
             title: 'Avanzar al Ejercicio 2',
             description: 'Introduce la clave de facilitador para enviar a todo el grupo a El Prisma del Pensamiento.'
@@ -1800,24 +1917,12 @@
         promptAdminAction(async () => {
             isPrismaUnlocked = true;
             isColaboradorUnlocked = true;
-            isFacilitatorMode = true;
             checkUserCurrentAvatar();
-            if (isConnected && db) {
-                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
-                    activeActivity: 'colaborador',
-                    mentiStep: currentMentiStep || 0,
-                    mentiRevealed: mentiRevealed || {},
-                    launchedAt: Date.now(),
-                    facilitatorId: userId
-                }, { merge: true });
-                showToast("¡Enviando a toda la sala al Momento 3: El Nuevo Colaborador!", "fa-robot");
-                setTimeout(() => navigateToColaborador(), 800);
-            } else {
-                navigateToColaborador();
-            }
+            showToast("¡Enviando a toda la sala al Momento 3: El Nuevo Colaborador!", "fa-robot");
+            navigateToColaborador(false);
         }, {
             title: 'Avanzar al Momento 3 (El Nuevo Colaborador)',
-            description: 'Introduce la clave de facilitador para abrir los tests tipo Mentimeter de El Nuevo Colaborador en todos los dispositivos.'
+            description: 'Introduce la clave de facilitador para abrir las preguntas de El Nuevo Colaborador en todos los dispositivos.'
         });
     }
 
@@ -2019,6 +2124,7 @@
                     activeActivity: 'colaborador',
                     mentiStep: clamped,
                     mentiRevealed: mentiRevealed || {},
+                    launchedAt: Date.now(),
                     updatedAt: Date.now(),
                     facilitatorId: userId
                 }, { merge: true });
@@ -2037,6 +2143,7 @@
             try {
                 await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
                     mentiRevealed,
+                    launchedAt: Date.now(),
                     updatedAt: Date.now()
                 }, { merge: true });
             } catch (e) {
@@ -2059,6 +2166,7 @@
                 dels.push(setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
                     mentiStep: 0,
                     mentiRevealed: {},
+                    launchedAt: Date.now(),
                     updatedAt: Date.now()
                 }, { merge: true }));
                 await Promise.all(dels);
@@ -2094,17 +2202,17 @@
         const totalVotersEl = document.getElementById('menti-total-voters');
         if (totalVotersEl) totalVotersEl.textContent = Object.keys(mentiVotesState).length;
 
-        // Update Facilitator Bar if visible
+        // Only show Facilitator Top Bar & Control Bar to Administrator
+        const colabTopBar = document.getElementById('colaborador-top-bar');
         const facBar = document.getElementById('colaborador-facilitator-bar');
         const facLabel = document.getElementById('toggle-facilitator-bar-label');
-        if (facBar) {
-            if (isFacilitatorMode) {
-                facBar.classList.remove('hidden');
-                if (facLabel) facLabel.textContent = 'Ocultar Panel Facilitador';
-            } else {
-                facBar.classList.add('hidden');
-                if (facLabel) facLabel.textContent = 'Control Facilitador';
-            }
+        if (isFacilitatorMode) {
+            if (colabTopBar) { colabTopBar.classList.remove('hidden'); colabTopBar.classList.add('flex'); }
+            if (facBar) facBar.classList.remove('hidden');
+            if (facLabel) facLabel.textContent = 'Panel Facilitador Activo';
+        } else {
+            if (colabTopBar) { colabTopBar.classList.add('hidden'); colabTopBar.classList.remove('flex'); }
+            if (facBar) facBar.classList.add('hidden');
         }
 
         const stepTitleEl = document.getElementById('menti-facilitator-step-title');
@@ -2117,19 +2225,6 @@
         if (prevBtn) prevBtn.disabled = step.index === 0;
         if (nextBtn) nextBtn.disabled = step.index === COLABORADOR_STEPS.length - 1;
 
-        const revealBtn = document.getElementById('btn-menti-reveal');
-        const revealLabel = document.getElementById('btn-menti-reveal-label');
-        if (revealBtn) {
-            if (step.revealKey) {
-                revealBtn.classList.remove('hidden');
-                const isRev = !!mentiRevealed[step.revealKey];
-                if (revealLabel) revealLabel.textContent = isRev ? 'Ocultar Veredicto' : 'Revelar Veredicto en Sala';
-                revealBtn.onclick = () => toggleMentiReveal(step.revealKey);
-            } else {
-                revealBtn.classList.add('hidden');
-            }
-        }
-
         const pillsContainer = document.getElementById('menti-step-pills');
         if (pillsContainer) {
             pillsContainer.innerHTML = COLABORADOR_STEPS.map(s => {
@@ -2141,7 +2236,7 @@
             });
         }
 
-        // Render Stage Content by Step Type
+        // Render Stage Content: Sin resultados grupales (cero sesgo) y sin marcas de respuesta (IA / HUMANO)
         let bodyHtml = '';
 
         if (step.type === 'waiting_presenter') {
@@ -2152,87 +2247,40 @@
                     </div>
                     <div class="space-y-2 max-w-lg mx-auto">
                         <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono uppercase tracking-wider">
-                            <i class="fas fa-circle text-[8px] mr-1.5 animate-ping"></i> Dispositivo conectado en vivo
+                            <i class="fas fa-circle text-[8px] mr-1.5 animate-ping"></i> Sincronizado en vivo
                         </span>
-                        <h3 class="font-orbitron text-lg sm:text-xl font-bold text-white pt-1">Sigue la proyección principal</h3>
+                        <h3 class="font-orbitron text-lg sm:text-xl font-bold text-white pt-1">Sigue la proyección del presentador</h3>
                         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                            No necesitas cambiar de pantalla. Cada vez que el presentador active una pregunta interactiva, <strong>aparecerán aquí automáticamente tus opciones de respuesta</strong>.
+                            Cada pregunta aparecerá aquí de forma automática en cuanto el presentador la active.
                         </p>
                     </div>
                 </div>
             `;
-        } else if (step.type === 'poll') {
-            const { counts, total } = computePollStats(step.pollKey, step.options);
-            const myChoice = myMentiVotes[step.pollKey];
-
-            bodyHtml = `
-                <div class="my-4 space-y-3.5">
-                    ${step.options.map(opt => {
-                        const count = counts[opt.key] || 0;
-                        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                        const isSelected = myChoice === opt.key;
-                        return `
-                            <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border transition-all relative overflow-hidden group ${isSelected ? 'bg-slate-900 border-amber-400 shadow-lg shadow-amber-500/15' : 'bg-slate-900/75 border-slate-800 hover:border-slate-600'}">
-                                <!-- Animated Background Fill Bar -->
-                                <div class="absolute inset-y-0 left-0 bg-gradient-to-r ${isSelected ? 'from-amber-500/30 to-orange-500/20' : 'from-sky-500/20 to-indigo-500/15'} transition-all duration-700 pointer-events-none" style="width: ${pct}%;"></div>
-                                
-                                <div class="relative z-10 flex items-center justify-between gap-3">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 border ${isSelected ? 'bg-amber-500 text-slate-950 border-amber-300' : 'bg-slate-950 text-amber-400 border-slate-700'}">
-                                            ${opt.key}
-                                        </span>
-                                        <span class="text-xs sm:text-base font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}">${opt.label}</span>
-                                        ${isSelected ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold">Tu voto</span>' : ''}
-                                    </div>
-                                    <div class="flex items-center gap-2 flex-shrink-0">
-                                        <span class="font-orbitron font-bold text-sm sm:text-lg ${isSelected ? 'text-amber-300' : 'text-sky-300'}">${pct}%</span>
-                                        <span class="text-[11px] text-slate-400 font-mono">(${count})</span>
-                                    </div>
-                                </div>
-                            </button>
-                        `;
-                    }).join('')}
-                    <div class="flex items-center justify-between pt-2 text-xs text-slate-400">
-                        <span>${myChoice ? `<i class="fas fa-check-circle text-emerald-400 mr-1"></i> Has votado la opción <strong>${myChoice}</strong> (puedes cambiarla tocando otra)` : '<i class="fas fa-hand-pointer text-amber-400 mr-1"></i> Toca una opción para registrar tu voto en vivo'}</span>
-                        <span class="font-mono">Total respuestas: <strong class="text-white">${total}</strong></span>
-                    </div>
-                </div>
-            `;
         } else if (step.type === 'ab_challenge') {
+            // PREGUNTAS "HUMANO O IA": Muestra TEXTO A y TEXTO B totalmente neutros (sin marcar respuesta IA/HUMANO) y sin votos de otros participantes
             const abOptions = [
                 { key: 'A', label: 'El Texto A fue escrito por la IA' },
                 { key: 'B', label: 'El Texto B fue escrito por la IA' }
             ];
-            const { counts, total } = computePollStats(step.pollKey, abOptions);
             const myChoice = myMentiVotes[step.pollKey];
-            const isRevealed = !!mentiRevealed[step.revealKey];
 
             let secondaryHtml = '';
             if (step.secondaryPollKey) {
+                const mySecChoice = myMentiVotes[step.secondaryPollKey];
                 const secOptions = [
                     { key: 'A', label: 'Preferiría recibir la Respuesta A de mi jefe' },
                     { key: 'B', label: 'Preferiría recibir la Respuesta B de mi jefe' }
                 ];
-                const secStats = computePollStats(step.secondaryPollKey, secOptions);
-                const mySecChoice = myMentiVotes[step.secondaryPollKey];
                 secondaryHtml = `
-                    <div class="mt-4 p-4 rounded-2xl bg-slate-900/90 border border-pink-500/30 space-y-2.5">
-                        <div class="text-xs sm:text-sm font-bold text-pink-300 flex items-center justify-between">
-                            <span><i class="fas fa-heart mr-1.5"></i> ${step.secondaryQuestion}</span>
-                            <span class="text-[11px] font-mono text-slate-400">${secStats.total} votos</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="mt-5 pt-4 border-t border-slate-800 space-y-3">
+                        <p class="text-xs sm:text-sm font-bold text-pink-300">${step.secondaryQuestion}</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             ${secOptions.map(opt => {
-                                const c = secStats.counts[opt.key] || 0;
-                                const pct = secStats.total > 0 ? Math.round((c / secStats.total) * 100) : 0;
                                 const sel = mySecChoice === opt.key;
                                 return `
-                                    <button data-poll="${step.secondaryPollKey}" data-opt="${opt.key}" class="menti-vote-btn p-3 rounded-xl border text-left relative overflow-hidden transition ${sel ? 'bg-slate-950 border-pink-400 text-white' : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'}">
-                                        <div class="absolute inset-y-0 left-0 bg-pink-500/20 transition-all duration-500 pointer-events-none" style="width:${pct}%"></div>
-                                        <div class="relative z-10 flex items-center justify-between text-xs font-semibold">
-                                            <span>${opt.label}</span>
-                                            <span class="font-orbitron text-pink-300 font-bold">${pct}% (${c})</span>
-                                        </div>
+                                    <button data-poll="${step.secondaryPollKey}" data-opt="${opt.key}" class="menti-vote-btn p-3.5 rounded-2xl border text-left font-semibold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 ${sel ? 'bg-pink-500/20 border-pink-400 text-white shadow-lg' : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700'}">
+                                        <span>${opt.label}</span>
+                                        ${sel ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1 flex-shrink-0"><i class="fas fa-check"></i> Enviado</span>' : ''}
                                     </button>
                                 `;
                             }).join('')}
@@ -2242,127 +2290,73 @@
             }
 
             bodyHtml = `
-                <div class="my-3 space-y-4">
-                    <!-- Two Cards A & B -->
+                <div class="my-4 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-5 rounded-2xl bg-slate-900/90 border-2 ${isRevealed ? (step.verdictA.type === 'ai' ? 'border-amber-400' : 'border-emerald-400') : 'border-slate-800'} flex flex-col justify-between space-y-3">
+                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-3">
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-3 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 font-orbitron font-bold text-xs text-amber-300">TEXTO A</span>
-                                    ${isRevealed ? `<span class="px-3 py-1 rounded-lg font-mono text-xs font-bold border ${step.verdictA.type === 'ai' ? 'bg-amber-500/20 text-amber-300 border-amber-400' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400'}">${step.verdictA.badge}</span>` : ''}
+                                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 font-orbitron font-bold text-xs text-slate-200">TEXTO A</span>
                                 </div>
                                 <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">“${step.cardA}”</p>
                             </div>
-                            ${isRevealed ? `<div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-xs text-slate-300 italic">${step.verdictA.note}</div>` : ''}
                         </div>
 
-                        <div class="p-5 rounded-2xl bg-slate-900/90 border-2 ${isRevealed ? (step.verdictB.type === 'ai' ? 'border-amber-400' : 'border-emerald-400') : 'border-slate-800'} flex flex-col justify-between space-y-3">
+                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-3">
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-3 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 font-orbitron font-bold text-xs text-sky-300">TEXTO B</span>
-                                    ${isRevealed ? `<span class="px-3 py-1 rounded-lg font-mono text-xs font-bold border ${step.verdictB.type === 'ai' ? 'bg-amber-500/20 text-amber-300 border-amber-400' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400'}">${step.verdictB.badge}</span>` : ''}
+                                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 font-orbitron font-bold text-xs text-slate-200">TEXTO B</span>
                                 </div>
                                 <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">“${step.cardB}”</p>
                             </div>
-                            ${isRevealed ? `<div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-xs text-slate-300 italic">${step.verdictB.note}</div>` : ''}
                         </div>
                     </div>
 
-                    <!-- Voting Buttons & Live Bars -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         ${abOptions.map(opt => {
-                            const count = counts[opt.key] || 0;
-                            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                             const isSelected = myChoice === opt.key;
-                            const isCorrectChoice = isRevealed && opt.key === step.aiIs;
                             return `
-                                <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn p-4 rounded-2xl border text-left relative overflow-hidden transition-all ${isSelected ? 'bg-slate-900 border-amber-400 shadow-lg' : 'bg-slate-900/75 border-slate-800 hover:border-slate-600'}">
-                                    <div class="absolute inset-y-0 left-0 ${isCorrectChoice ? 'bg-emerald-500/25' : 'bg-amber-500/20'} transition-all duration-700 pointer-events-none" style="width:${pct}%"></div>
-                                    <div class="relative z-10 flex items-center justify-between gap-2">
-                                        <div class="flex items-center gap-2.5">
-                                            <span class="w-7 h-7 rounded-lg font-orbitron font-bold text-xs flex items-center justify-center ${isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-amber-400 border border-slate-700'}">${opt.key}</span>
-                                            <span class="text-xs sm:text-sm font-bold text-white">${opt.label}</span>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="font-orbitron font-bold text-sm sm:text-base text-amber-300">${pct}%</span>
-                                            <span class="text-[11px] text-slate-400 font-mono block">${count} voto${count === 1 ? '' : 's'}</span>
-                                        </div>
+                                <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 ${isSelected ? 'bg-amber-500/15 border-amber-400 shadow-lg shadow-amber-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 border ${isSelected ? 'bg-amber-500 text-slate-950 border-amber-300' : 'bg-slate-950 text-amber-400 border-slate-700'}">${opt.key}</span>
+                                        <span class="text-xs sm:text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}">${opt.label}</span>
                                     </div>
+                                    ${isSelected ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 flex-shrink-0"><i class="fas fa-check"></i> Enviado</span>' : ''}
                                 </button>
                             `;
                         }).join('')}
                     </div>
 
                     ${secondaryHtml}
-
-                    ${isRevealed ? `
-                        <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-emerald-500/15 border border-amber-400/40 text-center">
-                            <div class="text-[10px] font-mono uppercase tracking-widest text-amber-300 mb-1">Conclusión para Talento Humano</div>
-                            <p class="text-sm sm:text-base font-bold text-white">${step.takeaway}</p>
-                        </div>
-                    ` : ''}
                 </div>
             `;
-        } else if (step.type === 'comparative_poll') {
-            const afterStats = computePollStats(step.pollKey, step.options);
-            const beforeStats = computePollStats(step.compareWithKey, step.options);
-            const myAfterChoice = myMentiVotes[step.pollKey];
-            const myBeforeChoice = myMentiVotes[step.compareWithKey];
+        } else {
+            // ENCUESTAS (POLL Y COMPARATIVE_POLL): Solo opciones individuales sin mostrar porcentajes ni respuestas de otros participantes (cero sesgo)
+            const participantOptions = step.options || [];
+            const myChoice = myMentiVotes[step.pollKey];
 
             bodyHtml = `
-                <div class="my-3 space-y-4">
-                    <div class="flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
-                        <div class="flex items-center gap-4">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-500 inline-block"></span> <span class="text-slate-300">${step.beforeLabel} (${beforeStats.total} votos)</span></span>
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> <span class="text-amber-300 font-bold">${step.afterLabel} (${afterStats.total} votos)</span></span>
-                        </div>
-                        ${myBeforeChoice ? `<span class="text-slate-400">Al inicio votaste: <strong class="text-sky-300">Opción ${myBeforeChoice}</strong></span>` : ''}
-                    </div>
-
-                    <div class="space-y-3">
-                        ${step.options.map(opt => {
-                            const bCount = beforeStats.counts[opt.key] || 0;
-                            const bPct = beforeStats.total > 0 ? Math.round((bCount / beforeStats.total) * 100) : 0;
-                            const aCount = afterStats.counts[opt.key] || 0;
-                            const aPct = afterStats.total > 0 ? Math.round((aCount / afterStats.total) * 100) : 0;
-                            const isSelected = myAfterChoice === opt.key;
-
-                            return `
-                                <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn w-full text-left p-3.5 rounded-2xl border transition-all ${isSelected ? 'bg-slate-900 border-amber-400 shadow-lg' : 'bg-slate-900/75 border-slate-800 hover:border-slate-600'}">
-                                    <div class="flex items-center justify-between gap-2 mb-2">
-                                        <div class="flex items-center gap-2.5">
-                                            <span class="w-7 h-7 rounded-lg font-orbitron font-bold text-xs flex items-center justify-center ${isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-amber-400 border border-slate-700'}">${opt.key}</span>
-                                            <span class="text-xs sm:text-sm font-bold text-white">${opt.label}</span>
-                                            ${isSelected ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">Tu voto actual</span>' : ''}
-                                        </div>
-                                        <div class="text-right font-mono text-xs">
-                                            <span class="text-slate-400 mr-2">Antes: ${bPct}% (${bCount})</span>
-                                            <strong class="text-amber-300 text-sm">Ahora: ${aPct}% (${aCount})</strong>
-                                        </div>
-                                    </div>
-                                    <!-- Dual Comparative Bars -->
-                                    <div class="space-y-1.5">
-                                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                                            <div class="h-full bg-slate-500 rounded-full transition-all duration-700" style="width:${bPct}%"></div>
-                                        </div>
-                                        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden">
-                                            <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-700" style="width:${aPct}%"></div>
-                                        </div>
-                                    </div>
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
-
-                    ${step.showClosingSummary ? `
-                        <div class="mt-4 p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-emerald-500/15 border border-amber-400/40 text-center space-y-2">
-                            <div class="text-[10px] font-mono uppercase tracking-widest text-amber-300">Mensaje Final • Encuentro Intercajas</div>
-                            <h3 class="font-orbitron text-base sm:text-xl font-bold text-white">“La tecnología la habilita. Las personas la integran. <span class="text-amber-400">Gestión Humana acompaña ese encuentro.</span>”</h3>
-                        </div>
-                    ` : ''}
+                <div class="my-4 space-y-3">
+                    ${participantOptions.map(opt => {
+                        const isSelected = myChoice === opt.key;
+                        return `
+                            <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${isSelected ? 'bg-amber-500/15 border-amber-400 shadow-lg shadow-amber-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 border ${isSelected ? 'bg-amber-500 text-slate-950 border-amber-300' : 'bg-slate-950 text-amber-400 border-slate-700'}">
+                                        ${opt.key}
+                                    </span>
+                                    <span class="text-sm sm:text-base font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}">${opt.label}</span>
+                                </div>
+                                ${isSelected ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 flex-shrink-0"><i class="fas fa-check"></i> Enviado</span>' : ''}
+                            </button>
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
+
+        const participantSubtitle = step.index > 0
+            ? 'Selecciona tu respuesta de forma individual.'
+            : step.subtitle;
 
         stage.innerHTML = `
             <div>
@@ -2370,21 +2364,13 @@
                     <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] sm:text-xs font-mono uppercase tracking-wider">
                         ${step.blockBadge}
                     </span>
-                    <span class="text-xs font-mono text-slate-400">${step.index === 0 ? 'En espera del presentador' : `Pregunta ${step.index} de ${COLABORADOR_STEPS.length - 1}`}</span>
+                    <span class="text-xs font-mono text-slate-400">${step.index === 0 ? 'En espera' : `Pregunta ${step.index} de ${COLABORADOR_STEPS.length - 1}`}</span>
                 </div>
                 <h2 class="font-orbitron text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">${step.title}</h2>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">${step.subtitle}</p>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">${participantSubtitle}</p>
             </div>
 
             ${bodyHtml}
-
-            <div class="pt-4 mt-2 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-400">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Mentimeter Intercajas en Vivo • Sincronizado con el presentador</span>
-                </div>
-                <span class="text-[11px] font-mono text-slate-500">Se actualiza automáticamente</span>
-            </div>
         `;
 
         // Bind vote buttons
@@ -2413,6 +2399,40 @@
             }
         });
 
+        const adminAccessBtn = document.getElementById('adminAccessBtn');
+        if (adminAccessBtn) {
+            adminAccessBtn.onclick = () => {
+                if (isFacilitatorMode) {
+                    isFacilitatorMode = false;
+                    sessionStorage.removeItem('intercajas_facilitator_mode');
+                    updateAdminUIVisibility();
+                    renderColaboradorStep();
+                    showToast("Modo Administrador desactivado (Vista Participante)", "fa-lock");
+                } else {
+                    promptAdminAction(async () => {
+                        isFacilitatorMode = true;
+                        sessionStorage.setItem('intercajas_facilitator_mode', 'true');
+                        updateAdminUIVisibility();
+                        renderColaboradorStep();
+                        await broadcastFacilitatorRouting(currentActiveActivity);
+                        showToast("¡Modo Administrador activo! Los participantes avanzarán automáticamente contigo.", "fa-broadcast-tower");
+                    }, {
+                        title: 'Acceso Administrador / Facilitador',
+                        description: 'Introduce la clave (Comfa2025) para tomar el control de la sesión y guiar a todos los dispositivos conectados.'
+                    });
+                }
+            };
+        }
+
+        const adminNavWelcome = document.getElementById('admin-nav-welcome');
+        if (adminNavWelcome) adminNavWelcome.onclick = () => navigateToWelcomeCover(false);
+        const adminNavMood = document.getElementById('admin-nav-mood');
+        if (adminNavMood) adminNavMood.onclick = () => navigateToTeamMood(false);
+        const adminNavPrisma = document.getElementById('admin-nav-prisma');
+        if (adminNavPrisma) adminNavPrisma.onclick = () => navigateToPrisma(false);
+        const adminNavColaborador = document.getElementById('admin-nav-colaborador');
+        if (adminNavColaborador) adminNavColaborador.onclick = () => navigateToColaborador(false);
+
         document.getElementById('openStatsBtn').onclick = openStatsModal;
         document.getElementById('view-stats-link').onclick = openStatsModal;
         document.getElementById('close-stats-btn').onclick = closeStatsModal;
@@ -2434,27 +2454,32 @@
         if (launchColabFromPrismaBtn) launchColabFromPrismaBtn.onclick = promptLaunchColaborador;
 
         const btnContinuePrisma = document.getElementById('btn-continue-prisma');
-        if (btnContinuePrisma) btnContinuePrisma.onclick = navigateToPrisma;
+        if (btnContinuePrisma) btnContinuePrisma.onclick = () => navigateToPrisma(false);
         const btnTreeContinuePrisma = document.getElementById('btn-tree-continue-prisma');
-        if (btnTreeContinuePrisma) btnTreeContinuePrisma.onclick = navigateToPrisma;
+        if (btnTreeContinuePrisma) btnTreeContinuePrisma.onclick = () => navigateToPrisma(false);
         const btnBackToMood = document.getElementById('btn-back-to-mood');
-        if (btnBackToMood) btnBackToMood.onclick = navigateToTeamMood;
+        if (btnBackToMood) btnBackToMood.onclick = () => navigateToTeamMood(false);
 
         const btnContinueColaborador = document.getElementById('btn-continue-colaborador');
-        if (btnContinueColaborador) btnContinueColaborador.onclick = navigateToColaborador;
+        if (btnContinueColaborador) btnContinueColaborador.onclick = () => navigateToColaborador(false);
         const btnBackToPrisma = document.getElementById('btn-back-to-prisma');
-        if (btnBackToPrisma) btnBackToPrisma.onclick = navigateToPrisma;
+        if (btnBackToPrisma) btnBackToPrisma.onclick = () => navigateToPrisma(false);
 
         const toggleFacBtn = document.getElementById('toggle-facilitator-bar-btn');
         if (toggleFacBtn) {
             toggleFacBtn.onclick = () => {
                 if (isFacilitatorMode) {
                     isFacilitatorMode = false;
+                    sessionStorage.removeItem('intercajas_facilitator_mode');
+                    updateAdminUIVisibility();
                     renderColaboradorStep();
                 } else {
-                    promptAdminAction(() => {
+                    promptAdminAction(async () => {
                         isFacilitatorMode = true;
+                        sessionStorage.setItem('intercajas_facilitator_mode', 'true');
+                        updateAdminUIVisibility();
                         renderColaboradorStep();
+                        await broadcastFacilitatorRouting('colaborador');
                         showToast("Modo Facilitador activado: tus cambios de etapa guían a toda la sala", "fa-broadcast-tower");
                     }, {
                         title: 'Activar Control de Facilitador (Mentimeter)',
@@ -2472,11 +2497,11 @@
         if (btnMentiReset) btnMentiReset.onclick = resetMentiVotes;
 
         const btnStartExperience = document.getElementById('btn-start-experience');
-        if (btnStartExperience) btnStartExperience.onclick = navigateToTeamMood;
+        if (btnStartExperience) btnStartExperience.onclick = () => navigateToTeamMood(false);
         const btnCoverQr = document.getElementById('btn-cover-qr');
         if (btnCoverQr) btnCoverQr.onclick = openQrModal;
         const welcomeCoverBtn = document.getElementById('welcomeCoverBtn');
-        if (welcomeCoverBtn) welcomeCoverBtn.onclick = navigateToWelcomeCover;
+        if (welcomeCoverBtn) welcomeCoverBtn.onclick = () => navigateToWelcomeCover(false);
     }
 
     function setupPensamientoAssessment() {
