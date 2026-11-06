@@ -389,11 +389,11 @@
     <!-- Mobile Screen View Switcher Tabs (Only visible on screens < 1024px) -->
     <div id="team-mood-mobile-tabs" class="hidden lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
         <div class="flex items-center p-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl">
-            <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
-                <i class="fas fa-tree"></i> Ver Árbol (30)
+            <button id="tab-btn-form" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
+                <i class="fas fa-user-edit"></i> 1. Tu Registro
             </button>
-            <button id="tab-btn-form" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
-                <i class="fas fa-user-edit"></i> Mi Registro & Clima
+            <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                <i class="fas fa-tree"></i> 2. Ver Árbol (30)
             </button>
         </div>
     </div>
@@ -402,7 +402,7 @@
     <main id="team-mood-main" class="hidden w-full max-w-[1600px] mx-auto p-3 sm:p-5 flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch">
         
         <!-- Left Column: Controls & Participation -->
-        <aside id="aside-panel" class="w-full lg:w-[380px] flex flex-col gap-4 order-2 lg:order-1 hidden lg:flex">
+        <aside id="aside-panel" class="w-full lg:w-[380px] flex flex-col gap-4 order-1">
             
             <!-- Registration Card -->
             <div class="glass-card p-4 sm:p-5 space-y-3.5">
@@ -513,7 +513,7 @@
             </div>
         </aside>
         <!-- Right Column: Interactive 30-Participant Emotional Tree -->
-        <section id="tree-section" class="flex-1 glass-card p-2 sm:p-5 flex flex-col items-center justify-between relative overflow-hidden min-h-[520px] lg:min-h-[720px] order-1 lg:order-2">
+        <section id="tree-section" class="hidden lg:flex flex-1 glass-card p-2 sm:p-5 flex-col items-center justify-between relative overflow-hidden min-h-[520px] lg:min-h-[720px] order-2">
             
             <!-- Floating Zoom Controls for Mobile & Precision Navigation -->
             <div class="absolute top-3 right-3 z-30 flex flex-col sm:flex-row items-center gap-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl shadow-xl backdrop-blur-md">
@@ -660,7 +660,7 @@
                 <span>Volver al Ejercicio 1 (Árbol Team Mood)</span>
             </button>
             <span class="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold uppercase tracking-wider">
-                Ejercicio 2 de 2
+                Momento 2 de 3
             </span>
         </div>
 
@@ -758,8 +758,8 @@
     </section>
 
     <!-- Momento 3: El Nuevo Colaborador (Mentimeter en Vivo & Presentación Sincronizada) -->
-    <section id="colaborador-main" class="hidden w-full max-w-5xl mx-auto p-3 sm:p-6 flex-1 flex flex-col z-10">
-        <!-- Top Navigation & Status Bar (Solo visible para el Administrador / Facilitador) -->
+    <section id="colaborador-main" class="hidden w-full max-w-4xl mx-auto p-3 sm:p-6 flex-1 flex flex-col justify-center z-10">
+        <!-- Top Navigation & Status Bar (Only visible to Administrator/Facilitator) -->
         <div id="colaborador-top-bar" class="hidden w-full items-center justify-between flex-wrap gap-2 mb-4">
             <div class="flex items-center gap-2">
                 <button id="btn-back-to-prisma" class="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-purple-400 hover:border-purple-500/50 transition text-xs font-semibold flex items-center gap-2 shadow-lg">
@@ -768,7 +768,7 @@
                 </button>
                 <span class="px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Momento 3 de 3 • El Nuevo Colaborador</span>
+                    <span>Monitor Momento 3 • El Nuevo Colaborador</span>
                 </span>
             </div>
 
@@ -1198,6 +1198,17 @@
         if (teamMoodMain) teamMoodMain.classList.remove('hidden');
         if (teamMoodTabs) teamMoodTabs.classList.remove('hidden');
 
+        if (window.innerWidth < 1024) {
+            const alreadyRegistered = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
+            if (alreadyRegistered) {
+                const tabTree = document.getElementById('tab-btn-tree');
+                if (tabTree) tabTree.click();
+            } else {
+                const tabForm = document.getElementById('tab-btn-form');
+                if (tabForm) tabForm.click();
+            }
+        }
+
         updateAdminUIVisibility();
         if (isFacilitatorMode && !fromRemote) {
             broadcastFacilitatorRouting('team-mood');
@@ -1455,7 +1466,9 @@
             tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
             tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
             treeSection.classList.remove('hidden');
+            treeSection.classList.add('flex');
             asidePanel.classList.add('hidden');
+            asidePanel.classList.remove('flex');
         }
 
         function showFormTab() {
@@ -1463,7 +1476,9 @@
             tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
             tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
             asidePanel.classList.remove('hidden');
+            asidePanel.classList.add('flex');
             treeSection.classList.add('hidden');
+            treeSection.classList.remove('flex');
         }
 
         tabTree.addEventListener('click', showTreeTab);
@@ -1473,14 +1488,20 @@
         window.addEventListener('resize', () => {
             if (window.innerWidth >= 1024) {
                 treeSection.classList.remove('hidden');
+                treeSection.classList.add('flex');
                 asidePanel.classList.remove('hidden');
+                asidePanel.classList.add('flex');
             } else {
                 if (tabTree.classList.contains('text-white')) {
                     treeSection.classList.remove('hidden');
+                    treeSection.classList.add('flex');
                     asidePanel.classList.add('hidden');
+                    asidePanel.classList.remove('flex');
                 } else {
                     asidePanel.classList.remove('hidden');
+                    asidePanel.classList.add('flex');
                     treeSection.classList.add('hidden');
+                    treeSection.classList.remove('flex');
                 }
             }
         });
