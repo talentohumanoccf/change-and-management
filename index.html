@@ -18,8 +18,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Configuración de ambiente local -->
+    <!-- Configuración de ambiente local y credenciales Firebase -->
     <script src="env.js"></script>
+    <script src="firebase-config.js"></script>
 
     <style>
         :root {
@@ -1289,20 +1290,17 @@
     }
 
     async function initFirebase() {
-        const DEFAULT_CONFIG = {
-            apiKey: "AIzaSyCHBOA0tixmSnoxABwwVWoxrXsBljvomNA",
-            authDomain: "mentalidad-7752e.firebaseapp.com",
-            projectId: "mentalidad-7752e",
-            storageBucket: "mentalidad-7752e.firebasestorage.app",
-            messagingSenderId: "485164590441",
-            appId: "1:485164590441:web:0161a806a16577977ac9f8",
-            measurementId: "G-2SC4L6MQ56"
-        };
-        let config = DEFAULT_CONFIG;
+        let config = null;
         if (typeof __firebase_config !== 'undefined') {
-            try { config = JSON.parse(__firebase_config); } catch(e) {}
+            try { config = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config; } catch(e) {}
         } else if (window.__firebase_config) {
-            try { config = JSON.parse(window.__firebase_config); } catch(e) {}
+            try { config = typeof window.__firebase_config === 'string' ? JSON.parse(window.__firebase_config) : window.__firebase_config; } catch(e) {}
+        }
+
+        if (!config || !config.apiKey || config.apiKey === 'TU_API_KEY_AQUI') {
+            console.warn("No se encontró 'firebase-config.js' con credenciales válidas. Ejecutando en Modo Local (Offline).");
+            updateConnectionStatus(false);
+            return;
         }
 
         const app = initializeApp(config);
