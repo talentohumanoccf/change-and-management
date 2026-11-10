@@ -27,10 +27,11 @@ No hay build, linter, pruebas ni `package.json`. Las dependencias llegan por CDN
   `python -m http.server 8000`) y abrir `index.html`. Hace falta internet para los CDN.
 - Verificar un cambio: a mano en el navegador, con dos pestañas (una como facilitador y otra
   como participante) para comprobar la sincronización, y en ancho de celular.
-- `env.js` y `firebase-config.js` se cargan en `<head>` y no están versionados. El segundo
-  define `window.__firebase_config` (objeto o JSON como texto); sin él, `index.html` arranca
-  en modo local y el tablero muestra un error de conexión. `env.js` puede definir
-  `window.GEMINI_API_KEY` y `window.__app_id`.
+- `firebase-config.js` define `window.__firebase_config` con la configuración web de
+  Firebase y está versionado, porque el sitio de GitHub Pages lo necesita para sincronizar.
+  Sin él, `index.html` arranca en modo local y el tablero muestra un error de conexión.
+- `env.js` se carga en `<head>` pero no está versionado; su ausencia solo produce un 404.
+  Puede definir `window.GEMINI_API_KEY` y `window.__app_id` en un ambiente local.
 
 ## Arquitectura
 
