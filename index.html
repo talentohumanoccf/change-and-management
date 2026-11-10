@@ -911,7 +911,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc, runTransaction, getDocFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc, runTransaction, getDocFromServer, disableNetwork, enableNetwork } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     class SoundFX {
         constructor() {
@@ -1023,6 +1023,10 @@
     const ROUTING_FRESH_MS = 3 * 60 * 60 * 1000;
     // Cada cuánto un dispositivo confirma con el servidor que no perdió un cambio de sala.
     const ROUTING_RESYNC_MS = 15 * 1000;
+    // Una consulta que no responde en este tiempo se abandona para no bloquear las siguientes.
+    const ROUTING_RESYNC_TIMEOUT_MS = 8 * 1000;
+    // A partir de este tiempo en segundo plano se reinicia la conexión al volver.
+    const BACKGROUND_RECONNECT_MS = 3 * 1000;
     // Lo reemplaza setupPensamientoAssessment: detiene la prueba al salir de Prisma.
     let leavePrismaAssessment = () => {};
 
@@ -1431,7 +1435,12 @@
             if (resyncInFlight || document.visibilityState !== 'visible') return;
             resyncInFlight = true;
             try {
-                const snap = await getDocFromServer(routingDocRef);
+                // Con la conexión colgada la consulta puede no responder nunca: el límite
+                // de tiempo libera el turno para el siguiente intento.
+                const snap = await Promise.race([
+                    getDocFromServer(routingDocRef),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('resync-timeout')), ROUTING_RESYNC_TIMEOUT_MS))
+                ]);
                 if (snap.exists()) {
                     const stamp = snap.data().updatedAt || snap.data().launchedAt || 0;
                     if (stamp !== lastAppliedRoutingStamp) applyRouting(snap);
@@ -1442,7 +1451,33 @@
                 resyncInFlight = false;
             }
         };
-        document.addEventListener('visibilitychange', resyncRouting);
+
+        // Al pasar a segundo plano, el sistema del celular congela la pestaña y la conexión
+        // con Firestore queda colgada sin dar error; al volver puede tardar más de un
+        // minuto en notarlo. Reiniciar la red obliga a reconectar de inmediato.
+        let hiddenAt = null;
+        let reconnecting = false;
+        const reconnectAfterBackground = async () => {
+            if (document.visibilityState === 'hidden') {
+                hiddenAt = Date.now();
+                return;
+            }
+            const wasAwayFor = hiddenAt ? Date.now() - hiddenAt : 0;
+            hiddenAt = null;
+            if (wasAwayFor >= BACKGROUND_RECONNECT_MS && !reconnecting) {
+                reconnecting = true;
+                try {
+                    await disableNetwork(db);
+                    await enableNetwork(db);
+                } catch (e) {
+                    console.warn("No se pudo reiniciar la conexión:", e);
+                } finally {
+                    reconnecting = false;
+                }
+            }
+            resyncRouting();
+        };
+        document.addEventListener('visibilitychange', reconnectAfterBackground);
         window.addEventListener('online', resyncRouting);
         window.addEventListener('pageshow', resyncRouting);
         setInterval(resyncRouting, ROUTING_RESYNC_MS);
