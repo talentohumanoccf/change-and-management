@@ -426,13 +426,21 @@
                     <span class="text-[10px] font-mono bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-md border border-sky-500/30">Paso a paso</span>
                 </div>
 
-                <div>
-                    <label for="participant-name" class="block text-xs font-semibold text-slate-300 mb-1">
-                        1. Tu nombre y apellido:
-                    </label>
-                    <div class="relative">
-                        <input type="text" id="participant-name" placeholder="Ej: Diana Valencia" autocomplete="name" class="w-full py-2 px-3 pl-8 text-xs sm:text-sm">
-                        <i class="fas fa-user absolute left-2.5 top-3 text-slate-500 text-xs"></i>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="participant-name" class="block text-xs font-semibold text-slate-300 mb-1">
+                            1. Tu nombre:
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="participant-name" placeholder="Ej: Diana" autocomplete="given-name" required aria-required="true" class="w-full py-2 px-3 pl-8 text-xs sm:text-sm">
+                            <i class="fas fa-user absolute left-2.5 top-3 text-slate-500 text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="participant-surname" class="block text-xs font-semibold text-slate-300 mb-1">
+                            Tu apellido:
+                        </label>
+                        <input type="text" id="participant-surname" placeholder="Ej: Valencia" autocomplete="family-name" required aria-required="true" class="w-full py-2 px-3 text-xs sm:text-sm">
                     </div>
                 </div>
 
@@ -1143,7 +1151,7 @@
     function getCurrentParticipantContext() {
         const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
         const nameInput = document.getElementById('participant-name');
-        const name = ((mySlotEntry && mySlotEntry[1]?.name) || firstNameOf(nameInput?.value) || localStorage.getItem('intercajas_participant_name') || '').trim();
+        const name = ((mySlotEntry && mySlotEntry[1]?.name) || givenNameOf(nameInput?.value) || localStorage.getItem('intercajas_participant_name') || '').trim();
         const mood = ((mySlotEntry && mySlotEntry[1]?.mood) || selectedMood || localStorage.getItem('intercajas_participant_mood') || '').trim();
         if (name) localStorage.setItem('intercajas_participant_name', name);
         if (mood) localStorage.setItem('intercajas_participant_mood', mood);
@@ -1391,16 +1399,17 @@
         return String(text ?? '').trim().replace(/\s+/g, ' ').split(' ')
             .map(w => w ? w[0].toLocaleUpperCase('es') + w.slice(1).toLocaleLowerCase('es') : w).join(' ');
     }
-    const firstNameOf = text => tidyTypedName(text).split(' ')[0].slice(0, MAX_FIRST_NAME);
+    // Lo escrito en el campo «nombre» es lo que va al árbol si la persona no está en la lista.
+    const givenNameOf = text => tidyTypedName(text).slice(0, MAX_FIRST_NAME);
 
     // Nunca falla: si la lista no carga o la persona no está, usa lo que escribió.
-    async function resolveParticipantIdentity(typedName) {
-        const typed = tidyTypedName(typedName);
+    async function resolveParticipantIdentity(typedGiven, typedSurname) {
+        const typed = tidyTypedName(`${typedGiven} ${typedSurname}`);
         let match = null;
         try { match = await findInRoster(typed); } catch (err) { console.warn('No se pudo consultar la lista de participantes:', err?.name); }
         return {
             full: match?.full || typed,
-            first: (match?.first || firstNameOf(typed)).slice(0, MAX_FIRST_NAME),
+            first: (match?.first || givenNameOf(typedGiven)).slice(0, MAX_FIRST_NAME),
             caja: match?.caja || ''
         };
     }
@@ -1825,12 +1834,16 @@
         }
 
         const nameInput = document.getElementById('participant-name');
-        const typedName = nameInput.value.trim();
+        const surnameInput = document.getElementById('participant-surname');
+        const typedGiven = nameInput.value.trim();
+        const typedSurname = surnameInput.value.trim();
 
-        if (!typedName) {
-            showToast("Escribe tu nombre y apellido en el formulario", "fa-exclamation-triangle");
+        // Los dos son obligatorios: sin apellido no se puede reconocer a la persona en la lista.
+        const missingInput = !typedGiven ? nameInput : (!typedSurname ? surnameInput : null);
+        if (missingInput) {
+            showToast(missingInput === nameInput ? "Escribe tu nombre" : "Escribe tu apellido", "fa-exclamation-triangle");
             if (window.innerWidth < 1024) document.getElementById('tab-btn-form').click();
-            nameInput.focus();
+            missingInput.focus();
             return;
         }
         if (!selectedMood) {
@@ -1840,7 +1853,7 @@
         }
 
         // Al árbol solo va el nombre de pila; el nombre completo y la Caja no salen del dispositivo.
-        const identity = await resolveParticipantIdentity(typedName);
+        const identity = await resolveParticipantIdentity(typedGiven, typedSurname);
         const name = identity.first;
         const newRecord = { index, name, mood: selectedMood, userId, timestamp: new Date().toISOString() };
 
