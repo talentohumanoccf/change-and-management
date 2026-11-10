@@ -21,6 +21,8 @@
     <!-- Configuración de ambiente local y credenciales Firebase -->
     <script src="env.js"></script>
     <script src="firebase-config.js"></script>
+    <!-- Contenido de la sesión, compartido con el tablero de resultados -->
+    <script src="session-content.js"></script>
 
     <style>
         :root {
@@ -792,7 +794,7 @@
                         <i class="fas fa-chart-bar text-xs"></i>
                         <span id="btn-menti-toggle-results-label">Resultados (R)</span>
                     </button>
-                    <a href="Tablero de Resultados.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-300 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Abrir tablero en otra ventana o pantalla completa">
+                    <a href="results-dashboard.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-300 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Abrir tablero en otra ventana o pantalla completa">
                         <i class="fas fa-external-link-alt text-xs"></i>
                         <span class="hidden md:inline">Tablero</span>
                     </a>
@@ -909,7 +911,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     class SoundFX {
         constructor() {
@@ -985,6 +987,14 @@
 
     const sound = new SoundFX();
 
+    // Los nombres y las palabras los escribe cualquier participante y terminan en
+    // innerHTML de todas las pantallas: se escapan siempre antes de insertarlos.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    }
+
     function showToast(message, icon = 'fa-check-circle') {
         const toast = document.getElementById('toast');
         const msgEl = document.getElementById('toast-message');
@@ -995,14 +1005,8 @@
         setTimeout(() => toast.classList.remove('show'), 3200);
     }
 
-    const MOODS = {
-        feliz: { id: 'feliz', label: 'Feliz', icon: 'fa-smile', color: 'text-amber-400', bgColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', description: 'Optimista' },
-        motivado: { id: 'motivado', label: 'Motivado', icon: 'fa-star', color: 'text-emerald-400', bgColor: 'rgba(52, 211, 153, 0.2)', borderColor: '#34d399', description: 'Con energía' },
-        neutro: { id: 'neutro', label: 'Neutro', icon: 'fa-meh', color: 'text-slate-400', bgColor: 'rgba(148, 163, 184, 0.2)', borderColor: '#94a3b8', description: 'En pausa' },
-        triste: { id: 'triste', label: 'Triste', icon: 'fa-frown', color: 'text-sky-400', bgColor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38bdf8', description: 'Baja energía' },
-        retado: { id: 'retado', label: 'Retado', icon: 'fa-fire', color: 'text-rose-500', bgColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e', description: 'En desafío' },
-        curioso: { id: 'curioso', label: 'Curioso', icon: 'fa-lightbulb', color: 'text-purple-400', bgColor: 'rgba(192, 132, 252, 0.2)', borderColor: '#c084fc', description: 'Descubriendo' }
-    };
+    // El contenido de la sesión vive en session-content.js, compartido con el tablero.
+    const { MOODS, COLABORADOR_STEPS } = window.SESSION_CONTENT;
 
     const TREE_POSITIONS_30 = [
         { top: '8%', left: '25%' }, { top: '6%', left: '38%' }, { top: '5%', left: '50%' }, { top: '6%', left: '62%' }, { top: '8%', left: '75%' },
@@ -1015,7 +1019,10 @@
     let db = null, auth = null, userId = null, appId = 'sesion-comfamiliar-team-mood-30', isConnected = false;
     let selectedMood = null, participantsState = {}, statsChartInstance = null;
     let currentZoom = 1.0;
-    const sessionLoadedAt = Date.now();
+    // Ventana en la que el estado de la sala se considera de la sesión en curso.
+    const ROUTING_FRESH_MS = 3 * 60 * 60 * 1000;
+    // Lo reemplaza setupPensamientoAssessment: detiene la prueba al salir de Prisma.
+    let leavePrismaAssessment = () => {};
 
     let prismaInitialized = false;
     let isPrismaUnlocked = false;
@@ -1167,6 +1174,7 @@
     }
 
     function navigateToTeamMood(fromRemote = false) {
+        leavePrismaAssessment();
         sound.playClick();
         currentActiveActivity = 'team-mood';
         const welcomeCover = document.getElementById('welcome-cover');
@@ -1200,6 +1208,7 @@
     }
 
     function navigateToWelcomeCover(fromRemote = false) {
+        leavePrismaAssessment();
         sound.playClick();
         currentActiveActivity = 'welcome';
         const welcomeCover = document.getElementById('welcome-cover');
@@ -1222,12 +1231,12 @@
     }
 
     function navigateToColaborador(fromRemote = false) {
+        leavePrismaAssessment();
         sound.playChime();
         currentActiveActivity = 'colaborador';
         showAdminMentiResults = false;
-        if (!fromRemote) {
-            currentMentiStep = 0;
-        }
+        // El paso no se reinicia al entrar: lo fija la sala, y solo vuelve a cero al
+        // reiniciar los votos.
         const welcomeCover = document.getElementById('welcome-cover');
         const teamMoodMain = document.getElementById('team-mood-main');
         const teamMoodTabs = document.getElementById('team-mood-mobile-tabs');
@@ -1271,8 +1280,10 @@
             initOfflineStorage();
         }
 
-        setupPensamientoAssessment();
-        prismaInitialized = true;
+        if (!prismaInitialized) {
+            setupPensamientoAssessment();
+            prismaInitialized = true;
+        }
         updateMoodAnalytics();
     };
 
@@ -1298,9 +1309,9 @@
         }
 
         if (!config || !config.apiKey || config.apiKey === 'TU_API_KEY_AQUI') {
-            console.warn("No se encontró 'firebase-config.js' con credenciales válidas. Ejecutando en Modo Local (Offline).");
-            updateConnectionStatus(false);
-            return;
+            // Se lanza el error para que window.onload active el modo local completo;
+            // con un simple return la app quedaba marcada «En vivo» sin base de datos.
+            throw new Error("No se encontró 'firebase-config.js' con credenciales válidas");
         }
 
         const app = initializeApp(config);
@@ -1335,17 +1346,28 @@
                 isInitialRoutingSnapshot = false;
                 return;
             }
-            // Al abrir la aplicación, siempre respeta el inicio en la Portada de Bienvenida
-            // e ignora estados antiguos guardados en la base de datos antes de abrir la página.
-            if (isInitialRoutingSnapshot) {
-                isInitialRoutingSnapshot = false;
-                return;
-            }
-
             const data = docSnap.data();
             const ts = data.updatedAt || data.launchedAt || 0;
-            const isLiveUpdateAfterLoad = ts >= (sessionLoadedAt - 2000);
-            if (!isLiveUpdateAfterLoad) return;
+
+            // Un reinicio de votos desbloquea a todos: cada dispositivo borra los suyos la
+            // primera vez que ve la marca, aunque haya estado apagado cuando ocurrió.
+            if (data.mentiResetAt && String(data.mentiResetAt) !== localStorage.getItem('intercajas_menti_reset_at')) {
+                localStorage.setItem('intercajas_menti_reset_at', String(data.mentiResetAt));
+                myMentiVotes = {};
+                localStorage.removeItem('intercajas_my_menti_votes');
+            }
+
+            // Quien entra tarde o recarga se une a la actividad en curso. Un estado
+            // viejo (de otra sesión) se ignora y la página arranca en la portada.
+            // Las instantáneas siguientes son siempre cambios en vivo: no se filtran por
+            // hora, porque el reloj del celular puede diferir del reloj del facilitador.
+            const isInitialSnapshot = isInitialRoutingSnapshot;
+            isInitialRoutingSnapshot = false;
+            if (isInitialSnapshot && Date.now() - ts > ROUTING_FRESH_MS) return;
+
+            // El facilitador no es arrastrado por la sala, salvo al recargar: ahí vuelve
+            // a la actividad en curso en vez de quedar en la portada.
+            const followsRoom = !isFacilitatorMode || isInitialSnapshot;
 
             if (typeof data.mentiStep === 'number' && data.mentiStep !== currentMentiStep) {
                 currentMentiStep = data.mentiStep;
@@ -1359,7 +1381,7 @@
                 mentiRevealed = data.mentiRevealed;
                 const colabEl = document.getElementById('colaborador-main');
                 if (colabEl && !colabEl.classList.contains('hidden')) {
-                    renderColaboradorStep();
+                    renderColaboradorStepFromRemote();
                 }
             }
 
@@ -1367,27 +1389,27 @@
                 isPrismaUnlocked = true;
                 isColaboradorUnlocked = true;
                 checkUserCurrentAvatar();
-                if (!isFacilitatorMode && currentActiveActivity !== 'colaborador') {
+                if (followsRoom && currentActiveActivity !== 'colaborador') {
                     currentMentiStep = typeof data.mentiStep === 'number' ? data.mentiStep : 0;
                     navigateToColaborador(true);
                 } else if (currentActiveActivity === 'colaborador') {
-                    renderColaboradorStep();
+                    renderColaboradorStepFromRemote();
                 }
             } else if (data.activeActivity === 'prisma') {
                 isPrismaUnlocked = true;
                 checkUserCurrentAvatar();
-                if (!isFacilitatorMode && currentActiveActivity !== 'prisma') {
+                if (followsRoom && currentActiveActivity !== 'prisma') {
                     navigateToPrisma(true);
                 }
             } else if (data.activeActivity === 'team-mood') {
                 isPrismaUnlocked = false;
                 isColaboradorUnlocked = false;
                 checkUserCurrentAvatar();
-                if (!isFacilitatorMode && currentActiveActivity !== 'team-mood') {
+                if (followsRoom && currentActiveActivity !== 'team-mood') {
                     navigateToTeamMood(true);
                 }
             } else if (data.activeActivity === 'welcome') {
-                if (!isFacilitatorMode && currentActiveActivity !== 'welcome') {
+                if (followsRoom && currentActiveActivity !== 'welcome') {
                     navigateToWelcomeCover(true);
                 }
             }
@@ -1410,7 +1432,7 @@
             if (totalVotersEl) totalVotersEl.textContent = Object.keys(mentiVotesState).length;
             const colabEl = document.getElementById('colaborador-main');
             if (colabEl && !colabEl.classList.contains('hidden')) {
-                renderColaboradorStep();
+                renderColaboradorStepFromRemote();
             }
         });
     }
@@ -1585,17 +1607,30 @@
             return;
         }
 
-        sound.playChime();
         const newRecord = { index, name, mood: selectedMood, userId, timestamp: new Date().toISOString() };
 
         if (isConnected && db) {
             const collectionPath = `/artifacts/${appId}/public/data/team-mood-30`;
-            await setDoc(doc(db, collectionPath, `${index}`), newRecord);
+            const slotRef = doc(db, collectionPath, `${index}`);
+            try {
+                // Transacción: si dos personas tocan el mismo puesto, gana la primera y
+                // la segunda se entera, en vez de que su avatar desaparezca sin aviso.
+                await runTransaction(db, async (tx) => {
+                    const current = await tx.get(slotRef);
+                    if (current.exists()) throw new Error('slot-taken');
+                    tx.set(slotRef, newRecord);
+                });
+            } catch (e) {
+                const taken = e?.message === 'slot-taken';
+                showToast(taken ? "Ese puesto lo acaba de tomar otra persona. Elige otro." : "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.", "fa-exclamation-triangle");
+                return;
+            }
         } else {
             participantsState[index] = newRecord;
             saveOfflineState();
         }
 
+        sound.playChime();
         showToast(`¡Avatar colgado con éxito por ${name}!`, "fa-heart");
     }
 
@@ -1625,7 +1660,7 @@
                             ${isMine ? '<span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sky-400 border-2 border-slate-900 rounded-full"></span>' : ''}
                         </div>
                         <div class="bg-slate-900/95 border border-slate-700/80 px-1 py-0.5 rounded-md mt-0.5 max-w-[55px] sm:max-w-[70px] truncate text-center shadow-md pointer-events-none">
-                            <span class="text-[7px] sm:text-[9px] font-bold text-white block truncate leading-tight">${data.name}</span>
+                            <span class="text-[7px] sm:text-[9px] font-bold text-white block truncate leading-tight">${escapeHtml(data.name)}</span>
                         </div>
                     </div>
                 `;
@@ -1917,6 +1952,7 @@
             checkUserCurrentAvatar();
             showToast("Árbol reiniciado para 30 nuevos participantes");
         }, {
+            requireReauth: true,
             title: 'Reiniciar Árbol (30 Slots)',
             description: 'Introduce la clave de facilitador para borrar los registros y reiniciar los 30 slots del árbol.'
         });
@@ -1946,119 +1982,6 @@
             description: 'Introduce la clave de facilitador para abrir las preguntas de El Nuevo Colaborador en todos los dispositivos.'
         });
     }
-
-    const COLABORADOR_STEPS = [
-        {
-            index: 0,
-            id: 'waiting',
-            shortLabel: '00 · En Espera',
-            blockBadge: 'Encuentro de Líderes • El Nuevo Colaborador',
-            title: 'Atento a la presentación principal',
-            subtitle: 'Aquí aparecerá automáticamente cada pregunta en la medida en que el presentador la active durante la sesión.',
-            type: 'waiting_presenter'
-        },
-        {
-            index: 1,
-            id: 'm1_q1',
-            shortLabel: 'P1 · Procesos con IA',
-            blockBadge: 'Momento 1 • Impacto de la IA (Pregunta 1 de 3)',
-            title: '¿En qué procesos de tu área ya se usa inteligencia artificial?',
-            subtitle: 'Selecciona la opción principal de tu área.',
-            type: 'poll',
-            pollKey: 'm1_q1',
-            options: [
-                { key: 'A', label: 'Selección' },
-                { key: 'B', label: 'Formación' },
-                { key: 'C', label: 'Bienestar y clima' },
-                { key: 'D', label: 'Nómina y administración de personal' },
-                { key: 'E', label: 'Evaluación de desempeño' },
-                { key: 'F', label: 'Comunicación interna' },
-                { key: 'G', label: 'Atención de preguntas de colaboradores' },
-                { key: 'H', label: 'Todavía en ninguno' }
-            ]
-        },
-        {
-            index: 2,
-            id: 'm1_q2',
-            shortLabel: 'P2 · IA no autorizada',
-            blockBadge: 'Momento 1 • La IA que nadie contrató (Pregunta 2 de 3)',
-            title: '¿Alguna vez has puesto en una IA gratuita información de personas de tu organización, como hojas de vida, evaluaciones o datos de nómina?',
-            subtitle: 'Es anónima de verdad: nadie sabrá qué respondiste.',
-            type: 'poll',
-            pollKey: 'm1_q2',
-            isAnonymous: true,
-            options: [
-                { key: 'A', label: 'Sí' },
-                { key: 'B', label: 'No' },
-                { key: 'C', label: 'No estoy seguro' }
-            ]
-        },
-        {
-            index: 3,
-            id: 'm1_q3',
-            shortLabel: 'P3 · Nube: Mayor impacto',
-            blockBadge: 'Momento 1 • Nube de Palabras (Pregunta 3 de 3)',
-            title: '¿Cuál ha sido el mayor impacto de la IA en tu área?',
-            subtitle: 'Escribe una sola palabra que describa el impacto principal.',
-            type: 'wordcloud',
-            pollKey: 'm1_q3',
-            placeholder: 'Ej: Automatización, Eficiencia, Miedo, Rapidez...'
-        },
-        {
-            index: 4,
-            id: 'humano_ia_1',
-            shortLabel: 'Humano/IA · Ronda 1',
-            blockBadge: 'Momento 2 • Humano o IA (Ronda 1 de 2)',
-            title: 'Ronda 1: Mensaje a un candidato no seleccionado',
-            subtitle: 'Uno lo escribió una persona y el otro una IA. ¿Cuál escribió la IA?',
-            type: 'ab_challenge',
-            pollKey: 'humano_ia_1',
-            revealKey: 'humano_ia_1',
-            cardA: 'Estimado Andrés: Agradecemos sinceramente tu interés y el tiempo dedicado a nuestro proceso de selección. Después de una cuidadosa evaluación, hemos decidido continuar con otros candidatos cuyo perfil se ajusta más a las necesidades actuales del cargo. Te animamos a estar atento a futuras oportunidades. Te deseamos muchos éxitos.',
-            cardB: 'Hola, Andrés. Gracias por presentarte. No quedaste esta vez; la decisión fue entre tú y otra persona con más experiencia en nómina, que era lo que más pesaba dentro de todo el proceso de selección. Tu entrevista fue de las mejores. Si a futuro abrimos la vacante de analista, cuenta con nosotros para saber si te interesa participar. Te deseamos muchos éxitos.',
-            aiIs: 'A',
-            verdictA: { badge: 'IA', note: 'Mejor redacción. Correcta, cuidadosa… y genérica.' },
-            verdictB: { badge: 'HUMANO', note: 'Da una razón y deja una puerta abierta.' },
-            takeaway: 'La IA redacta mejor. La persona explica por qué.'
-        },
-        {
-            index: 5,
-            id: 'humano_ia_2',
-            shortLabel: 'Humano/IA · Ronda 2',
-            blockBadge: 'Momento 2 • Humano o IA (Ronda 2 de 2)',
-            title: 'Ronda 2: Convocatoria al torneo de bolos',
-            subtitle: '¿Cuál de las dos convocatorias escribió la IA?',
-            type: 'ab_challenge',
-            pollKey: 'humano_ia_2',
-            revealKey: 'humano_ia_2',
-            cardA: 'Ojo pues: el viernes hay torneo de bolos y quedan seis cupos. El año pasado ganó Cartera y no han dejado de recordárnoslo. Inscríbete antes del jueves si quieres quitarles el título.',
-            cardB: 'Te invitamos a participar en el torneo de bolos que se realizará este viernes. Inscríbete antes del jueves en el enlace adjunto. ¡Cupos limitados!',
-            aiIs: 'A',
-            verdictA: { badge: 'IA', note: 'Con el contexto correcto: quién ganó el año pasado, cuántos cupos quedan, cómo habla la casa.' },
-            verdictB: { badge: 'HUMANO', note: 'Escrito con afán, a las 5:40 p. m., entre dos reuniones.' },
-            takeaway: 'La IA rinde según la inducción que le den. Contexto, criterios y límites: exactamente lo que Talento Humano hace en una inducción.'
-        },
-        {
-            index: 6,
-            id: 'm4_final',
-            shortLabel: 'Cierre · Votación Final',
-            blockBadge: 'Momento 4 • La Última Votación',
-            title: '¿Cuánto de esta presentación creen que hizo la IA?',
-            subtitle: 'Vota según tu percepción de lo que viste en toda la sesión.',
-            type: 'cierre_autor',
-            pollKey: 'm4_final',
-            options: [
-                { key: 'A', label: 'Nada: la hizo toda una persona' },
-                { key: 'B', label: 'Poco: más persona que IA' },
-                { key: 'C', label: 'Mitad y mitad' },
-                { key: 'D', label: 'Mucho: más IA que persona' },
-                { key: 'E', label: 'Todo: la hizo toda la IA' }
-            ],
-            verdictProduction: 'Más IA que persona. Borradores, láminas e ilustraciones animadas.',
-            verdictDecisions: '100 % personas. Qué decir, qué dejar por fuera, qué era verdad y qué no.',
-            takeaway: 'La IA produce. Las personas deciden y responden.'
-        }
-    ];
 
     async function submitMentiVote(pollKey, optionKey) {
         // Bloqueo estricto: una vez dada una respuesta no se permite una nueva
@@ -2151,9 +2074,12 @@
                 const snap = await getDocs(collection(db, mentiColPath));
                 const dels = [];
                 snap.forEach(d => dels.push(deleteDoc(d.ref)));
+                const resetAt = Date.now();
+                localStorage.setItem('intercajas_menti_reset_at', String(resetAt));
                 dels.push(setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
                     mentiStep: 0,
                     mentiRevealed: {},
+                    mentiResetAt: resetAt,
                     launchedAt: Date.now(),
                     updatedAt: Date.now()
                 }, { merge: true }));
@@ -2163,6 +2089,7 @@
             renderColaboradorStep();
             showToast("Votos de Mentimeter reiniciados en toda la sala", "fa-trash-alt");
         }, {
+            requireReauth: true,
             title: 'Reiniciar Votos Mentimeter',
             description: 'Introduce la clave de facilitador para borrar todas las respuestas de El Nuevo Colaborador y volver a la etapa 1.'
         });
@@ -2228,7 +2155,7 @@
                     const color = colorClasses[idx % colorClasses.length];
                     return `
                         <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border ${color} ${fontSize} shadow-sm transition hover:scale-105 cursor-default">
-                            <span>${item.word}</span>
+                            <span>${escapeHtml(item.word)}</span>
                             <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-950/60 font-normal">(${item.count})</span>
                         </span>
                     `;
@@ -2237,9 +2164,40 @@
         `;
     }
 
+    // Un repintado reemplaza el campo de la nube de palabras: borra lo escrito y cierra el
+    // teclado del celular. Mientras alguien escribe, los cambios remotos esperan.
+    let pendingMentiRender = false;
+
+    function isTypingMentiAnswer() {
+        return document.activeElement?.id === 'menti-wordcloud-input';
+    }
+
+    function renderColaboradorStepFromRemote() {
+        if (isTypingMentiAnswer()) {
+            pendingMentiRender = true;
+            return;
+        }
+        renderColaboradorStep();
+    }
+
+    document.addEventListener('focusout', (e) => {
+        if (e.target?.id !== 'menti-wordcloud-input' || !pendingMentiRender) return;
+        // La espera deja que el toque en «Enviar» se registre antes de repintar.
+        setTimeout(() => {
+            if (pendingMentiRender && !isTypingMentiAnswer()) renderColaboradorStep();
+        }, 400);
+    });
+
     function renderColaboradorStep() {
         const stage = document.getElementById('colaborador-stage');
         if (!stage) return;
+        pendingMentiRender = false;
+
+        // Conserva el borrador de la nube de palabras entre repintados de la misma pregunta.
+        const previousInput = stage.querySelector('#menti-wordcloud-input');
+        const draft = previousInput && !previousInput.disabled
+            ? { pollKey: previousInput.dataset.pollKey, value: previousInput.value }
+            : null;
 
         const step = COLABORADOR_STEPS[currentMentiStep] || COLABORADOR_STEPS[0];
         const totalVotersEl = document.getElementById('menti-total-voters');
@@ -2405,7 +2363,7 @@
                             <span>${hasVoted ? 'Tu palabra ya fue registrada:' : 'Escribe una palabra o concepto clave:'}</span>
                         </label>
                         <div class="flex gap-2">
-                            <input type="text" id="menti-wordcloud-input" maxlength="35" placeholder="${step.placeholder || 'Escribe aquí...'}" value="${myChoice}" ${hasVoted ? 'disabled' : ''} class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 font-semibold ${hasVoted ? 'bg-slate-950/50 text-slate-300 cursor-not-allowed border-slate-800' : ''}" />
+                            <input type="text" id="menti-wordcloud-input" maxlength="35" placeholder="${step.placeholder || 'Escribe aquí...'}" value="${escapeHtml(myChoice)}" ${hasVoted ? 'disabled' : ''} class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 font-semibold ${hasVoted ? 'bg-slate-950/50 text-slate-300 cursor-not-allowed border-slate-800' : ''}" />
                             <button id="menti-wordcloud-submit-btn" ${hasVoted ? 'disabled' : ''} class="px-5 py-3 rounded-xl ${hasVoted ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20'} font-orbitron font-bold text-xs transition flex items-center gap-1.5 flex-shrink-0">
                                 <i class="fas ${hasVoted ? 'fa-check' : 'fa-paper-plane'}"></i>
                                 <span>${hasVoted ? 'Registrada' : 'Enviar'}</span>
@@ -2415,7 +2373,7 @@
                     ${hasVoted ? `
                         <div class="flex items-center justify-center gap-2 text-xs font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-4 py-2.5 rounded-xl">
                             <i class="fas fa-lock text-emerald-400"></i>
-                            <span>Palabra registrada: <strong>“${myChoice}”</strong> (Bloqueada)</span>
+                            <span>Palabra registrada: <strong>“${escapeHtml(myChoice)}”</strong> (Bloqueada)</span>
                         </div>
                     ` : ''}
                 </div>
@@ -2634,6 +2592,12 @@
         // Bind wordcloud events if present
         const wcInput = stage.querySelector('#menti-wordcloud-input');
         const wcBtn = stage.querySelector('#menti-wordcloud-submit-btn');
+        if (wcInput) {
+            wcInput.dataset.pollKey = step.pollKey;
+            if (draft && draft.pollKey === step.pollKey && !wcInput.disabled && !wcInput.value) {
+                wcInput.value = draft.value;
+            }
+        }
         if (wcBtn && wcInput) {
             const sendWord = () => {
                 const val = wcInput.value.trim();
@@ -2688,7 +2652,7 @@
                         showToast("¡Modo Administrador activo! Los participantes avanzarán automáticamente contigo.", "fa-broadcast-tower");
                     }, {
                         title: 'Acceso Administrador / Facilitador',
-                        description: 'Introduce la clave (Comfa2025) para tomar el control de la sesión y guiar a todos los dispositivos conectados.'
+                        description: 'Introduce la clave de facilitador para tomar el control de la sesión y guiar a todos los dispositivos conectados.'
                     });
                 }
             };
@@ -2907,13 +2871,23 @@
             }
         }
 
-        function generateQuiz() {
-            shuffleArray(questionBank.convergent);
-            shuffleArray(questionBank.divergentObjects);
-            shuffleArray(questionBank.divergentPeople);
-            shuffleArray(questionBank.divergentDisruptive);
+        // Retos cerrados que se resuelven razonando, sin depender de conocer la adivinanza.
+        const CORE_CONVERGENT_TITLES = ["El Reto de la Meta", "Atención al Detalle", "Agilidad en Selección"];
 
-            const selectedConv = questionBank.convergent.slice(0, 3).map(q => ({...q, questionType: 'convergent'}));
+        // Una idea es un fragmento con contenido, separado por salto de línea, puntuación o conjunción.
+        // Así cuenta lo mismo quien escribe una lista que quien escribe una frase con comas.
+        function extractIdeas(value) {
+            return Array.from(new Set(
+                value.split(/[\n,;.]+|\s+(?:y|e|o|u)\s+/).map(i => normalizeText(i)).filter(i => i.length >= 4)
+            ));
+        }
+
+        function generateQuiz() {
+            // Todos responden los mismos seis retos, en orden distinto, para que los
+            // resultados del grupo sean comparables entre sí.
+            const selectedConv = questionBank.convergent
+                .filter(q => CORE_CONVERGENT_TITLES.includes(q.title))
+                .map(q => ({...q, questionType: 'convergent'}));
             const selectedDiv = [
                 { ...questionBank.divergentObjects[0], questionType: 'divergent' },
                 { ...questionBank.divergentPeople[0], questionType: 'divergent' },
@@ -2985,9 +2959,7 @@
                 if (q.type === 'list') {
                     const counterEl = document.getElementById('idea-counter');
                     textareaEl.addEventListener('input', () => {
-                        const count = new Set(
-                            textareaEl.value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
-                        ).size;
+                        const count = extractIdeas(textareaEl.value).length;
                         if (counterEl) counterEl.textContent = `${count} ${count === 1 ? 'idea detectada' : 'ideas detectadas'}`;
                     });
                 }
@@ -3015,18 +2987,9 @@
                     questionScore = 25;
                     scores.convergent += questionScore;
                 }
-            } else if (q.type === 'list') {
-                const uniqueIdeas = Array.from(new Set(
-                    value.split('\n').map(i => normalizeText(i)).filter(i => i.length >= 3)
-                ));
-                questionScore = Math.min(25, uniqueIdeas.length * 5);
-                scores.divergent += questionScore;
-            } else if (q.type === 'text') {
-                const words = normalizeText(value).split(' ').filter(w => w.length > 2);
-                const uniqueWords = new Set(words);
-                if (uniqueWords.size >= 15) questionScore = 25;
-                else if (uniqueWords.size >= 8) questionScore = 18;
-                else if (uniqueWords.size >= 4) questionScore = 10;
+            } else {
+                // Fluidez: cinco ideas distintas dan el máximo, en lista o en texto libre.
+                questionScore = Math.min(25, extractIdeas(value).length * 5);
                 scores.divergent += questionScore;
             }
 
@@ -3058,12 +3021,7 @@
         }
 
         function calculateDivergentWeight(s) {
-            const div = Math.max(0, Number(s?.divergent) || 0);
-            const conv = Math.max(0, Number(s?.convergent) || 0);
-            if (div === 0 && conv === 0) return 50;
-            const smoothedDiv = div + 20;
-            const smoothedConv = conv + 20;
-            return (smoothedDiv / (smoothedDiv + smoothedConv)) * 100;
+            return window.SESSION_CONTENT.divergentWeight(s);
         }
 
         function renderScoreUI() {
@@ -3082,9 +3040,9 @@
             elements.progressBar.style.width = '100%';
 
             const answeredCount = userResponses.filter(r => r.answer && r.answer !== "(Sin respuesta)").length;
-            const totalScore = scores.convergent + scores.divergent;
 
-            if (answeredCount === 0 || totalScore === 0) {
+            // Quien respondió, aunque no haya acertado, recibe su perfil.
+            if (answeredCount === 0) {
                 if (elements.resultViz) elements.resultViz.classList.add('hidden');
                 if (elements.aiContainer) elements.aiContainer.classList.add('hidden');
                 elements.resultTitle.textContent = "¡Nos faltó leer tus ideas!";
@@ -3100,7 +3058,12 @@
 
             if (db && userId && isConnected) {
                 const collectionPath = `/artifacts/${appId}/public/data/pensamiento-assessment`;
-                await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+                // Un fallo al guardar no debe dejar a la persona sin su resultado.
+                try {
+                    await setDoc(doc(db, collectionPath, userId), { userId, name: participantName || 'Participante', mood: participantMood || null, scores, timestamp: new Date() });
+                } catch (e) {
+                    console.warn("Error guardando resultado de Prisma:", e);
+                }
             }
 
             if (localStorage.getItem('gemini_api_key')) {
@@ -3221,7 +3184,25 @@ Reglas estrictas para tu mensaje:
             showGroupResults();
         }
 
-        elements.startBtn.addEventListener('click', () => { sound.playClick(); generateQuiz(); showScreen('question'); loadQuestion(); });
+        // Al salir de Prisma a mitad de prueba se detiene el reloj y la prueba vuelve al
+        // inicio: un intento a medias no debe guardarse como resultado.
+        leavePrismaAssessment = () => {
+            clearInterval(timerInterval);
+            if (screens.question.style.display === 'block') {
+                scores = { divergent: 0, convergent: 0 };
+                currentQIndex = 0;
+                showScreen('start');
+            }
+        };
+
+        elements.startBtn.addEventListener('click', () => {
+            sound.playClick();
+            scores = { divergent: 0, convergent: 0 };
+            currentQIndex = 0;
+            generateQuiz();
+            showScreen('question');
+            loadQuestion();
+        });
         elements.nextBtn.addEventListener('click', handleNext);
         elements.restartBtn.addEventListener('click', () => { 
             sound.playClick(); 
@@ -3232,6 +3213,7 @@ Reglas estrictas para tu mensaje:
         elements.showGroupBtn.addEventListener('click', () => { sound.playClick(); showGroupResults(); });
         elements.backToIndividualBtn.addEventListener('click', () => { sound.playClick(); showScreen('result'); });
         elements.resetGroupBtn.addEventListener('click', () => promptAdminAction(resetGroupPensamiento, {
+            requireReauth: true,
             title: 'Resetear Evaluaciones (Prisma)',
             description: 'Introduce la clave de facilitador para borrar los resultados grupales de El Prisma del Pensamiento.'
         }));
