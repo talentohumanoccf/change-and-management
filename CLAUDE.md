@@ -75,6 +75,10 @@ Reglas que no se ven a simple vista:
   y un estado de otra sesión se ignora. Las siguientes son cambios en vivo y se aplican
   siempre; no filtrarlas por hora, porque el reloj del celular difiere del reloj del
   facilitador.
+- Además del listener, cada dispositivo consulta `routing` en el servidor al volver a primer
+  plano y cada `ROUTING_RESYNC_MS` (`resyncRouting`), y aplica solo un cambio que no había
+  llegado. Cubre celulares bloqueados o con mala señal sin arrastrar a quien volvió por su
+  cuenta a una vista anterior.
 - Los repintados disparados por Firestore en la vista de encuestas pasan por
   `renderColaboradorStepFromRemote`, que espera mientras alguien escribe en la nube de
   palabras; `renderColaboradorStep` repinta todo con `innerHTML`.

@@ -911,7 +911,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc, runTransaction, getDocFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     class SoundFX {
         constructor() {
@@ -1021,6 +1021,8 @@
     let currentZoom = 1.0;
     // Ventana en la que el estado de la sala se considera de la sesión en curso.
     const ROUTING_FRESH_MS = 3 * 60 * 60 * 1000;
+    // Cada cuánto un dispositivo confirma con el servidor que no perdió un cambio de sala.
+    const ROUTING_RESYNC_MS = 15 * 1000;
     // Lo reemplaza setupPensamientoAssessment: detiene la prueba al salir de Prisma.
     let leavePrismaAssessment = () => {};
 
@@ -1341,13 +1343,15 @@
 
         const routingDocRef = doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing');
         let isInitialRoutingSnapshot = true;
-        onSnapshot(routingDocRef, (docSnap) => {
+        let lastAppliedRoutingStamp = null;
+        const applyRouting = (docSnap) => {
             if (!docSnap.exists()) {
                 isInitialRoutingSnapshot = false;
                 return;
             }
             const data = docSnap.data();
             const ts = data.updatedAt || data.launchedAt || 0;
+            lastAppliedRoutingStamp = ts;
 
             // Un reinicio de votos desbloquea a todos: cada dispositivo borra los suyos la
             // primera vez que ve la marca, aunque haya estado apagado cuando ocurrió.
@@ -1413,7 +1417,35 @@
                     navigateToWelcomeCover(true);
                 }
             }
+        };
+        onSnapshot(routingDocRef, applyRouting, (err) => {
+            console.warn("Se perdió la escucha del control de sala:", err);
         });
+
+        // Red de seguridad: un celular bloqueado, en segundo plano o con mala señal puede
+        // perder un cambio de sala. Se consulta el servidor al volver a primer plano y
+        // cada pocos segundos, y solo se aplica un cambio que no había llegado; así quien
+        // volvió por su cuenta a una vista anterior no es arrastrado de nuevo.
+        let resyncInFlight = false;
+        const resyncRouting = async () => {
+            if (resyncInFlight || document.visibilityState !== 'visible') return;
+            resyncInFlight = true;
+            try {
+                const snap = await getDocFromServer(routingDocRef);
+                if (snap.exists()) {
+                    const stamp = snap.data().updatedAt || snap.data().launchedAt || 0;
+                    if (stamp !== lastAppliedRoutingStamp) applyRouting(snap);
+                }
+            } catch (e) {
+                // Sin red en este momento: el siguiente intento lo resuelve.
+            } finally {
+                resyncInFlight = false;
+            }
+        };
+        document.addEventListener('visibilitychange', resyncRouting);
+        window.addEventListener('online', resyncRouting);
+        window.addEventListener('pageshow', resyncRouting);
+        setInterval(resyncRouting, ROUTING_RESYNC_MS);
 
         const mentiColPath = `/artifacts/${appId}/public/data/menti-colaborador`;
         onSnapshot(collection(db, mentiColPath), (snapshot) => {
