@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#080c14">
+    <title>Resumen de la sesión | Comfamiliar Risaralda</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuración de ambiente local, credenciales de Firebase y contenido compartido con index.html -->
+    <script src="env.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="session-content.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #080c14;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --track: rgba(148, 163, 184, 0.16);
+            --text: #f1f5f9;
+            --text-muted: #a3b1c6;
+            --accent-sky: #38bdf8;
+            --accent-purple: #a78bfa;
+            --accent-pink: #ec4899;
+            --accent-emerald: #34d399;
+            --accent-amber: #f59e0b;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            min-height: 100dvh;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.5;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 16px 56px;
+        }
+
+        .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-sky), var(--accent-purple), var(--accent-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0 0;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-amber);
+        }
+        .status[data-state="live"] .status-dot { background: var(--accent-emerald); }
+        .status[data-state="error"] .status-dot { background: #f43f5e; }
+
+        .print-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            background: rgba(56, 189, 248, 0.14);
+            color: #bae6fd;
+            font: inherit;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .print-button:hover { background: rgba(56, 189, 248, 0.24); }
+        .print-button:focus-visible,
+        a:focus-visible { outline: 2px solid var(--accent-sky); outline-offset: 3px; }
+
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 20px;
+        }
+
+        .tile-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .tile-label { margin-top: 4px; font-size: 0.875rem; color: var(--text-muted); }
+
+        section { margin-bottom: 36px; }
+
+        h2 {
+            margin: 0 0 4px;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+        .section-note { margin: 0 0 14px; font-size: 0.875rem; color: var(--text-muted); }
+
+        .cards { display: grid; gap: 12px; }
+
+        h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; }
+        .card-note { margin: 0 0 14px; font-size: 0.8125rem; color: var(--text-muted); }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 4px 12px;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+        .bar-row:last-child { margin-bottom: 0; }
+        .bar-label { font-size: 0.9rem; font-weight: 600; overflow-wrap: anywhere; }
+        .bar-label i { width: 20px; margin-right: 4px; text-align: center; }
+        .bar-value { font-size: 0.875rem; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .bar-track {
+            grid-column: 1 / -1;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--track);
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: var(--accent-sky);
+            transition: width 0.4s ease;
+        }
+
+        .tag {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 1px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fcd34d;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        .words { display: flex; flex-wrap: wrap; gap: 8px; }
+        .word {
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.12);
+            color: #fcd34d;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+        .word small { margin-left: 6px; font-weight: 400; color: var(--text-muted); }
+
+        .empty { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+
+        .skeleton {
+            height: 10px;
+            margin-bottom: 14px;
+            border-radius: 999px;
+            background: var(--track);
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        .skeleton:nth-child(2) { width: 70%; }
+        .skeleton:nth-child(3) { width: 45%; margin-bottom: 0; }
+        @keyframes pulse { 50% { opacity: 0.45; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton { animation: none; }
+            .bar-fill { transition: none; }
+        }
+
+        @media print {
+            :root {
+                --bg-dark: #ffffff;
+                --card-bg: #ffffff;
+                --card-border: #cbd5e1;
+                --track: #e2e8f0;
+                --text: #0f172a;
+                --text-muted: #475569;
+            }
+            h1 { background: none; color: #0f172a; }
+            .print-button, .status { display: none; }
+            .card { break-inside: avoid; }
+            .word, .tag { color: #92400e; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="page-header">
+            <div>
+                <h1>Resumen de la sesión</h1>
+                <p id="status" class="status" data-state="connecting" role="status">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span id="status-text">Conectando…</span>
+                </p>
+            </div>
+            <button id="print-button" class="print-button" type="button">
+                <i class="fas fa-file-arrow-down" aria-hidden="true"></i> Guardar como PDF
+            </button>
+        </header>
+
+        <div class="tiles">
+            <div class="card"><div id="tile-tree" class="tile-value">–</div><div class="tile-label">personas en el árbol</div></div>
+            <div class="card"><div id="tile-prisma" class="tile-value">–</div><div class="tile-label">completaron el Prisma</div></div>
+            <div class="card"><div id="tile-voters" class="tile-value">–</div><div class="tile-label">votaron en las encuestas</div></div>
+        </div>
+
+        <section aria-labelledby="mood-heading">
+            <h2 id="mood-heading">Cómo llegó el equipo</h2>
+            <p class="section-note">Árbol de emociones</p>
+            <div id="mood-card" class="card"></div>
+        </section>
+
+        <section aria-labelledby="prisma-heading">
+            <h2 id="prisma-heading">Cómo piensa el equipo</h2>
+            <p class="section-note">El Prisma del Pensamiento</p>
+            <div id="prisma-card" class="card"></div>
+        </section>
+
+        <section aria-labelledby="polls-heading">
+            <h2 id="polls-heading">Qué respondió el equipo</h2>
+            <p class="section-note">El Nuevo Colaborador</p>
+            <div id="polls" class="cards"></div>
+        </section>
+    </main>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const { DEFAULT_APP_ID, MOODS, COLABORADOR_STEPS, thinkingProfile } = window.SESSION_CONTENT;
+
+    const THINKING_PROFILES = [
+        { key: 'disruptive', label: 'El Innovador Disruptivo', color: '#ec4899' },
+        { key: 'strategic', label: 'El Arquitecto Estratégico', color: '#a78bfa' },
+        { key: 'solver', label: 'El Solucionador de Precisión', color: '#38bdf8' }
+    ];
+    const POLL_COLOR = '#38bdf8';
+    const AI_ANSWER_COLOR = '#f59e0b';
+
+    // El tablero solo muestra totales: nunca nombres ni respuestas individuales.
+    const state = { tree: null, prisma: null, voters: null };
+
+    // Todo el texto entra con textContent, así una palabra escrita por un participante
+    // nunca se interpreta como HTML.
+    function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+    }
+
+    function plural(count, singular, pluralForm) {
+        return `${count} ${count === 1 ? singular : pluralForm}`;
+    }
+
+    function skeleton() {
+        const wrap = el('div');
+        wrap.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < 3; i++) wrap.appendChild(el('div', 'skeleton'));
+        return wrap;
+    }
+
+    function barRow({ label, icon, count, total, color, tag }) {
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        const row = el('div', 'bar-row');
+
+        const labelEl = el('span', 'bar-label');
+        if (icon) {
+            const iconEl = el('i', `fas ${icon}`);
+            iconEl.style.color = color;
+            iconEl.setAttribute('aria-hidden', 'true');
+            labelEl.appendChild(iconEl);
+        }
+        labelEl.appendChild(document.createTextNode(label));
+        if (tag) labelEl.appendChild(el('span', 'tag', tag));
+
+        const track = el('div', 'bar-track');
+        const fill = el('div', 'bar-fill');
+        fill.style.width = `${pct}%`;
+        fill.style.background = color;
+        track.appendChild(fill);
+
+        row.append(labelEl, el('span', 'bar-value', `${count} · ${pct} %`), track);
+        return row;
+    }
+
+    function fillCard(card, rows, emptyMessage) {
+        card.replaceChildren();
+        if (rows === null) {
+            card.appendChild(skeleton());
+        } else if (rows.length === 0) {
+            card.appendChild(el('p', 'empty', emptyMessage));
+        } else {
+            card.append(...rows);
+        }
+    }
+
+    function renderMood() {
+        const card = document.getElementById('mood-card');
+        if (state.tree === null) return fillCard(card, null);
+        const total = state.tree.length;
+        document.getElementById('tile-tree').textContent = total;
+        const rows = total === 0 ? [] : Object.values(MOODS).map(mood => barRow({
+            label: mood.label,
+            icon: mood.icon,
+            count: state.tree.filter(p => p.mood === mood.id).length,
+            total,
+            color: mood.borderColor
+        }));
+        fillCard(card, rows, 'Todavía nadie ha colgado su emoción en el árbol.');
+    }
+
+    function renderPrisma() {
+        const card = document.getElementById('prisma-card');
+        if (state.prisma === null) return fillCard(card, null);
+        const total = state.prisma.length;
+        document.getElementById('tile-prisma').textContent = total;
+        const profiles = state.prisma.map(thinkingProfile);
+        const rows = total === 0 ? [] : THINKING_PROFILES.map(profile => barRow({
+            label: profile.label,
+            count: profiles.filter(key => key === profile.key).length,
+            total,
+            color: profile.color
+        }));
+        fillCard(card, rows, 'Todavía nadie ha completado el Prisma.');
+    }
+
+    function optionsFor(step) {
+        if (step.type === 'ab_challenge') {
+            return [{ key: 'A', label: 'Texto A' }, { key: 'B', label: 'Texto B' }];
+        }
+        return step.options || [];
+    }
+
+    function pollCard(step) {
+        const card = el('div', 'card');
+        card.appendChild(el('h3', '', step.title));
+
+        const answers = state.voters
+            .map(voter => voter?.votes?.[step.pollKey])
+            .filter(answer => typeof answer === 'string' && answer.trim().length > 0);
+        const noteEl = el('p', 'card-note', plural(answers.length, 'respuesta', 'respuestas'));
+        card.appendChild(noteEl);
+
+        if (answers.length === 0) {
+            card.appendChild(el('p', 'empty', 'Aún no hay respuestas.'));
+            return card;
+        }
+
+        if (step.type === 'wordcloud') {
+            const counts = new Map();
+            answers.forEach(raw => {
+                const word = raw.trim();
+                const normalized = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                counts.set(normalized, (counts.get(normalized) || 0) + 1);
+            });
+            const words = el('div', 'words');
+            [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([word, count]) => {
+                const chip = el('span', 'word', word);
+                chip.appendChild(el('small', '', `× ${count}`));
+                words.appendChild(chip);
+            });
+            card.appendChild(words);
+            return card;
+        }
+
+        const options = optionsFor(step);
+        const valid = answers.filter(answer => options.some(o => o.key === answer));
+        if (step.type === 'ab_challenge') {
+            const correct = valid.filter(answer => answer === step.aiIs).length;
+            const pct = valid.length > 0 ? Math.round((correct / valid.length) * 100) : 0;
+            noteEl.textContent = `${plural(valid.length, 'respuesta', 'respuestas')} · ${pct} % identificó el texto de la IA`;
+        }
+        options.forEach(option => {
+            const isAiText = step.type === 'ab_challenge' && option.key === step.aiIs;
+            card.appendChild(barRow({
+                label: option.label,
+                count: valid.filter(answer => answer === option.key).length,
+                total: valid.length,
+                color: isAiText ? AI_ANSWER_COLOR : POLL_COLOR,
+                tag: isAiText ? 'Lo escribió la IA' : undefined
+            }));
+        });
+        return card;
+    }
+
+    function renderPolls() {
+        const container = document.getElementById('polls');
+        const steps = COLABORADOR_STEPS.filter(step => step.pollKey);
+        if (state.voters === null) {
+            container.replaceChildren(...steps.map(() => {
+                const card = el('div', 'card');
+                card.appendChild(skeleton());
+                return card;
+            }));
+            return;
+        }
+        document.getElementById('tile-voters').textContent = state.voters.length;
+        container.replaceChildren(...steps.map(pollCard));
+    }
+
+    function setStatus(stateName, text) {
+        document.getElementById('status').dataset.state = stateName;
+        document.getElementById('status-text').textContent = text;
+    }
+
+    function showConnectionError() {
+        setStatus('error', 'No se pudo conectar. Revisa tu conexión y recarga la página.');
+        // Sin datos no hay nada que mostrar: se quitan los esqueletos para no sugerir
+        // que algo sigue cargando.
+        if (state.tree === null) { state.tree = []; renderMood(); document.getElementById('tile-tree').textContent = '–'; }
+        if (state.prisma === null) { state.prisma = []; renderPrisma(); document.getElementById('tile-prisma').textContent = '–'; }
+        if (state.voters === null) { state.voters = []; renderPolls(); document.getElementById('tile-voters').textContent = '–'; }
+    }
+
+    async function start() {
+        // La configuración llega de firebase-config.js, igual que en index.html.
+        let config = window.__firebase_config || null;
+        if (typeof config === 'string') {
+            try { config = JSON.parse(config); } catch (e) { config = null; }
+        }
+        if (!config || !config.apiKey) throw new Error('missing-firebase-config');
+        const appId = window.__app_id || DEFAULT_APP_ID;
+
+        const app = initializeApp(config);
+        const db = getFirestore(app);
+        await signInAnonymously(getAuth(app));
+
+        const base = `/artifacts/${appId}/public/data`;
+        const listen = (name, onData) => onSnapshot(
+            collection(db, `${base}/${name}`),
+            snapshot => {
+                onData(snapshot.docs.map(d => d.data()));
+                setStatus('live', 'En vivo: se actualiza solo');
+            },
+            showConnectionError
+        );
+
+        listen('team-mood-30', docs => {
+            state.tree = docs.filter(d => d.index !== undefined && MOODS[d.mood]);
+            renderMood();
+        });
+        listen('pensamiento-assessment', docs => {
+            state.prisma = docs.map(d => d.scores).filter(Boolean);
+            renderPrisma();
+        });
+        listen('menti-colaborador', docs => {
+            state.voters = docs.filter(d => d && d.userId);
+            renderPolls();
+        });
+    }
+
+    document.getElementById('print-button').addEventListener('click', () => window.print());
+
+    renderMood();
+    renderPrisma();
+    renderPolls();
+    start().catch(showConnectionError);
+    </script>
+</body>
+</html>
