@@ -297,6 +297,13 @@
         </div>
     </div>
 
+    <!-- Saludo personal: solo en el dispositivo de cada participante -->
+    <div id="participant-welcome-banner" class="hidden w-full px-3 pt-3 z-20" role="status">
+        <p class="mx-auto w-fit max-w-full px-4 py-1.5 rounded-full bg-sky-500/15 border border-sky-400/40 text-sky-200 text-xs sm:text-sm font-semibold text-center">
+            <i class="fas fa-user-check text-sky-400 mr-1"></i><span id="participant-welcome-text"></span>
+        </p>
+    </div>
+
     <!-- Portada de Bienvenida (Encuentro de Líderes de Talento Humano) -->
     <section id="welcome-cover" class="w-full max-w-5xl mx-auto px-4 py-6 sm:py-12 flex-1 flex flex-col items-center justify-center z-20">
         <div class="glass-card w-full p-6 sm:p-10 md:p-12 border border-sky-500/30 shadow-2xl relative overflow-hidden text-center">
@@ -421,10 +428,10 @@
 
                 <div>
                     <label for="participant-name" class="block text-xs font-semibold text-slate-300 mb-1">
-                        1. Tu Nombre o Alias:
+                        1. Tu nombre y apellido:
                     </label>
                     <div class="relative">
-                        <input type="text" id="participant-name" placeholder="Ej: Diana Valencia..." class="w-full py-2 px-3 pl-8 text-xs sm:text-sm">
+                        <input type="text" id="participant-name" placeholder="Ej: Diana Valencia" autocomplete="name" class="w-full py-2 px-3 pl-8 text-xs sm:text-sm">
                         <i class="fas fa-user absolute left-2.5 top-3 text-slate-500 text-xs"></i>
                     </div>
                 </div>
@@ -1136,7 +1143,7 @@
     function getCurrentParticipantContext() {
         const mySlotEntry = Object.entries(participantsState).find(([_, d]) => d.userId === userId);
         const nameInput = document.getElementById('participant-name');
-        const name = ((mySlotEntry && mySlotEntry[1]?.name) || nameInput?.value.trim() || localStorage.getItem('intercajas_participant_name') || '').trim();
+        const name = ((mySlotEntry && mySlotEntry[1]?.name) || firstNameOf(nameInput?.value) || localStorage.getItem('intercajas_participant_name') || '').trim();
         const mood = ((mySlotEntry && mySlotEntry[1]?.mood) || selectedMood || localStorage.getItem('intercajas_participant_mood') || '').trim();
         if (name) localStorage.setItem('intercajas_participant_name', name);
         if (mood) localStorage.setItem('intercajas_participant_mood', mood);
@@ -1263,7 +1270,164 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // --- Identidad del participante ---
+    // La persona escribe nombre y apellido; se busca en la lista ofuscada (Firestore) aunque
+    // venga mal escrito o sin tildes. Al árbol y a las demás actividades solo va el nombre de
+    // pila; el nombre completo y la Caja se quedan en este dispositivo, para el saludo.
+    const ROSTER_SKIP = new Set(['de', 'del', 'la', 'las', 'los', 'y']);
+    const ROSTER_MAGIC = 'ok1|';
+    const MAX_FIRST_NAME = 24;
+
+    function rosterTokens(text) {
+        return String(text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+            .split(/[^a-z]+/).filter(t => t.length > 1 && !ROSTER_SKIP.has(t));
+    }
+
+    // Normalización fonética: «Vásquez», «Vazques» y «Basquez» quedan iguales.
+    // Debe ser idéntica a la del script que genera la lista.
+    function rosterFold(token) {
+        return token.replace(/gu(?=[ei])/g, 'G').replace(/qu/g, 'k').replace(/ch/g, 'C')
+            .replace(/g(?=[ei])/g, 'j').replace(/c(?=[ei])/g, 's').replace(/c/g, 'k')
+            .replace(/h/g, '').replace(/v/g, 'b').replace(/y/g, 'i').replace(/[zx]/g, 's')
+            .replace(/w/g, 'u').replace(/G/g, 'g').replace(/C/g, 'ch').replace(/(.)\1+/g, '$1');
+    }
+
+    // La palabra y sus versiones con una letra menos: dos palabras que comparten alguna
+    // difieren en una letra de más, de menos o cambiada.
+    function rosterVariants(folded) {
+        const out = new Set([folded]);
+        if (folded.length >= 5) {
+            for (let i = 0; i < folded.length; i++) out.add(folded.slice(0, i) + folded.slice(i + 1));
+        }
+        return out;
+    }
+
+    async function sha256Bytes(input) {
+        const data = typeof input === 'string' ? new TextEncoder().encode(input) : input;
+        return new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+    }
+    const bytesToHex = bytes => Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    const hexToBytes = hex => Uint8Array.from(hex.match(/../g) || [], h => parseInt(h, 16));
+    const xorBytes = (a, b) => a.map((v, i) => v ^ b[i]);
+
+    async function rosterOpen(key, payloadHex) {
+        const data = hexToBytes(payloadHex);
+        const plain = new Uint8Array(data.length);
+        for (let block = 0; block * 32 < data.length; block++) {
+            const stream = await sha256Bytes(Uint8Array.from([...key, block]));
+            for (let i = block * 32; i < Math.min(data.length, block * 32 + 32); i++) plain[i] = data[i] ^ stream[i - block * 32];
+        }
+        const text = new TextDecoder().decode(plain);
+        return text.startsWith(ROSTER_MAGIC) ? JSON.parse(text.slice(ROSTER_MAGIC.length)) : null;
+    }
+
+    // La lista vive en Firestore (session-control/roster), no en el repositorio, y trae fecha
+    // de vencimiento: pasada esa fecha no se usa y el primer dispositivo que la ve la borra.
+    const ROSTER_LOAD_TIMEOUT_MS = 4000;
+    let rosterPromise = null;
+
+    async function fetchRoster() {
+        // Se mira db y no isConnected: la precarga corre antes de que se marque la conexión.
+        if (!db) return null;
+        const ref = doc(db, `/artifacts/${appId}/public/data/session-control`, 'roster');
+        const snap = await Promise.race([
+            getDocFromServer(ref),
+            new Promise((_resolve, reject) => setTimeout(() => reject(new Error('timeout')), ROSTER_LOAD_TIMEOUT_MS))
+        ]);
+        if (!snap.exists()) return null;
+        const stored = snap.data();
+        if (!(Number(stored.expiresAt) > Date.now())) {
+            deleteDoc(ref).catch(() => {});
+            return null;
+        }
+        return JSON.parse(stored.data);
+    }
+
+    // Una sola lectura por carga de página; si falla, se reintenta en la siguiente búsqueda.
+    function loadRoster() {
+        if (!rosterPromise) {
+            rosterPromise = fetchRoster().catch(err => {
+                console.warn('No se pudo cargar la lista de participantes:', err?.message);
+                rosterPromise = null;
+                return null;
+            });
+        }
+        return rosterPromise;
+    }
+
+    // Devuelve {full, first, caja} si lo escrito corresponde a UNA persona de la lista; si no, null.
+    async function findInRoster(typedName) {
+        const roster = await loadRoster();
+        if (!roster || !roster.g || !roster.s || !window.crypto?.subtle) return null;
+        const tokens = rosterTokens(typedName).slice(0, 6);
+        // halves[tipo] = persona -> lista de {pos, half}: mitad de llave que abrió la palabra en esa posición.
+        const halves = { g: new Map(), s: new Map() };
+        for (let pos = 0; pos < tokens.length; pos++) {
+            for (const variant of rosterVariants(rosterFold(tokens[pos]))) {
+                for (const kind of ['g', 's']) {
+                    const id = bytesToHex(await sha256Bytes(`${roster.salt}|${kind}|${variant}`)).slice(0, 12);
+                    for (const [idx, wrapHex] of roster[kind][id] || []) {
+                        const mask = (await sha256Bytes(`${roster.salt}|${kind}w|${variant}|${idx}`)).slice(0, 16);
+                        if (!halves[kind].has(idx)) halves[kind].set(idx, []);
+                        halves[kind].get(idx).push({ pos, half: xorBytes(hexToBytes(wrapHex), mask) });
+                    }
+                }
+            }
+        }
+        const found = [];
+        for (const [idx, givenHits] of halves.g) {
+            const surnameHits = halves.s.get(idx) || [];
+            // El nombre y el apellido tienen que salir de palabras distintas.
+            const pair = givenHits.flatMap(g => surnameHits.filter(s => s.pos !== g.pos).map(s => [g, s]))[0];
+            if (!pair) continue;
+            const person = await rosterOpen(xorBytes(pair[0].half, pair[1].half), roster.p[idx]);
+            if (person) found.push(person);
+        }
+        if (found.length !== 1) return null;
+        return { full: String(found[0].f || ''), first: String(found[0].n || ''), caja: String(found[0].c || '') };
+    }
+
+    function tidyTypedName(text) {
+        return String(text ?? '').trim().replace(/\s+/g, ' ').split(' ')
+            .map(w => w ? w[0].toLocaleUpperCase('es') + w.slice(1).toLocaleLowerCase('es') : w).join(' ');
+    }
+    const firstNameOf = text => tidyTypedName(text).split(' ')[0].slice(0, MAX_FIRST_NAME);
+
+    // Nunca falla: si la lista no carga o la persona no está, usa lo que escribió.
+    async function resolveParticipantIdentity(typedName) {
+        const typed = tidyTypedName(typedName);
+        let match = null;
+        try { match = await findInRoster(typed); } catch (err) { console.warn('No se pudo consultar la lista de participantes:', err?.name); }
+        return {
+            full: match?.full || typed,
+            first: (match?.first || firstNameOf(typed)).slice(0, MAX_FIRST_NAME),
+            caja: match?.caja || ''
+        };
+    }
+
+    function saveParticipantIdentity(identity) {
+        try {
+            localStorage.setItem('intercajas_participant_full', identity.full || '');
+            localStorage.setItem('intercajas_participant_caja', identity.caja || '');
+        } catch (err) { /* sin almacenamiento, el saludo dura hasta recargar */ }
+    }
+
+    function renderWelcomeBanner(identity) {
+        const banner = document.getElementById('participant-welcome-banner');
+        const text = document.getElementById('participant-welcome-text');
+        if (!banner || !text) return;
+        let full = identity?.full, caja = identity?.caja;
+        try {
+            full = full || localStorage.getItem('intercajas_participant_full') || localStorage.getItem('intercajas_participant_name');
+            caja = caja ?? localStorage.getItem('intercajas_participant_caja');
+        } catch (err) { /* se usa lo que haya en memoria */ }
+        if (!full) { banner.classList.add('hidden'); return; }
+        text.textContent = caja ? `Te damos la bienvenida, ${full} · ${caja}` : `Te damos la bienvenida, ${full}`;
+        banner.classList.remove('hidden');
+    }
+
     window.onload = async () => {
+        renderWelcomeBanner();
         const defaultApiKey = window.GEMINI_API_KEY || atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
         if (!localStorage.getItem('gemini_api_key') && defaultApiKey) {
             localStorage.setItem('gemini_api_key', defaultApiKey);
@@ -1346,6 +1510,7 @@
         });
 
         const routingDocRef = doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing');
+        loadRoster();
         let isInitialRoutingSnapshot = true;
         let lastAppliedRoutingStamp = null;
         const applyRouting = (docSnap) => {
@@ -1660,10 +1825,10 @@
         }
 
         const nameInput = document.getElementById('participant-name');
-        const name = nameInput.value.trim();
+        const typedName = nameInput.value.trim();
 
-        if (!name) {
-            showToast("Escribe tu nombre en el formulario", "fa-exclamation-triangle");
+        if (!typedName) {
+            showToast("Escribe tu nombre y apellido en el formulario", "fa-exclamation-triangle");
             if (window.innerWidth < 1024) document.getElementById('tab-btn-form').click();
             nameInput.focus();
             return;
@@ -1674,6 +1839,9 @@
             return;
         }
 
+        // Al árbol solo va el nombre de pila; el nombre completo y la Caja no salen del dispositivo.
+        const identity = await resolveParticipantIdentity(typedName);
+        const name = identity.first;
         const newRecord = { index, name, mood: selectedMood, userId, timestamp: new Date().toISOString() };
 
         if (isConnected && db) {
@@ -1698,6 +1866,8 @@
         }
 
         sound.playChime();
+        saveParticipantIdentity(identity);
+        renderWelcomeBanner(identity);
         showToast(`¡Avatar colgado con éxito por ${name}!`, "fa-heart");
     }
 

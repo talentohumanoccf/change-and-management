@@ -128,6 +128,19 @@ resultado de Prisma) oculta la tarjeta en ese caso.
   entrar a un `innerHTML`.
 - Reiniciar votos escribe `mentiResetAt` en `routing`; cada dispositivo borra sus votos
   locales la primera vez que ve esa marca.
+- Al árbol, a las encuestas y a Prisma solo llega el nombre de pila (`identity.first`). El
+  nombre completo y la Caja se guardan únicamente en el `localStorage` del propio
+  participante (`intercajas_participant_full`, `intercajas_participant_caja`) y nunca se
+  escriben en Firestore.
+- La lista de participantes vive en Firestore (`session-control/roster`), no en el
+  repositorio: un JSON ofuscado en el campo `data` y un `expiresAt` en milisegundos. Sirve
+  para mostrar arriba «Te damos la bienvenida, nombre completo · Caja». Es ofuscación y no
+  confidencialidad: quien pruebe un diccionario de nombres puede recuperar nombre y Caja,
+  así que solo lleva esos dos datos. Vencida, la app no la usa y el primer dispositivo que
+  la ve la borra. Si falta o la persona no está, el saludo usa lo que escribió.
+- La búsqueda en la lista tolera tildes, mayúsculas y errores de una letra (`rosterFold`,
+  `rosterVariants`). Esas dos funciones deben coincidir con las del script que genera la lista, que está fuera
+  del repositorio.
 - Los nombres de los participantes son datos personales: no copiarlos a registros, prompts
   de ejemplo ni archivos del repositorio.
 - No agregar credenciales nuevas al archivo: van en `env.js`, fuera del repositorio.
