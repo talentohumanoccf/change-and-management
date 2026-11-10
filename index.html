@@ -758,71 +758,53 @@
     </section>
 
     <!-- Momento 3: El Nuevo Colaborador (Mentimeter en Vivo & Presentación Sincronizada) -->
-    <section id="colaborador-main" class="hidden w-full max-w-4xl mx-auto p-3 sm:p-6 flex-1 flex flex-col justify-center z-10">
-        <!-- Top Navigation & Status Bar (Only visible to Administrator/Facilitator) -->
-        <div id="colaborador-top-bar" class="hidden w-full items-center justify-between flex-wrap gap-2 mb-4">
-            <div class="flex items-center gap-2">
-                <button id="btn-back-to-prisma" class="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-purple-400 hover:border-purple-500/50 transition text-xs font-semibold flex items-center gap-2 shadow-lg">
-                    <i class="fas fa-arrow-left text-purple-400"></i>
-                    <span>Momento 2 (Prisma)</span>
-                </button>
-                <span class="px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Monitor Momento 3 • El Nuevo Colaborador</span>
-                </span>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <div class="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 flex items-center gap-1.5">
-                    <i class="fas fa-poll text-amber-400"></i>
-                    <span>Votos en sala: <strong id="menti-total-voters" class="text-amber-400 font-bold">0</strong></span>
-                </div>
-                <button id="toggle-facilitator-bar-btn" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
-                    <i class="fas fa-sliders-h"></i>
-                    <span id="toggle-facilitator-bar-label">Control Facilitador</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Barra de Control en Vivo del Facilitador (Desbloqueable con Clave Comfa2025) -->
-        <div id="colaborador-facilitator-bar" class="hidden glass-card p-4 mb-4 border border-amber-500/40 bg-slate-950/90 space-y-3 shadow-2xl">
-            <div class="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-800">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold uppercase tracking-wider">
-                        <i class="fas fa-broadcast-tower mr-1"></i> Modo Facilitador Activo
-                    </span>
-                    <span class="text-[11px] text-slate-400">Usa <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300 font-mono text-[10px]">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300 font-mono text-[10px]">→</kbd> para avanzar preguntas y <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-mono text-[10px]">R</kbd> o <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-mono text-[10px]">↓</kbd> para ver/ocultar resultados.</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="btn-menti-toggle-results" class="hidden px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 text-xs font-bold transition flex items-center gap-1.5">
-                        <i class="fas fa-chart-bar"></i>
-                        <span id="btn-menti-toggle-results-label">Ver Resultados (R)</span>
+    <section id="colaborador-main" class="hidden w-full max-w-5xl mx-auto p-3 sm:p-5 flex-1 flex flex-col justify-center z-10">
+        <!-- Barra Unificada y Compacta de Control del Facilitador (~48px, ultra limpia y sin robar espacio a la proyección) -->
+        <div id="colaborador-facilitator-bar" class="hidden glass-card p-2 sm:px-4 sm:py-2.5 mb-3.5 border border-amber-500/35 bg-slate-950/95 shadow-xl rounded-2xl">
+            <div class="flex items-center justify-between flex-wrap gap-2.5">
+                <!-- Izquierda: Regresar a Prisma y Conteo de Votos en Sala -->
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <button id="btn-back-to-prisma" class="px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-purple-400 text-slate-300 hover:text-white transition text-xs font-semibold flex items-center gap-1.5 shadow-sm" title="Volver a Momento 2 (Prisma)">
+                        <i class="fas fa-arrow-left text-purple-400 text-xs"></i>
+                        <span class="hidden sm:inline">Prisma</span>
                     </button>
-                    <button id="btn-menti-reset" class="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-semibold transition flex items-center gap-1.5">
-                        <i class="fas fa-trash-alt"></i>
-                        <span>Reiniciar Votos</span>
+                    <div class="px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 flex items-center gap-1.5 font-mono" title="Participantes con votos registrados en la sala">
+                        <i class="fas fa-users text-amber-400 text-xs"></i>
+                        <span><strong id="menti-total-voters" class="text-amber-400 font-bold">0</strong> <span class="hidden md:inline text-slate-400">votos</span></span>
+                    </div>
+                </div>
+
+                <!-- Centro: Navegador de Preguntas Ultra Compacto (Flechas + Pills) -->
+                <div class="flex items-center gap-1.5 py-0.5">
+                    <button id="btn-menti-prev" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-slate-200 transition flex items-center justify-center border border-slate-700 flex-shrink-0 shadow-sm" title="Pregunta anterior (tecla ←)">
+                        <i class="fas fa-chevron-left text-amber-400 text-xs"></i>
+                    </button>
+                    <div id="menti-step-pills" class="flex items-center gap-1"></div>
+                    <button id="btn-menti-next" class="w-8 h-8 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-30 disabled:pointer-events-none text-white transition flex items-center justify-center shadow flex-shrink-0" title="Siguiente pregunta (tecla →)">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Derecha: Acciones Rápidas (Resultados, Tablero, Reset) -->
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <button id="btn-menti-toggle-results" class="hidden px-2.5 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Alternar ver u ocultar resultados en vivo (R)">
+                        <i class="fas fa-chart-bar text-xs"></i>
+                        <span id="btn-menti-toggle-results-label">Resultados (R)</span>
+                    </button>
+                    <a href="Tablero de Resultados.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-300 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Abrir tablero en otra ventana o pantalla completa">
+                        <i class="fas fa-external-link-alt text-xs"></i>
+                        <span class="hidden md:inline">Tablero</span>
+                    </a>
+                    <button id="btn-menti-reset" class="w-8 h-8 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 transition flex items-center justify-center shadow-sm" title="Reiniciar votos de la sala">
+                        <i class="fas fa-trash-alt text-xs"></i>
                     </button>
                 </div>
             </div>
-
-            <!-- Stepper Controls -->
-            <div class="flex items-center justify-between gap-2">
-                <button id="btn-menti-prev" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-2 border border-slate-700">
-                    <i class="fas fa-chevron-left text-amber-400"></i>
-                    <span>Anterior</span>
-                </button>
-                <div class="text-center flex-1">
-                    <div id="menti-facilitator-step-title" class="font-orbitron text-xs sm:text-sm font-bold text-white">Etapa 1 de 11</div>
-                    <div id="menti-facilitator-step-sub" class="text-[11px] text-amber-300">Sincronizado con la sala</div>
-                </div>
-                <button id="btn-menti-next" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-amber-500/20">
-                    <span>Siguiente</span>
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+            <!-- Subtítulo de paso para Facilitador (sutil y minimalista) -->
+            <div class="hidden sm:flex items-center justify-between text-[11px] text-slate-400 pt-1.5 mt-1.5 border-t border-slate-800/80">
+                <span id="menti-facilitator-step-title" class="font-mono text-amber-300 truncate font-semibold"></span>
+                <span class="text-slate-500 text-[10px]">Atajos: <kbd class="px-1 py-0.5 rounded bg-slate-800 text-amber-300 font-mono">←</kbd> <kbd class="px-1 py-0.5 rounded bg-slate-800 text-amber-300 font-mono">→</kbd> avanzar &bull; <kbd class="px-1 py-0.5 rounded bg-slate-800 text-sky-300 font-mono">R</kbd> resultados</span>
             </div>
-
-            <!-- Quick Jump Pills -->
-            <div id="menti-step-pills" class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1"></div>
         </div>
 
         <!-- Dynamic Stage Card -->
@@ -1971,157 +1953,122 @@
         {
             index: 0,
             id: 'waiting',
-            shortLabel: '00 · En Espera (Proyección)',
-            blockBadge: 'Momento 3 • Sincronizado con el Presentador',
+            shortLabel: '00 · En Espera',
+            blockBadge: 'Encuentro de Líderes • El Nuevo Colaborador',
             title: 'Atento a la presentación principal',
             subtitle: 'Aquí aparecerá automáticamente cada pregunta en la medida en que el presentador la active durante la sesión.',
             type: 'waiting_presenter'
         },
         {
             index: 1,
-            id: 'diag_q1',
-            shortLabel: 'P1 · Uso IA (7 días)',
-            blockBadge: 'Diagnóstico de la Sala • Pregunta 1',
-            title: '¿Usaste una IA en los últimos siete días?',
-            subtitle: 'Selecciona tu respuesta. Los resultados del grupo se actualizan en vivo.',
+            id: 'm1_q1',
+            shortLabel: 'P1 · Procesos con IA',
+            blockBadge: 'Momento 1 • Impacto de la IA (Pregunta 1 de 3)',
+            title: '¿En qué procesos de tu área ya se usa inteligencia artificial?',
+            subtitle: 'Selecciona la opción principal de tu área.',
             type: 'poll',
-            pollKey: 'diag_q1',
+            pollKey: 'm1_q1',
             options: [
-                { key: 'A', label: 'Sí, casi todos los días' },
-                { key: 'B', label: 'Sí, alguna vez' },
-                { key: 'C', label: 'No' },
-                { key: 'D', label: 'No estoy seguro de si la usé' }
+                { key: 'A', label: 'Selección' },
+                { key: 'B', label: 'Formación' },
+                { key: 'C', label: 'Bienestar y clima' },
+                { key: 'D', label: 'Nómina y administración de personal' },
+                { key: 'E', label: 'Evaluación de desempeño' },
+                { key: 'F', label: 'Comunicación interna' },
+                { key: 'G', label: 'Atención de preguntas de colaboradores' },
+                { key: 'H', label: 'Todavía en ninguno' }
             ]
         },
         {
             index: 2,
-            id: 'diag_q2',
-            shortLabel: 'P2 · Preparación Equipo',
-            blockBadge: 'Diagnóstico de la Sala • Pregunta 2',
-            title: '¿Qué tan preparado está tu equipo para trabajar con IA?',
-            subtitle: 'Selecciona una opción. Tu respuesta se guardará para compararla al final.',
+            id: 'm1_q2',
+            shortLabel: 'P2 · IA no autorizada',
+            blockBadge: 'Momento 1 • La IA que nadie contrató (Pregunta 2 de 3)',
+            title: '¿Alguna vez has puesto en una IA gratuita información de personas de tu organización, como hojas de vida, evaluaciones o datos de nómina?',
+            subtitle: 'Es anónima de verdad: nadie sabrá qué respondiste.',
             type: 'poll',
-            pollKey: 'diag_q2',
+            pollKey: 'm1_q2',
+            isAnonymous: true,
             options: [
-                { key: 'A', label: 'Nada preparado' },
-                { key: 'B', label: 'Poco preparado' },
-                { key: 'C', label: 'Medianamente preparado' },
-                { key: 'D', label: 'Bastante preparado' },
-                { key: 'E', label: 'Totalmente preparado' }
+                { key: 'A', label: 'Sí' },
+                { key: 'B', label: 'No' },
+                { key: 'C', label: 'No estoy seguro' }
             ]
         },
         {
             index: 3,
-            id: 'diag_q3',
-            shortLabel: 'P3 · Quién decide hoy',
-            blockBadge: 'Diagnóstico de la Sala • Pregunta 3',
-            title: 'En tu organización, ¿quién decide hoy qué tareas hace la IA?',
-            subtitle: 'Selecciona una opción. Volveremos sobre este resultado al cierre.',
-            type: 'poll',
-            pollKey: 'diag_q3',
-            options: [
-                { key: 'A', label: 'Tecnología / sistemas' },
-                { key: 'B', label: 'Cada área por su cuenta' },
-                { key: 'C', label: 'Gestión Humana' },
-                { key: 'D', label: 'Un comité conjunto' },
-                { key: 'E', label: 'Nadie lo ha definido' }
-            ]
+            id: 'm1_q3',
+            shortLabel: 'P3 · Nube: Mayor impacto',
+            blockBadge: 'Momento 1 • Nube de Palabras (Pregunta 3 de 3)',
+            title: '¿Cuál ha sido el mayor impacto de la IA en tu área?',
+            subtitle: 'Escribe una sola palabra que describa el impacto principal.',
+            type: 'wordcloud',
+            pollKey: 'm1_q3',
+            placeholder: 'Ej: Automatización, Eficiencia, Miedo, Rapidez...'
         },
         {
             index: 4,
             id: 'humano_ia_1',
-            shortLabel: 'Humano/IA · Ítem 1',
-            blockBadge: 'Momento 8 • Humano o IA (Ítem 1 de 3)',
-            title: 'Ítem 1: Respuesta a una queja en redes sociales',
+            shortLabel: 'Humano/IA · Ronda 1',
+            blockBadge: 'Momento 2 • Humano o IA (Ronda 1 de 2)',
+            title: 'Ronda 1: Mensaje a un candidato no seleccionado',
             subtitle: 'Uno lo escribió una persona y el otro una IA. ¿Cuál escribió la IA?',
             type: 'ab_challenge',
             pollKey: 'humano_ia_1',
             revealKey: 'humano_ia_1',
-            cardA: 'Buenas tardes. Lamentamos profundamente lo sucedido. Entendemos lo frustrante que resulta esperar sin recibir información clara y agradecemos que nos lo compartas. Por favor escríbenos por mensaje directo con tu número de documento para revisar tu caso de manera personalizada y darte una respuesta hoy mismo.',
-            cardB: 'Buenas tardes. Para revisar el caso necesitamos el número de documento, escríbelo por interno. Sobre la fila: hoy se cayó el sistema entre las 9 y las 11 y se represó todo el punto. No es excusa, pero es lo que pasó.',
+            cardA: 'Estimado Andrés: Agradecemos sinceramente tu interés y el tiempo dedicado a nuestro proceso de selección. Después de una cuidadosa evaluación, hemos decidido continuar con otros candidatos cuyo perfil se ajusta más a las necesidades actuales del cargo. Te animamos a estar atento a futuras oportunidades. Te deseamos muchos éxitos.',
+            cardB: 'Hola, Andrés. Gracias por presentarte. No quedaste esta vez; la decisión fue entre tú y otra persona con más experiencia en nómina, que era lo que más pesaba dentro de todo el proceso de selección. Tu entrevista fue de las mejores. Si a futuro abrimos la vacante de analista, cuenta con nosotros para saber si te interesa participar. Te deseamos muchos éxitos.',
             aiIs: 'A',
-            verdictA: { badge: 'IA', type: 'ai', note: 'Impecable. Empática. Y no dice absolutamente nada que el afiliado no supiera ya.' },
-            verdictB: { badge: 'HUMANO', type: 'human', note: 'Torpe, sin adornos — y es el único que explica qué pasó realmente.' },
-            takeaway: 'La IA escribe mejor. La persona sabe más.'
+            verdictA: { badge: 'IA', note: 'Mejor redacción. Correcta, cuidadosa… y genérica.' },
+            verdictB: { badge: 'HUMANO', note: 'Da una razón y deja una puerta abierta.' },
+            takeaway: 'La IA redacta mejor. La persona explica por qué.'
         },
         {
             index: 5,
             id: 'humano_ia_2',
-            shortLabel: 'Humano/IA · Ítem 2',
-            blockBadge: 'Momento 8 • Humano o IA (Ítem 2 de 3)',
-            title: 'Ítem 2: Convocatoria interna de bienestar',
-            subtitle: '¿Cuál de las dos convocatorias al torneo de bolos escribió la IA?',
+            shortLabel: 'Humano/IA · Ronda 2',
+            blockBadge: 'Momento 2 • Humano o IA (Ronda 2 de 2)',
+            title: 'Ronda 2: Convocatoria al torneo de bolos',
+            subtitle: '¿Cuál de las dos convocatorias escribió la IA?',
             type: 'ab_challenge',
             pollKey: 'humano_ia_2',
             revealKey: 'humano_ia_2',
             cardA: 'Ojo pues: el viernes hay torneo de bolos y quedan seis cupos. El año pasado ganó Cartera y no han dejado de recordárnoslo. Inscríbete antes del jueves si quieres quitarles el título.',
             cardB: 'Te invitamos a participar en el torneo de bolos que se realizará este viernes. Inscríbete antes del jueves en el enlace adjunto. ¡Cupos limitados!',
             aiIs: 'A',
-            verdictA: { badge: 'IA', type: 'ai', note: 'Con el contexto correcto: quién ganó el año pasado, cuántos cupos quedan, cómo habla la casa.' },
-            verdictB: { badge: 'HUMANO', type: 'human', note: 'Escrito con afán, a las 5:40 p. m., entre dos reuniones.' },
-            takeaway: 'La IA rinde según la inducción que le den. Contexto, criterios y límites: exactamente lo que RRHH sabe hacer con las personas.'
+            verdictA: { badge: 'IA', note: 'Con el contexto correcto: quién ganó el año pasado, cuántos cupos quedan, cómo habla la casa.' },
+            verdictB: { badge: 'HUMANO', note: 'Escrito con afán, a las 5:40 p. m., entre dos reuniones.' },
+            takeaway: 'La IA rinde según la inducción que le den. Contexto, criterios y límites: exactamente lo que Talento Humano hace en una inducción.'
         },
         {
             index: 6,
-            id: 'humano_ia_3',
-            shortLabel: 'Humano/IA · Ítem 3',
-            blockBadge: 'Momento 8 • Humano o IA (Ítem 3 de 3)',
-            title: 'Ítem 3: Un colaborador te dice que se siente estancado',
-            subtitle: '¿Cuál escribió la IA?',
-            type: 'ab_challenge',
-            pollKey: 'humano_ia_3',
-            secondaryPollKey: 'humano_ia_3_jefe',
-            secondaryQuestion: 'La pregunta real: ¿Cuál de las dos preferirías recibir de tu jefe?',
-            revealKey: 'humano_ia_3',
-            cardA: 'Te entiendo, y te agradezco que me lo digas. Antes de responderte quiero pensarlo bien. ¿Te parece si lo hablamos el jueves y traes tres cosas que te gustaría estar haciendo dentro de un año?',
-            cardB: 'Valoro enormemente tu honestidad al compartir esto conmigo. El estancamiento profesional es una experiencia común y no define tu valor. Construyamos juntos un plan de desarrollo con objetivos claros a corto y mediano plazo.',
-            aiIs: 'B',
-            verdictA: { badge: 'HUMANO', type: 'human', note: 'No resuelve nada, pide tiempo y le devuelve trabajo al otro. Y es la que funciona.' },
-            verdictB: { badge: 'IA', type: 'ai', note: 'Perfecta. Cálida. Cierra la conversación sin que pase nada.' },
-            takeaway: 'La pregunta real: ¿cuál de las dos preferirías recibir de tu jefe?'
-        },
-        {
-            index: 7,
-            id: 'cierre_q2',
-            shortLabel: 'Cierre · Pregunta 2',
-            blockBadge: 'Momento 10 • Volvamos a la Pregunta 2',
-            title: 'Después de esta sesión: ¿qué tan preparado está tu equipo para trabajar con IA?',
-            subtitle: 'Mismas opciones. Comparen con su respuesta del comienzo.',
-            type: 'comparative_poll',
-            pollKey: 'cierre_q2',
-            compareWithKey: 'diag_q2',
-            beforeLabel: 'Al Inicio',
-            afterLabel: 'Ahora',
+            id: 'm4_final',
+            shortLabel: 'Cierre · Votación Final',
+            blockBadge: 'Momento 4 • La Última Votación',
+            title: '¿Cuánto de esta presentación creen que hizo la IA?',
+            subtitle: 'Vota según tu percepción de lo que viste en toda la sesión.',
+            type: 'cierre_autor',
+            pollKey: 'm4_final',
             options: [
-                { key: 'A', label: 'Nada preparado' },
-                { key: 'B', label: 'Poco preparado' },
-                { key: 'C', label: 'Medianamente preparado' },
-                { key: 'D', label: 'Bastante preparado' },
-                { key: 'E', label: 'Totalmente preparado' }
-            ]
-        },
-        {
-            index: 8,
-            id: 'cierre_q3',
-            shortLabel: 'Cierre · Pregunta 3',
-            blockBadge: 'Momento 10 • Volvamos a la Pregunta 3 (Cambia un verbo)',
-            title: '¿Quién DEBERÍA decidir qué tareas hace la IA?',
-            subtitle: 'Compara quién decide hoy frente a quién debería decidirlo.',
-            type: 'comparative_poll',
-            pollKey: 'cierre_q3',
-            compareWithKey: 'diag_q3',
-            beforeLabel: 'Quién decide HOY',
-            afterLabel: 'Quién DEBERÍA decidir',
-            options: [
-                { key: 'A', label: 'Tecnología / sistemas' },
-                { key: 'B', label: 'Cada área por su cuenta' },
-                { key: 'C', label: 'Gestión Humana' },
-                { key: 'D', label: 'Un comité conjunto' }
-            ]
+                { key: 'A', label: 'Nada: la hizo toda una persona' },
+                { key: 'B', label: 'Poco: más persona que IA' },
+                { key: 'C', label: 'Mitad y mitad' },
+                { key: 'D', label: 'Mucho: más IA que persona' },
+                { key: 'E', label: 'Todo: la hizo toda la IA' }
+            ],
+            verdictProduction: 'Más IA que persona. Borradores, láminas e ilustraciones animadas.',
+            verdictDecisions: '100 % personas. Qué decir, qué dejar por fuera, qué era verdad y qué no.',
+            takeaway: 'La IA produce. Las personas deciden y responden.'
         }
     ];
 
     async function submitMentiVote(pollKey, optionKey) {
+        // Bloqueo estricto: una vez dada una respuesta no se permite una nueva
+        if (myMentiVotes[pollKey]) {
+            showToast("Tu respuesta ya ha sido registrada previamente", "fa-lock");
+            return;
+        }
+
         sound.playClick();
         myMentiVotes[pollKey] = optionKey;
         localStorage.setItem('intercajas_my_menti_votes', JSON.stringify(myMentiVotes));
@@ -2137,6 +2084,7 @@
         };
 
         renderColaboradorStep();
+        showToast("¡Respuesta registrada!", "fa-check-circle");
 
         if (isConnected && db && userId) {
             try {
@@ -2236,6 +2184,61 @@
         return { counts, total };
     }
 
+    function computeWordCloudStats(pollKey) {
+        const counts = {};
+        let total = 0;
+        Object.values(mentiVotesState).forEach(voter => {
+            const raw = voter?.votes?.[pollKey];
+            if (raw && typeof raw === 'string') {
+                const word = raw.trim();
+                if (word.length > 0) {
+                    const norm = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                    counts[norm] = (counts[norm] || 0) + 1;
+                    total++;
+                }
+            }
+        });
+        const words = Object.entries(counts)
+            .map(([word, count]) => ({ word, count }))
+            .sort((a, b) => b.count - a.count);
+        return { words, total };
+    }
+
+    function renderWordCloudHtml(words, total) {
+        if (!words || words.length === 0) {
+            return `
+                <div class="text-center py-10 text-slate-400">
+                    <i class="fas fa-cloud text-3xl text-amber-400/40 mb-2"></i>
+                    <p class="text-xs sm:text-sm">Esperando que los participantes envíen sus palabras en vivo...</p>
+                </div>
+            `;
+        }
+        const maxCount = Math.max(...words.map(w => w.count), 1);
+        const colorClasses = [
+            'bg-amber-500/15 border-amber-400/40 text-amber-300',
+            'bg-sky-500/15 border-sky-400/40 text-sky-300',
+            'bg-emerald-500/15 border-emerald-400/40 text-emerald-300',
+            'bg-purple-500/15 border-purple-400/40 text-purple-300',
+            'bg-rose-500/15 border-rose-400/40 text-rose-300'
+        ];
+
+        return `
+            <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 p-5 rounded-2xl bg-slate-900/90 border border-slate-800">
+                ${words.map((item, idx) => {
+                    const weight = item.count / maxCount;
+                    const fontSize = weight > 0.7 ? 'text-lg sm:text-2xl font-black' : (weight > 0.4 ? 'text-sm sm:text-lg font-bold' : 'text-xs sm:text-sm font-semibold');
+                    const color = colorClasses[idx % colorClasses.length];
+                    return `
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border ${color} ${fontSize} shadow-sm transition hover:scale-105 cursor-default">
+                            <span>${item.word}</span>
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-950/60 font-normal">(${item.count})</span>
+                        </span>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
     function renderColaboradorStep() {
         const stage = document.getElementById('colaborador-stage');
         if (!stage) return;
@@ -2244,23 +2247,19 @@
         const totalVotersEl = document.getElementById('menti-total-voters');
         if (totalVotersEl) totalVotersEl.textContent = Object.keys(mentiVotesState).length;
 
-        // Only show Facilitator Top Bar & Control Bar to Administrator
+        // Mostrar u ocultar barra del facilitador según modo
         const colabTopBar = document.getElementById('colaborador-top-bar');
         const facBar = document.getElementById('colaborador-facilitator-bar');
-        const facLabel = document.getElementById('toggle-facilitator-bar-label');
         if (isFacilitatorMode) {
             if (colabTopBar) { colabTopBar.classList.remove('hidden'); colabTopBar.classList.add('flex'); }
             if (facBar) facBar.classList.remove('hidden');
-            if (facLabel) facLabel.textContent = 'Panel Facilitador Activo';
         } else {
             if (colabTopBar) { colabTopBar.classList.add('hidden'); colabTopBar.classList.remove('flex'); }
             if (facBar) facBar.classList.add('hidden');
         }
 
         const stepTitleEl = document.getElementById('menti-facilitator-step-title');
-        const stepSubEl = document.getElementById('menti-facilitator-step-sub');
-        if (stepTitleEl) stepTitleEl.textContent = `Etapa ${step.index + 1} de ${COLABORADOR_STEPS.length} • ${step.shortLabel}`;
-        if (stepSubEl) stepSubEl.textContent = step.title;
+        if (stepTitleEl) stepTitleEl.textContent = `Etapa ${step.index + 1} de ${COLABORADOR_STEPS.length} • ${step.shortLabel}: ${step.title}`;
 
         const prevBtn = document.getElementById('btn-menti-prev');
         const nextBtn = document.getElementById('btn-menti-next');
@@ -2273,7 +2272,7 @@
             if (isFacilitatorMode && step.index > 0) {
                 toggleResultsBtn.classList.remove('hidden');
                 if (toggleResultsLabel) {
-                    toggleResultsLabel.textContent = showAdminMentiResults ? 'Volver a la Pregunta (R)' : 'Ver Resultados (R)';
+                    toggleResultsLabel.textContent = showAdminMentiResults ? 'Volver a Pregunta (R)' : 'Resultados (R)';
                 }
                 toggleResultsBtn.onclick = () => {
                     sound.playClick();
@@ -2287,21 +2286,23 @@
 
         const pillsContainer = document.getElementById('menti-step-pills');
         if (pillsContainer) {
-            pillsContainer.innerHTML = COLABORADOR_STEPS.map(s => {
+            const shortCodes = ['0', 'P1', 'P2', 'P3', 'R1', 'R2', 'Cierre'];
+            pillsContainer.innerHTML = COLABORADOR_STEPS.map((s, idx) => {
                 const active = s.index === step.index;
-                return `<button data-step="${s.index}" class="menti-jump-pill px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition border ${active ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'}">${s.shortLabel}</button>`;
+                const code = shortCodes[idx] || `P${idx}`;
+                return `<button data-step="${s.index}" title="${s.shortLabel}: ${s.title}" class="menti-jump-pill px-2.5 py-1 rounded-lg text-xs font-orbitron font-bold transition border ${active ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-md shadow-amber-500/30 ring-2 ring-amber-400/50 scale-105' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'}">${code}</button>`;
             }).join('');
             pillsContainer.querySelectorAll('.menti-jump-pill').forEach(btn => {
                 btn.onclick = () => setMentiStep(parseInt(btn.dataset.step));
             });
         }
 
-        // Render Stage Content: Sin resultados grupales (cero sesgo) y sin marcas de respuesta (IA / HUMANO)
+        // Render Stage Content: Sin resultados grupales (cero sesgo) y con bloqueo estricto una vez respondido
         let bodyHtml = '';
 
         if (step.type === 'waiting_presenter') {
             bodyHtml = `
-                <div class="my-6 py-8 px-5 rounded-3xl bg-slate-900/80 border border-amber-500/30 text-center space-y-5">
+                <div class="my-6 py-10 px-6 rounded-3xl bg-slate-900/80 border border-amber-500/30 text-center space-y-5 shadow-2xl">
                     <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
                         <i class="fas fa-satellite-dish text-2xl text-amber-400 animate-pulse"></i>
                     </div>
@@ -2311,62 +2312,37 @@
                         </span>
                         <h3 class="font-orbitron text-lg sm:text-xl font-bold text-white pt-1">Sigue la proyección del presentador</h3>
                         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                            Cada pregunta aparecerá aquí de forma automática en cuanto el presentador la active.
+                            Cada pregunta se activará aquí de forma automática en cuanto el facilitador la presente en pantalla.
                         </p>
                     </div>
                 </div>
             `;
         } else if (step.type === 'ab_challenge') {
-            // PREGUNTAS "HUMANO O IA": Muestra TEXTO A y TEXTO B totalmente neutros (sin marcar respuesta IA/HUMANO) y sin votos de otros participantes
             const abOptions = [
                 { key: 'A', label: 'El Texto A fue escrito por la IA' },
                 { key: 'B', label: 'El Texto B fue escrito por la IA' }
             ];
             const myChoice = myMentiVotes[step.pollKey];
-
-            let secondaryHtml = '';
-            if (step.secondaryPollKey) {
-                const mySecChoice = myMentiVotes[step.secondaryPollKey];
-                const secOptions = [
-                    { key: 'A', label: 'Preferiría recibir la Respuesta A de mi jefe' },
-                    { key: 'B', label: 'Preferiría recibir la Respuesta B de mi jefe' }
-                ];
-                secondaryHtml = `
-                    <div class="mt-5 pt-4 border-t border-slate-800 space-y-3">
-                        <p class="text-xs sm:text-sm font-bold text-pink-300">${step.secondaryQuestion}</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            ${secOptions.map(opt => {
-                                const sel = mySecChoice === opt.key;
-                                return `
-                                    <button data-poll="${step.secondaryPollKey}" data-opt="${opt.key}" class="menti-vote-btn p-3.5 rounded-2xl border text-left font-semibold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 ${sel ? 'bg-pink-500/20 border-pink-400 text-white shadow-lg' : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700'}">
-                                        <span>${opt.label}</span>
-                                        ${sel ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1 flex-shrink-0"><i class="fas fa-check"></i> Enviado</span>' : ''}
-                                    </button>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }
+            const hasVoted = Boolean(myChoice);
 
             bodyHtml = `
                 <div class="my-4 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-3">
+                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-3 shadow-md">
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 font-orbitron font-bold text-xs text-slate-200">TEXTO A</span>
+                                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 font-orbitron font-bold text-xs text-amber-300">TEXTO A</span>
                                 </div>
-                                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">“${step.cardA}”</p>
+                                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed italic">“${step.cardA}”</p>
                             </div>
                         </div>
 
-                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-3">
+                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-3 shadow-md">
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 font-orbitron font-bold text-xs text-slate-200">TEXTO B</span>
+                                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 font-orbitron font-bold text-xs text-sky-300">TEXTO B</span>
                                 </div>
-                                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">“${step.cardB}”</p>
+                                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed italic">“${step.cardB}”</p>
                             </div>
                         </div>
                     </div>
@@ -2374,43 +2350,135 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         ${abOptions.map(opt => {
                             const isSelected = myChoice === opt.key;
-                            return `
-                                <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 ${isSelected ? 'bg-amber-500/15 border-amber-400 shadow-lg shadow-amber-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 border ${isSelected ? 'bg-amber-500 text-slate-950 border-amber-300' : 'bg-slate-950 text-amber-400 border-slate-700'}">${opt.key}</span>
-                                        <span class="text-xs sm:text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}">${opt.label}</span>
-                                    </div>
-                                    ${isSelected ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 flex-shrink-0"><i class="fas fa-check"></i> Enviado</span>' : ''}
-                                </button>
-                            `;
+                            if (hasVoted) {
+                                if (isSelected) {
+                                    return `
+                                        <div class="p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-500/15 text-left flex items-center justify-between gap-3 shadow-lg shadow-emerald-500/10">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 bg-emerald-500 text-slate-950 border border-emerald-300">${opt.key}</span>
+                                                <span class="text-xs sm:text-sm font-bold text-white">${opt.label}</span>
+                                            </div>
+                                            <span class="px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 text-[11px] font-bold flex items-center gap-1 flex-shrink-0">
+                                                <i class="fas fa-check-circle"></i> Tu respuesta
+                                            </span>
+                                        </div>
+                                    `;
+                                } else {
+                                    return `
+                                        <div class="p-4 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-left flex items-center justify-between gap-3 opacity-35 pointer-events-none cursor-not-allowed">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 text-slate-500 border border-slate-800">${opt.key}</span>
+                                                <span class="text-xs sm:text-sm text-slate-400">${opt.label}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            } else {
+                                return `
+                                    <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn p-4 rounded-2xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-amber-400/60 hover:scale-[1.01] active:scale-[0.99] transition-all text-left flex items-center justify-between gap-3 group shadow-md">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 text-amber-400 border border-slate-700 group-hover:border-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition">${opt.key}</span>
+                                            <span class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white transition">${opt.label}</span>
+                                        </div>
+                                        <i class="fas fa-arrow-right text-slate-600 group-hover:text-amber-400 transition text-xs pr-1"></i>
+                                    </button>
+                                `;
+                            }
                         }).join('')}
                     </div>
 
-                    ${secondaryHtml}
+                    ${hasVoted ? `
+                        <div class="mt-2 flex items-center justify-center gap-2 text-xs font-medium text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 py-2.5 px-4 rounded-xl max-w-md mx-auto">
+                            <i class="fas fa-lock text-emerald-400"></i>
+                            <span>Respuesta guardada. No es posible cambiar tu selección.</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else if (step.type === 'wordcloud') {
+            const myChoice = myMentiVotes[step.pollKey] || '';
+            const hasVoted = Boolean(myChoice);
+
+            bodyHtml = `
+                <div class="my-4 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-md">
+                    <div class="space-y-2">
+                        <label class="text-xs sm:text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i class="fas fa-comment-dots text-amber-400"></i>
+                            <span>${hasVoted ? 'Tu palabra ya fue registrada:' : 'Escribe una palabra o concepto clave:'}</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="menti-wordcloud-input" maxlength="35" placeholder="${step.placeholder || 'Escribe aquí...'}" value="${myChoice}" ${hasVoted ? 'disabled' : ''} class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 font-semibold ${hasVoted ? 'bg-slate-950/50 text-slate-300 cursor-not-allowed border-slate-800' : ''}" />
+                            <button id="menti-wordcloud-submit-btn" ${hasVoted ? 'disabled' : ''} class="px-5 py-3 rounded-xl ${hasVoted ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20'} font-orbitron font-bold text-xs transition flex items-center gap-1.5 flex-shrink-0">
+                                <i class="fas ${hasVoted ? 'fa-check' : 'fa-paper-plane'}"></i>
+                                <span>${hasVoted ? 'Registrada' : 'Enviar'}</span>
+                            </button>
+                        </div>
+                    </div>
+                    ${hasVoted ? `
+                        <div class="flex items-center justify-center gap-2 text-xs font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-4 py-2.5 rounded-xl">
+                            <i class="fas fa-lock text-emerald-400"></i>
+                            <span>Palabra registrada: <strong>“${myChoice}”</strong> (Bloqueada)</span>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         } else {
-            // ENCUESTAS (POLL Y COMPARATIVE_POLL): Solo opciones individuales sin mostrar porcentajes ni respuestas de otros participantes (cero sesgo)
+            // ENCUESTAS (POLL Y CIERRE_AUTOR)
             const participantOptions = step.options || [];
             const myChoice = myMentiVotes[step.pollKey];
+            const hasVoted = Boolean(myChoice);
+            const isMultiCol = participantOptions.length > 4;
 
             bodyHtml = `
-                <div class="my-4 space-y-3">
+                <div class="my-4 ${isMultiCol ? 'grid grid-cols-1 sm:grid-cols-2 gap-2.5' : 'space-y-2.5'}">
                     ${participantOptions.map(opt => {
                         const isSelected = myChoice === opt.key;
-                        return `
-                            <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${isSelected ? 'bg-amber-500/15 border-amber-400 shadow-lg shadow-amber-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 border ${isSelected ? 'bg-amber-500 text-slate-950 border-amber-300' : 'bg-slate-950 text-amber-400 border-slate-700'}">
-                                        ${opt.key}
-                                    </span>
-                                    <span class="text-sm sm:text-base font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}">${opt.label}</span>
-                                </div>
-                                ${isSelected ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 flex-shrink-0"><i class="fas fa-check"></i> Enviado</span>' : ''}
-                            </button>
-                        `;
+                        if (hasVoted) {
+                            if (isSelected) {
+                                return `
+                                    <div class="w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-500/15 shadow-lg shadow-emerald-500/10 flex items-center justify-between gap-3">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 bg-emerald-500 text-slate-950 border border-emerald-300">
+                                                ${opt.key}
+                                            </span>
+                                            <span class="text-xs sm:text-sm font-bold text-white">${opt.label}</span>
+                                        </div>
+                                        <span class="px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 text-[11px] font-bold flex items-center gap-1 flex-shrink-0">
+                                            <i class="fas fa-check-circle"></i> Tu respuesta
+                                        </span>
+                                    </div>
+                                `;
+                            } else {
+                                return `
+                                    <div class="w-full text-left p-3.5 sm:p-4 rounded-2xl border border-slate-800/60 bg-slate-900/30 opacity-35 pointer-events-none cursor-not-allowed flex items-center gap-3">
+                                        <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 text-slate-500 border border-slate-800">
+                                            ${opt.key}
+                                        </span>
+                                        <span class="text-xs sm:text-sm text-slate-400">${opt.label}</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            return `
+                                <button data-poll="${step.pollKey}" data-opt="${opt.key}" class="menti-vote-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-amber-400/50 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-between gap-3 group shadow-md">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="w-8 h-8 rounded-xl font-orbitron font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 text-amber-400 border border-slate-700 group-hover:border-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition">
+                                            ${opt.key}
+                                        </span>
+                                        <span class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white transition">${opt.label}</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-600 group-hover:text-amber-400 transition pr-1 text-xs"></i>
+                                </button>
+                            `;
+                        }
                     }).join('')}
                 </div>
+                ${hasVoted ? `
+                    <div class="mt-4 flex items-center justify-center gap-2 text-xs font-medium text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 py-2.5 px-4 rounded-xl max-w-md mx-auto shadow-inner">
+                        <i class="fas fa-lock text-emerald-400"></i>
+                        <span>Respuesta registrada. No es posible cambiar tu voto.</span>
+                    </div>
+                ` : ''}
             `;
         }
 
@@ -2426,81 +2494,65 @@
                     { key: 'B', label: 'Opción B (Texto B fue escrito por la IA)' }
                   ]
                 : (step.options || []);
-            const { counts, total } = computePollStats(step.pollKey, evalOptions);
 
-            if (step.type === 'comparative_poll') {
-                const beforeStats = computePollStats(step.compareWithKey, evalOptions);
+            if (step.type === 'wordcloud') {
+                const { words, total } = computeWordCloudStats(step.pollKey);
                 adminResultsHtml = `
                     <div class="mt-6 pt-5 border-t border-sky-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-4">
                         <div class="flex items-center justify-between flex-wrap gap-2">
                             <span class="px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold uppercase tracking-wider">
-                                <i class="fas fa-chart-bar mr-1.5"></i> Resultados Comparativos en Sala (Vista Facilitador)
+                                <i class="fas fa-cloud mr-1.5"></i> Nube de Palabras en Vivo (Vista Facilitador)
                             </span>
-                            <div class="flex items-center gap-4 text-xs font-mono">
-                                <span class="text-slate-400">${step.beforeLabel}: <strong class="text-white">${beforeStats.total}</strong></span>
-                                <span class="text-amber-300">${step.afterLabel}: <strong class="text-white">${total}</strong></span>
-                            </div>
+                            <span class="text-xs font-mono text-slate-300">Total respuestas: <strong class="text-white">${total}</strong></span>
                         </div>
-                        <div class="space-y-3">
+                        ${renderWordCloudHtml(words, total)}
+                    </div>
+                `;
+            } else if (step.type === 'cierre_autor') {
+                const { counts, total } = computePollStats(step.pollKey, evalOptions);
+                adminResultsHtml = `
+                    <div class="mt-6 pt-5 border-t border-emerald-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                                <i class="fas fa-chart-bar mr-1.5"></i> Resultados de la Sala (Vista Facilitador)
+                            </span>
+                            <span class="text-xs font-mono text-slate-300">Total votos: <strong class="text-white">${total}</strong></span>
+                        </div>
+                        <div class="space-y-2.5">
                             ${evalOptions.map(opt => {
-                                const bCount = beforeStats.counts[opt.key] || 0;
-                                const bPct = beforeStats.total > 0 ? Math.round((bCount / beforeStats.total) * 100) : 0;
-                                const aCount = counts[opt.key] || 0;
-                                const aPct = total > 0 ? Math.round((aCount / total) * 100) : 0;
+                                const count = counts[opt.key] || 0;
+                                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                                 return `
                                     <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
                                         <div class="flex items-center justify-between text-xs sm:text-sm font-semibold text-white">
-                                            <span><strong class="text-amber-400 font-orbitron mr-1.5">${opt.key}.</strong> ${opt.label}</span>
-                                            <span class="font-mono text-xs">
-                                                <span class="text-slate-400 mr-2">Antes: ${bPct}% (${bCount})</span>
-                                                <strong class="text-amber-300">Ahora: ${aPct}% (${aCount})</strong>
-                                            </span>
-                                        </div>
-                                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                                            <div class="h-full bg-slate-500 rounded-full transition-all duration-700" style="width:${bPct}%"></div>
+                                            <span><strong class="text-emerald-400 font-orbitron mr-1.5">${opt.key}.</strong> ${opt.label}</span>
+                                            <span class="font-orbitron text-emerald-300 font-bold">${pct}% <span class="text-xs font-mono text-slate-400 font-normal">(${count})</span></span>
                                         </div>
                                         <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden">
-                                            <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-700" style="width:${aPct}%"></div>
+                                            <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" style="width:${pct}%"></div>
                                         </div>
                                     </div>
                                 `;
                             }).join('')}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+                            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                                <span class="text-[10px] font-mono text-amber-300 font-bold uppercase tracking-wider">En la Producción</span>
+                                <p class="text-xs sm:text-sm text-slate-200">${step.verdictProduction}</p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                                <span class="text-[10px] font-mono text-emerald-300 font-bold uppercase tracking-wider">En las Decisiones</span>
+                                <p class="text-xs sm:text-sm text-slate-200">${step.verdictDecisions}</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 via-slate-900 to-sky-500/10 border border-emerald-400/30 text-center">
+                            <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-300">Conclusión Clave</span>
+                            <p class="text-xs sm:text-sm font-bold text-white mt-0.5">${step.takeaway}</p>
                         </div>
                     </div>
                 `;
             } else {
-                let secAdminHtml = '';
-                if (step.secondaryPollKey) {
-                    const secOptions = [
-                        { key: 'A', label: 'Preferiría recibir la Respuesta A de mi jefe' },
-                        { key: 'B', label: 'Preferiría recibir la Respuesta B de mi jefe' }
-                    ];
-                    const secStats = computePollStats(step.secondaryPollKey, secOptions);
-                    secAdminHtml = `
-                        <div class="pt-4 mt-4 border-t border-slate-800 space-y-2.5">
-                            <div class="flex items-center justify-between text-xs font-bold text-pink-300">
-                                <span>${step.secondaryQuestion}</span>
-                                <span class="font-mono text-slate-400">${secStats.total} votos</span>
-                            </div>
-                            ${secOptions.map(opt => {
-                                const c = secStats.counts[opt.key] || 0;
-                                const pct = secStats.total > 0 ? Math.round((c / secStats.total) * 100) : 0;
-                                return `
-                                    <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-                                        <div class="flex items-center justify-between text-xs text-slate-200 font-semibold">
-                                            <span>${opt.label}</span>
-                                            <span class="font-orbitron text-pink-300 font-bold">${pct}% (${c})</span>
-                                        </div>
-                                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                                            <div class="h-full bg-pink-500 rounded-full transition-all duration-700" style="width:${pct}%"></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                }
-
+                const { counts, total } = computePollStats(step.pollKey, evalOptions);
                 adminResultsHtml = `
                     <div class="mt-6 pt-5 border-t border-sky-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-4">
                         <div class="flex items-center justify-between flex-wrap gap-2">
@@ -2526,7 +2578,6 @@
                                 `;
                             }).join('')}
                         </div>
-                        ${secAdminHtml}
                     </div>
                 `;
             }
@@ -2549,7 +2600,7 @@
                             <span>Expandir Pregunta (R)</span>
                         </button>
                     </div>
-                    ${adminResultsHtml.replace('mt-6 pt-5 border-t border-sky-500/30', '')}
+                    ${adminResultsHtml.replace('mt-6 pt-5 border-t border-sky-500/30', '').replace('mt-6 pt-5 border-t border-emerald-500/30', '')}
                 </div>
             `;
             const expandBtn = stage.querySelector('#btn-expand-question-back');
@@ -2581,6 +2632,23 @@
         stage.querySelectorAll('.menti-vote-btn').forEach(btn => {
             btn.onclick = () => submitMentiVote(btn.dataset.poll, btn.dataset.opt);
         });
+
+        // Bind wordcloud events if present
+        const wcInput = stage.querySelector('#menti-wordcloud-input');
+        const wcBtn = stage.querySelector('#menti-wordcloud-submit-btn');
+        if (wcBtn && wcInput) {
+            const sendWord = () => {
+                const val = wcInput.value.trim();
+                if (val) submitMentiVote(step.pollKey, val);
+            };
+            wcBtn.onclick = sendWord;
+            wcInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendWord();
+                }
+            };
+        }
     }
 
     function setupControls() {
