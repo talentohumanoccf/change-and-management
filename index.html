@@ -392,10 +392,10 @@
     <!-- Mobile Screen View Switcher Tabs (Only visible on screens < 1024px) -->
     <div id="team-mood-mobile-tabs" class="hidden lg:hidden w-full max-w-xl mx-auto px-3 pt-3 pb-0 sticky top-[53px] z-30">
         <div class="flex items-center p-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl">
-            <button id="tab-btn-form" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
+            <button id="tab-btn-form" class="flex-1 min-h-[44px] py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md">
                 <i class="fas fa-user-edit"></i> 1. Tu Registro
             </button>
-            <button id="tab-btn-tree" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+            <button id="tab-btn-tree" class="flex-1 min-h-[44px] py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
                 <i class="fas fa-tree"></i> 2. Ver Árbol (30)
             </button>
         </div>
@@ -442,7 +442,7 @@
                     <div class="flex-1">
                         <strong class="font-bold block">3. Toca una rama vacía (+)</strong>
                         <p class="text-[10px] sm:text-[11px] text-sky-300/80 mt-0.5">Toca cualquiera de los 30 círculos vacíos del árbol para colgar tu avatar.</p>
-                        <button id="btn-goto-tree-mobile" class="lg:hidden mt-2 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-md">
+                        <button id="btn-goto-tree-mobile" class="lg:hidden mt-2 w-full min-h-[44px] bg-sky-500 hover:bg-sky-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-md">
                             <span>Ir al Árbol a elegir mi rama</span>
                             <i class="fas fa-arrow-right text-[10px]"></i>
                         </button>
@@ -533,7 +533,7 @@
 
             <div id="tree-export-wrapper" class="w-full h-full relative flex flex-col items-center justify-center flex-1">
                 
-                <div class="text-center z-20 mb-1 pointer-events-none px-2">
+                <div class="text-center z-20 mb-1 pointer-events-none px-12 sm:px-2">
                     <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-[9px] sm:text-[11px] font-bold uppercase tracking-widest">
                         Sesión Colectiva en Tiempo Real
                     </span>
@@ -1532,8 +1532,8 @@
 
         function showTreeTab() {
             sound.playClick();
-            tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
-            tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+            tabTree.className = 'flex-1 min-h-[44px] py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
+            tabForm.className = 'flex-1 min-h-[44px] py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
             treeSection.classList.remove('hidden');
             treeSection.classList.add('flex');
             asidePanel.classList.add('hidden');
@@ -1542,8 +1542,8 @@
 
         function showFormTab() {
             sound.playClick();
-            tabForm.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
-            tabTree.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+            tabForm.className = 'flex-1 min-h-[44px] py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md';
+            tabTree.className = 'flex-1 min-h-[44px] py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white';
             asidePanel.classList.remove('hidden');
             asidePanel.classList.add('flex');
             treeSection.classList.add('hidden');
@@ -2430,8 +2430,8 @@
                             <span>${hasVoted ? 'Tu palabra ya fue registrada:' : 'Escribe una palabra o concepto clave:'}</span>
                         </label>
                         <div class="flex gap-2">
-                            <input type="text" id="menti-wordcloud-input" maxlength="35" placeholder="${step.placeholder || 'Escribe aquí...'}" value="${escapeHtml(myChoice)}" ${hasVoted ? 'disabled' : ''} class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 font-semibold ${hasVoted ? 'bg-slate-950/50 text-slate-300 cursor-not-allowed border-slate-800' : ''}" />
-                            <button id="menti-wordcloud-submit-btn" ${hasVoted ? 'disabled' : ''} class="px-5 py-3 rounded-xl ${hasVoted ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20'} font-orbitron font-bold text-xs transition flex items-center gap-1.5 flex-shrink-0">
+                            <input type="text" id="menti-wordcloud-input" maxlength="35" style="min-width: 0;" placeholder="${step.placeholder || 'Escribe aquí...'}" value="${escapeHtml(myChoice)}" ${hasVoted ? 'disabled' : ''} class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 font-semibold ${hasVoted ? 'bg-slate-950/50 text-slate-300 cursor-not-allowed border-slate-800' : ''}" />
+                            <button id="menti-wordcloud-submit-btn" ${hasVoted ? 'disabled' : ''} class="flex-shrink-0 px-4 sm:px-5 py-3 rounded-xl ${hasVoted ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20'} font-orbitron font-bold text-xs transition flex items-center gap-1.5 flex-shrink-0">
                                 <i class="fas ${hasVoted ? 'fa-check' : 'fa-paper-plane'}"></i>
                                 <span>${hasVoted ? 'Registrada' : 'Enviar'}</span>
                             </button>
@@ -2506,7 +2506,7 @@
         }
 
         const participantSubtitle = step.index > 0
-            ? 'Selecciona tu respuesta de forma individual.'
+            ? (step.type === 'wordcloud' ? 'Escribe tu respuesta de forma individual.' : 'Selecciona tu respuesta de forma individual.')
             : step.subtitle;
 
         let adminResultsHtml = '';
@@ -2999,7 +2999,7 @@
 
             if (q.questionType === 'convergent') {
                 elements.answerArea.innerHTML = `
-                    <input type="text" id="answer-input" class="w-full text-sm" placeholder="Escribe tu solución concreta...">
+                    <input type="text" id="answer-input" class="w-full" placeholder="Escribe tu solución concreta...">
                     <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
                         <i class="fas fa-keyboard text-sky-400"></i> Presiona <b>Enter</b> o haz clic en Siguiente para confirmar.
                     </p>
@@ -3015,9 +3015,11 @@
             } else {
                 const helperMsg = q.type === 'list'
                     ? 'Escribe una idea por línea (Enter). <span id="idea-counter" class="text-pink-400 font-semibold ml-1">0 ideas detectadas</span>'
-                    : 'Desarrolla tus propuestas con libertad creativa (Ctrl + Enter para avanzar).';
+                    : (window.matchMedia('(pointer: coarse)').matches
+                        ? 'Desarrolla tus propuestas con libertad creativa.'
+                        : 'Desarrolla tus propuestas con libertad creativa (Ctrl + Enter para avanzar).');
                 elements.answerArea.innerHTML = `
-                    <textarea id="answer-input" rows="4" class="w-full text-sm" placeholder="Desarrolla tus ideas creativas aquí..."></textarea>
+                    <textarea id="answer-input" rows="4" class="w-full" placeholder="Desarrolla tus ideas creativas aquí..."></textarea>
                     <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
                         <i class="fas fa-lightbulb text-pink-400"></i> <span>${helperMsg}</span>
                     </p>
