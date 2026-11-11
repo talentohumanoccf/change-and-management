@@ -795,12 +795,13 @@
                     </div>
                 </div>
 
-                <!-- Centro: Navegador de Preguntas Ultra Compacto (Flechas + Pills) -->
-                <div class="flex items-center gap-1.5 py-0.5">
+                <!-- Centro: Navegador de Preguntas Ultra Compacto (Flechas + Pills). En el celular las pastillas
+                     no caben: se desplazan dentro de su franja y las flechas quedan siempre a la vista. -->
+                <div class="flex items-center gap-1.5 py-0.5 min-w-0 max-w-full">
                     <button id="btn-menti-prev" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-slate-200 transition flex items-center justify-center border border-slate-700 flex-shrink-0 shadow-sm" title="Pregunta anterior (tecla ←)">
                         <i class="fas fa-chevron-left text-amber-400 text-xs"></i>
                     </button>
-                    <div id="menti-step-pills" class="flex items-center gap-1"></div>
+                    <div id="menti-step-pills" class="flex items-center gap-1 min-w-0 overflow-x-auto px-1 py-1.5" style="scrollbar-width: none;"></div>
                     <button id="btn-menti-next" class="w-8 h-8 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-30 disabled:pointer-events-none text-white transition flex items-center justify-center shadow flex-shrink-0" title="Siguiente pregunta (tecla →)">
                         <i class="fas fa-chevron-right text-xs"></i>
                     </button>
@@ -2585,15 +2586,21 @@
 
         const pillsContainer = document.getElementById('menti-step-pills');
         if (pillsContainer) {
-            const shortCodes = ['0', 'P1', 'P2', 'P3', 'R1', 'R2', 'Cierre'];
+            const shortCodes = ['0', 'P1', 'P2', 'P3', 'R1', 'R2', 'Cierre', 'Sube', 'Aba'];
             pillsContainer.innerHTML = COLABORADOR_STEPS.map((s, idx) => {
                 const active = s.index === step.index;
                 const code = shortCodes[idx] || `P${idx}`;
-                return `<button data-step="${s.index}" title="${s.shortLabel}: ${s.title}" class="menti-jump-pill px-2.5 py-1 rounded-lg text-xs font-orbitron font-bold transition border ${active ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-md shadow-amber-500/30 ring-2 ring-amber-400/50 scale-105' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'}">${code}</button>`;
+                return `<button data-step="${s.index}" title="${s.shortLabel}: ${s.title}" class="menti-jump-pill flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-orbitron font-bold transition border ${active ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-md shadow-amber-500/30 ring-2 ring-amber-400/50 scale-105' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'}">${code}</button>`;
             }).join('');
             pillsContainer.querySelectorAll('.menti-jump-pill').forEach(btn => {
                 btn.onclick = () => setMentiStep(parseInt(btn.dataset.step));
             });
+            // Deja a la vista la pastilla activa sin mover la página.
+            const activePill = pillsContainer.querySelector(`[data-step="${step.index}"]`);
+            if (activePill) {
+                const box = pillsContainer.getBoundingClientRect(), pill = activePill.getBoundingClientRect();
+                pillsContainer.scrollLeft += (pill.left + pill.width / 2) - (box.left + box.width / 2);
+            }
         }
 
         // Render Stage Content: Sin resultados grupales (cero sesgo) y con bloqueo estricto una vez respondido
