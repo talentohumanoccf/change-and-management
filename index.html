@@ -930,7 +930,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc, setDoc, runTransaction, getDocFromServer, disableNetwork, enableNetwork } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, deleteField, doc, setDoc, runTransaction, getDocFromServer, disableNetwork, enableNetwork } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     class SoundFX {
         constructor() {
@@ -1449,6 +1449,57 @@
     // leerlas (la misma configuración web pública de Firebase que ya trae este sitio).
     const ABA_STAGE_URL = 'https://cea-analitica.comfamiliar.com/avatar/escenario';
 
+    // Lo que pertenece al momento de Aba dentro de los votos de cada persona.
+    function isAbaVoteKey(key) {
+        return key === 'voluntario_aba' || String(key).startsWith('aba_');
+    }
+
+    function forgetLocalAbaState() {
+        myMentiVotes = Object.fromEntries(Object.entries(myMentiVotes).filter(([key]) => !isAbaVoteKey(key)));
+        localStorage.setItem('intercajas_my_menti_votes', JSON.stringify(myMentiVotes));
+        abaRound = null;
+        abaGuest = null;
+    }
+
+    // Deja el momento de Aba en cero sin tocar las votaciones de los otros momentos: borra las
+    // respuestas a sus preguntas y las postulaciones, la pregunta abierta y la persona en la tarima.
+    // El reinicio general de votos no alcanzaba: dejaba la última pregunta abierta como la primera.
+    function clearAbaStage() {
+        promptAdminAction(async () => {
+            if (isConnected && db) {
+                try {
+                    const snap = await getDocs(collection(db, `/artifacts/${appId}/public/data/menti-colaborador`));
+                    const writes = [];
+                    snap.forEach(d => {
+                        const abaKeys = Object.keys(d.data()?.votes || {}).filter(isAbaVoteKey);
+                        if (!abaKeys.length) return;
+                        writes.push(setDoc(d.ref, {
+                            votes: Object.fromEntries(abaKeys.map(key => [key, deleteField()])),
+                            abaQuestions: deleteField(),
+                            updatedAt: Date.now()
+                        }, { merge: true }));
+                    });
+                    await Promise.all(writes);
+                    const resetAt = Date.now();
+                    localStorage.setItem('intercajas_aba_reset_at', String(resetAt));
+                    await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                        abaRound: deleteField(), abaGuest: deleteField(), abaResetAt: resetAt, launchedAt: Date.now(), updatedAt: Date.now()
+                    }, { merge: true });
+                } catch (e) {
+                    showToast("No se pudo limpiar. Revisa tu conexión e inténtalo de nuevo.", "fa-exclamation-triangle");
+                    return;
+                }
+            }
+            forgetLocalAbaState();
+            renderColaboradorStep();
+            showToast("Aba quedó en cero: sin respuestas, sin pregunta abierta y sin nadie en la tarima", "fa-broom");
+        }, {
+            requireReauth: true,
+            title: 'Limpiar el momento de Aba',
+            description: 'Introduce la clave de facilitador para borrar las respuestas a Aba, las postulaciones, la pregunta abierta y la persona en la tarima. Las demás votaciones no se tocan.'
+        });
+    }
+
     // El facilitador elige quién pasa a la tarima: el escenario de Aba lo recibe y ella busca su perfil.
     async function chooseAbaGuest({ userId: guestId, name, caja }) {
         const cleanName = String(name ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
@@ -1605,6 +1656,15 @@
                 localStorage.setItem('intercajas_menti_reset_at', String(data.mentiResetAt));
                 myMentiVotes = {};
                 localStorage.removeItem('intercajas_my_menti_votes');
+                abaRound = null;
+                abaGuest = null;
+            }
+            // Limpieza del momento de Aba: cada dispositivo olvida lo suyo una sola vez.
+            if (data.abaResetAt && String(data.abaResetAt) !== localStorage.getItem('intercajas_aba_reset_at')) {
+                localStorage.setItem('intercajas_aba_reset_at', String(data.abaResetAt));
+                forgetLocalAbaState();
+                const colabEl = document.getElementById('colaborador-main');
+                if (colabEl && !colabEl.classList.contains('hidden')) renderColaboradorStepFromRemote();
             }
 
             // Quien entra tarde o recarga se une a la actividad en curso. Un estado
@@ -2421,12 +2481,17 @@
                     mentiStep: 0,
                     mentiRevealed: {},
                     mentiResetAt: resetAt,
+                    // Sin esto la última pregunta abierta de Aba y la persona en la tarima sobrevivían al reinicio.
+                    abaRound: deleteField(),
+                    abaGuest: deleteField(),
                     launchedAt: Date.now(),
                     updatedAt: Date.now()
                 }, { merge: true }));
                 await Promise.all(dels);
             }
             currentMentiStep = 0;
+            abaRound = null;
+            abaGuest = null;
             renderColaboradorStep();
             showToast("Votos de Mentimeter reiniciados en toda la sala", "fa-trash-alt");
         }, {
@@ -2737,6 +2802,7 @@
                                 <input type="text" id="aba-guest-input" maxlength="60" style="min-width: 0;" placeholder="O escribe el nombre y apellido de quien pasa…" class="flex-1 py-2.5 px-3 text-sm rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-sky-400 focus:outline-none">
                                 <button id="aba-guest-manual-btn" class="flex-shrink-0 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition">Presentar</button>
                             </div>
+                            <button type="button" class="aba-clear-btn w-full px-3 py-2 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-200 font-semibold text-xs transition"><i class="fas fa-broom mr-1.5"></i>Limpiar lo de Aba: respuestas, pregunta y tarima</button>
                         </div>
                     ` : ''}
                 </div>
@@ -2767,6 +2833,7 @@
                                 <input type="text" id="aba-new-question-input" maxlength="200" style="min-width: 0;" placeholder="Escribe la nueva pregunta…" class="flex-1 py-2.5 px-3 text-sm rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-sky-400 focus:outline-none">
                                 <button id="aba-new-question-btn" class="flex-shrink-0 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs sm:text-sm transition">Abrir nueva pregunta</button>
                             </div>
+                            <button type="button" class="aba-clear-btn w-full px-3 py-2 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-200 font-semibold text-xs transition"><i class="fas fa-broom mr-1.5"></i>Limpiar lo de Aba: respuestas, pregunta y tarima</button>
                         </div>
                     ` : ''}
                     <p class="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
@@ -3048,6 +3115,8 @@
             guestManualBtn.onclick = present;
             guestInput.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); present(); } };
         }
+
+        stage.querySelectorAll('.aba-clear-btn').forEach(btn => { btn.onclick = clearAbaStage; });
 
         // Facilitador: abre una pregunta nueva para Aba; todos los celulares la reciben.
         const newQuestionInput = stage.querySelector('#aba-new-question-input');
