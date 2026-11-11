@@ -123,6 +123,19 @@ window.SESSION_CONTENT = (() => {
             verdictProduction: 'Más IA que persona. Borradores, láminas e ilustraciones animadas.',
             verdictDecisions: '100 % personas. Qué decir, qué dejar por fuera, qué era verdad y qué no.',
             takeaway: 'La IA produce. Las personas deciden y responden.'
+        },
+        // Pregunta abierta que Aba lee en la pantalla del escenario. `title` es la pregunta con la
+        // que arranca; el facilitador abre las siguientes con «Abrir nueva pregunta».
+        {
+            index: 7,
+            id: 'aba_1',
+            shortLabel: 'Participa con Aba',
+            blockBadge: 'Cierre • Participa con Aba',
+            title: '¿Qué le pedirías a una colaboradora de IA como Aba en tu equipo?',
+            subtitle: 'Escríbelo o díctalo con el micrófono del teclado. Aba lo va a leer en la pantalla.',
+            type: 'aba_open',
+            pollKey: 'aba_1',
+            placeholder: 'Escribe aquí tu respuesta…'
         }
     ];
 

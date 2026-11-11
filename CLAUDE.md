@@ -138,6 +138,13 @@ resultado de Prisma) oculta la tarjeta en ese caso.
   confidencialidad: quien pruebe un diccionario de nombres puede recuperar nombre y Caja,
   así que solo lleva esos dos datos. Vencida, la app no la usa y el primer dispositivo que
   la ve la borra. Si falta o la persona no está, el saludo usa lo que escribió.
+- «Participa con Aba» es la última etapa de las encuestas (tipo `aba_open`): una pregunta abierta
+  de 200 caracteres, una respuesta por persona y por pregunta. El facilitador abre preguntas
+  nuevas con «Abrir nueva pregunta» (`openAbaQuestion` escribe `abaRound { id, q }` en
+  `routing`; el `id` es la clave de la respuesta en `votes`). Las respuestas viajan con el
+  nombre de pila y la Caja, y las lee el escenario de Aba (`openAbaStage`), una página dentro
+  de la red de Comfamiliar que solo abre en el PC que proyecta. Si el escenario no está, el
+  facilitador las ve con «Resultados (R)». El tablero no las muestra: son individuales.
 - La búsqueda en la lista tolera tildes, mayúsculas y errores de una letra (`rosterFold`,
   `rosterVariants`). Esas dos funciones deben coincidir con las del script que genera la lista, que está fuera
   del repositorio.

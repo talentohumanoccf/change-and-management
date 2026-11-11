@@ -431,7 +431,8 @@
 
     function renderPolls() {
         const container = document.getElementById('polls');
-        const steps = COLABORADOR_STEPS.filter(step => step.pollKey);
+        // Las preguntas abiertas para Aba son respuestas individuales: el tablero solo muestra totales.
+        const steps = COLABORADOR_STEPS.filter(step => step.pollKey && step.type !== 'aba_open');
         if (state.voters === null) {
             container.replaceChildren(...steps.map(() => {
                 const card = el('div', 'card');

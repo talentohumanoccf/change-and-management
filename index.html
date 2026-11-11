@@ -244,6 +244,9 @@
             <!-- Action Buttons -->
             <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-800">
                 <div id="admin-header-tools" class="hidden items-center gap-1">
+                    <button id="openAbaStageBtn" title="Abrir el escenario de Aba (solo funciona dentro de la red de Comfamiliar)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-sky-400 hover:bg-slate-800/80 transition flex items-center justify-center">
+                        <i class="fas fa-robot text-xs sm:text-sm"></i>
+                    </button>
                     <button id="welcomeCoverBtn" title="Ver Portada de Bienvenida" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition flex items-center justify-center">
                         <i class="fas fa-home text-xs sm:text-sm"></i>
                     </button>
@@ -1053,6 +1056,9 @@
     let currentMentiStep = 0;
     let showAdminMentiResults = false;
     let mentiRevealed = {};
+    // Pregunta abierta para Aba que el facilitador abrió en vivo: { id, q }. Cada pregunta
+    // tiene su propia clave, así cada persona responde una sola vez por pregunta.
+    let abaRound = null;
     let mentiVotesState = {};
     let myMentiVotes = JSON.parse(localStorage.getItem('intercajas_my_menti_votes') || '{}');
 
@@ -1435,8 +1441,46 @@
         banner.classList.remove('hidden');
     }
 
+    // Escenario de Aba: una página dentro de la red de Comfamiliar que muestra a Aba y las
+    // respuestas a las preguntas `aba_open`. Recibe en el fragmento de la URL lo necesario para
+    // leerlas (la misma configuración web pública de Firebase que ya trae este sitio).
+    const ABA_STAGE_URL = 'https://cea-analitica.comfamiliar.com/avatar/escenario';
+
+    async function openAbaQuestion(rawQuestion) {
+        const question = String(rawQuestion ?? '').replace(/\s+/g, ' ').trim().slice(0, 200);
+        if (!question) {
+            showToast("Escribe la nueva pregunta", "fa-exclamation-triangle");
+            return;
+        }
+        abaRound = { id: `aba_${Date.now().toString(36)}`, q: question };
+        renderColaboradorStep();
+        if (isConnected && db) {
+            try {
+                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    abaRound, launchedAt: Date.now(), updatedAt: Date.now()
+                }, { merge: true });
+                showToast("Nueva pregunta abierta para todos", "fa-check-circle");
+            } catch (e) {
+                showToast("No se pudo abrir la pregunta. Revisa tu conexión.", "fa-exclamation-triangle");
+            }
+        }
+    }
+
+    function openAbaStage() {
+        const firebaseConfig = typeof window.__firebase_config === 'string' ? JSON.parse(window.__firebase_config) : window.__firebase_config;
+        if (!firebaseConfig?.apiKey || !firebaseConfig?.projectId) {
+            showToast("Sin conexión con la sala no se puede abrir el escenario", "fa-exclamation-triangle");
+            return;
+        }
+        const steps = COLABORADOR_STEPS.filter(s => s.type === 'aba_open').map(s => ({ i: s.index, key: s.pollKey, q: s.title }));
+        const payload = JSON.stringify({ k: firebaseConfig.apiKey, p: firebaseConfig.projectId, a: appId, s: steps });
+        const encoded = btoa(String.fromCharCode(...new TextEncoder().encode(payload))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        window.open(`${ABA_STAGE_URL}#c=${encoded}`, '_blank', 'noopener');
+    }
+
     window.onload = async () => {
         renderWelcomeBanner();
+        document.getElementById('openAbaStageBtn')?.addEventListener('click', () => promptAdminAction(openAbaStage));
         const defaultApiKey = window.GEMINI_API_KEY || atob("QVEuQWI4Uk42SVZDU3JQV0VxSUEtMUd3Z3dhZEtoaDM4c296MU1QWWlnaHg5aUtNT0NOUGc=");
         if (!localStorage.getItem('gemini_api_key') && defaultApiKey) {
             localStorage.setItem('gemini_api_key', defaultApiKey);
@@ -1558,6 +1602,12 @@
                     sound.playClick();
                     renderColaboradorStep();
                 }
+            }
+            const round = data.abaRound;
+            if (round && typeof round.id === 'string' && typeof round.q === 'string' && round.id !== abaRound?.id) {
+                abaRound = { id: round.id, q: round.q };
+                const colabEl = document.getElementById('colaborador-main');
+                if (colabEl && !colabEl.classList.contains('hidden')) renderColaboradorStepFromRemote();
             }
             if (data.mentiRevealed) {
                 mentiRevealed = data.mentiRevealed;
@@ -2264,6 +2314,8 @@
                     userId,
                     name: name || 'Participante',
                     mood: mood || 'motivado',
+                    // La Caja solo se publica al responder una pregunta para Aba.
+                    ...(String(pollKey).startsWith('aba_') ? { caja: localStorage.getItem('intercajas_participant_caja') || '' } : {}),
                     votes: myMentiVotes,
                     updatedAt: Date.now()
                 }, { merge: true });
@@ -2419,7 +2471,7 @@
     let pendingMentiRender = false;
 
     function isTypingMentiAnswer() {
-        return document.activeElement?.id === 'menti-wordcloud-input';
+        return ['menti-wordcloud-input', 'aba-new-question-input'].includes(document.activeElement?.id);
     }
 
     function renderColaboradorStepFromRemote() {
@@ -2449,7 +2501,10 @@
             ? { pollKey: previousInput.dataset.pollKey, value: previousInput.value }
             : null;
 
-        const step = COLABORADOR_STEPS[currentMentiStep] || COLABORADOR_STEPS[0];
+        const baseStep = COLABORADOR_STEPS[currentMentiStep] || COLABORADOR_STEPS[0];
+        const step = baseStep.type === 'aba_open' && abaRound
+            ? { ...baseStep, pollKey: abaRound.id, title: abaRound.q }
+            : baseStep;
         const totalVotersEl = document.getElementById('menti-total-voters');
         if (totalVotersEl) totalVotersEl.textContent = Object.keys(mentiVotesState).length;
 
@@ -2601,6 +2656,39 @@
                     ` : ''}
                 </div>
             `;
+        } else if (step.type === 'aba_open') {
+            // Pregunta abierta para Aba: la respuesta va con el nombre de pila a la pantalla del
+            // escenario. Reutiliza los ids de la nube para heredar el borrador y el envío.
+            const myChoice = myMentiVotes[step.pollKey] || '';
+            const hasVoted = Boolean(myChoice);
+
+            bodyHtml = `
+                <div class="my-4 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
+                    <label for="menti-wordcloud-input" class="text-xs sm:text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fas fa-robot text-sky-400"></i>
+                        <span>${hasVoted ? 'Tu respuesta para Aba:' : 'Tu respuesta para Aba (máximo 200 letras):'}</span>
+                    </label>
+                    <textarea id="menti-wordcloud-input" rows="3" maxlength="200" placeholder="${escapeHtml(step.placeholder || 'Escribe aquí…')}" ${hasVoted ? 'disabled' : ''} class="w-full py-3 px-4 text-sm sm:text-base rounded-xl bg-slate-950 border ${hasVoted ? 'border-emerald-500/40 text-emerald-300' : 'border-slate-700 text-white focus:border-sky-400'} focus:outline-none">${escapeHtml(myChoice)}</textarea>
+                    <button id="menti-wordcloud-submit-btn" ${hasVoted ? 'disabled' : ''} class="w-full px-5 py-3 rounded-xl ${hasVoted ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-600 text-slate-950'} font-bold text-sm transition flex items-center justify-center gap-2">
+                        <i class="fas ${hasVoted ? 'fa-check' : 'fa-paper-plane'}"></i>
+                        <span>${hasVoted ? 'Enviada. Mira la pantalla: Aba la va a leer' : 'Enviar a Aba'}</span>
+                    </button>
+                    ${isFacilitatorMode ? `
+                        <div class="pt-3 mt-1 border-t border-slate-800 space-y-2">
+                            <label for="aba-new-question-input" class="text-xs font-semibold text-sky-300 flex items-center gap-2">
+                                <i class="fas fa-plus-circle"></i><span>Facilitador: abrir una nueva pregunta para todos</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <input type="text" id="aba-new-question-input" maxlength="200" style="min-width: 0;" placeholder="Escribe la nueva pregunta…" class="flex-1 py-2.5 px-3 text-sm rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-sky-400 focus:outline-none">
+                                <button id="aba-new-question-btn" class="flex-shrink-0 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs sm:text-sm transition">Abrir nueva pregunta</button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <p class="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
+                        Aba puede leer tu respuesta en voz alta con tu nombre. La procesa un servicio de inteligencia artificial de Google: no escribas datos personales tuyos ni de otras personas.
+                    </p>
+                </div>
+            `;
         } else if (step.type === 'wordcloud') {
             const myChoice = myMentiVotes[step.pollKey] || '';
             const hasVoted = Boolean(myChoice);
@@ -2689,7 +2777,7 @@
         }
 
         const participantSubtitle = step.index > 0
-            ? (step.type === 'wordcloud' ? 'Escribe tu respuesta de forma individual.' : 'Selecciona tu respuesta de forma individual.')
+            ? ((step.type === 'wordcloud' || step.type === 'aba_open') ? 'Escribe tu respuesta de forma individual.' : 'Selecciona tu respuesta de forma individual.')
             : step.subtitle;
 
         let adminResultsHtml = '';
@@ -2701,7 +2789,27 @@
                   ]
                 : (step.options || []);
 
-            if (step.type === 'wordcloud') {
+            if (step.type === 'aba_open') {
+                // Respaldo: si el escenario de Aba no está disponible, quien conduce las lee aquí.
+                const answers = Object.values(mentiVotesState)
+                    .filter(v => typeof v?.votes?.[step.pollKey] === 'string' && v.votes[step.pollKey].trim())
+                    .sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+                adminResultsHtml = `
+                    <div class="mt-6 pt-5 border-t border-sky-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold uppercase tracking-wider">
+                                <i class="fas fa-robot mr-1.5"></i> Respuestas para Aba (Vista Facilitador)
+                            </span>
+                            <span class="text-xs font-mono text-slate-300">Total respuestas: <strong class="text-white">${answers.length}</strong></span>
+                        </div>
+                        ${answers.length ? `<ul class="space-y-2 text-left">${answers.map(v => `
+                            <li class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-100">
+                                <strong class="text-amber-300">${escapeHtml(v.name || 'Alguien')}${v.caja ? ` · ${escapeHtml(v.caja)}` : ''}:</strong>
+                                ${escapeHtml(v.votes[step.pollKey])}
+                            </li>`).join('')}</ul>` : '<p class="text-sm text-slate-400">Todavía no hay respuestas.</p>'}
+                    </div>
+                `;
+            } else if (step.type === 'wordcloud') {
                 const { words, total } = computeWordCloudStats(step.pollKey);
                 adminResultsHtml = `
                     <div class="mt-6 pt-5 border-t border-sky-500/30 bg-slate-950/85 p-5 rounded-2xl space-y-4">
@@ -2839,6 +2947,15 @@
             btn.onclick = () => submitMentiVote(btn.dataset.poll, btn.dataset.opt);
         });
 
+        // Facilitador: abre una pregunta nueva para Aba; todos los celulares la reciben.
+        const newQuestionInput = stage.querySelector('#aba-new-question-input');
+        const newQuestionBtn = stage.querySelector('#aba-new-question-btn');
+        if (newQuestionInput && newQuestionBtn) {
+            const open = () => openAbaQuestion(newQuestionInput.value);
+            newQuestionBtn.onclick = open;
+            newQuestionInput.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); open(); } };
+        }
+
         // Bind wordcloud events if present
         const wcInput = stage.querySelector('#menti-wordcloud-input');
         const wcBtn = stage.querySelector('#menti-wordcloud-submit-btn');
@@ -2855,7 +2972,7 @@
             };
             wcBtn.onclick = sendWord;
             wcInput.onkeydown = (e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && wcInput.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                     sendWord();
                 }
