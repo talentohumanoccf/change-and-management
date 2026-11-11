@@ -145,6 +145,14 @@ resultado de Prisma) oculta la tarjeta en ese caso.
   nombre de pila y la Caja, y las lee el escenario de Aba (`openAbaStage`), una página dentro
   de la red de Comfamiliar que solo abre en el PC que proyecta. Si el escenario no está, el
   facilitador las ve con «Resultados (R)». El tablero no las muestra: son individuales.
+- Antes de la pregunta abierta está la etapa de voluntarios (tipo `aba_volunteer`, clave
+  `voluntario_aba`, que a propósito no empieza por `aba_`): cada persona se postula y con eso
+  publica su nombre completo y su Caja; el facilitador elige con «Elegir» o escribe un nombre
+  (`chooseAbaGuest` escribe `abaGuest { userId, name, caja, at }` en `routing`). El escenario
+  muestra a esa persona y Aba busca su perfil.
+- Cada respuesta a una pregunta de Aba guarda también el texto de su pregunta
+  (`abaQuestions`), para que Aba enlace lo que la misma persona dijo antes. Las demás etapas
+  no se enlazan con nombre: una de ellas promete anonimato.
 - La búsqueda en la lista tolera tildes, mayúsculas y errores de una letra (`rosterFold`,
   `rosterVariants`). Esas dos funciones deben coincidir con las del script que genera la lista, que está fuera
   del repositorio.

@@ -1059,6 +1059,8 @@
     // Pregunta abierta para Aba que el facilitador abrió en vivo: { id, q }. Cada pregunta
     // tiene su propia clave, así cada persona responde una sola vez por pregunta.
     let abaRound = null;
+    // Persona que el facilitador eligió para conversar con Aba en la tarima: { userId, name, caja, at }.
+    let abaGuest = null;
     let mentiVotesState = {};
     let myMentiVotes = JSON.parse(localStorage.getItem('intercajas_my_menti_votes') || '{}');
 
@@ -1446,6 +1448,27 @@
     // leerlas (la misma configuración web pública de Firebase que ya trae este sitio).
     const ABA_STAGE_URL = 'https://cea-analitica.comfamiliar.com/avatar/escenario';
 
+    // El facilitador elige quién pasa a la tarima: el escenario de Aba lo recibe y ella busca su perfil.
+    async function chooseAbaGuest({ userId: guestId, name, caja }) {
+        const cleanName = String(name ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
+        if (!cleanName) {
+            showToast("Escribe el nombre de quien pasa", "fa-exclamation-triangle");
+            return;
+        }
+        abaGuest = { userId: guestId || '', name: cleanName, caja: String(caja ?? '').slice(0, 60), at: Date.now() };
+        renderColaboradorStep();
+        if (isConnected && db) {
+            try {
+                await setDoc(doc(db, `/artifacts/${appId}/public/data/session-control`, 'routing'), {
+                    abaGuest, launchedAt: Date.now(), updatedAt: Date.now()
+                }, { merge: true });
+                showToast(`${cleanName} pasa a conversar con Aba`, "fa-microphone");
+            } catch (e) {
+                showToast("No se pudo avisar al escenario. Revisa tu conexión.", "fa-exclamation-triangle");
+            }
+        }
+    }
+
     async function openAbaQuestion(rawQuestion) {
         const question = String(rawQuestion ?? '').replace(/\s+/g, ' ').trim().slice(0, 200);
         if (!question) {
@@ -1602,6 +1625,12 @@
                     sound.playClick();
                     renderColaboradorStep();
                 }
+            }
+            const guest = data.abaGuest;
+            if (guest && typeof guest.name === 'string' && guest.at !== abaGuest?.at) {
+                abaGuest = { userId: guest.userId || '', name: guest.name, caja: guest.caja || '', at: guest.at };
+                const colabEl = document.getElementById('colaborador-main');
+                if (colabEl && !colabEl.classList.contains('hidden')) renderColaboradorStepFromRemote();
             }
             const round = data.abaRound;
             if (round && typeof round.id === 'string' && typeof round.q === 'string' && round.id !== abaRound?.id) {
@@ -2314,8 +2343,17 @@
                     userId,
                     name: name || 'Participante',
                     mood: mood || 'motivado',
-                    // La Caja solo se publica al responder una pregunta para Aba.
-                    ...(String(pollKey).startsWith('aba_') ? { caja: localStorage.getItem('intercajas_participant_caja') || '' } : {}),
+                    // La Caja y el texto de la pregunta solo se publican al responder una pregunta
+                    // para Aba: con ellos puede enlazar lo que la misma persona dijo antes.
+                    ...(String(pollKey).startsWith('aba_') ? {
+                        caja: localStorage.getItem('intercajas_participant_caja') || '',
+                        abaQuestions: { [pollKey]: (abaRound?.id === pollKey ? abaRound.q : COLABORADOR_STEPS.find(s => s.pollKey === pollKey)?.title) || '' }
+                    } : {}),
+                    // Quien se postula para la tarima publica su nombre completo y su Caja.
+                    ...(pollKey === 'voluntario_aba' ? {
+                        fullName: localStorage.getItem('intercajas_participant_full') || name || '',
+                        caja: localStorage.getItem('intercajas_participant_caja') || ''
+                    } : {}),
                     votes: myMentiVotes,
                     updatedAt: Date.now()
                 }, { merge: true });
@@ -2471,7 +2509,7 @@
     let pendingMentiRender = false;
 
     function isTypingMentiAnswer() {
-        return ['menti-wordcloud-input', 'aba-new-question-input'].includes(document.activeElement?.id);
+        return ['menti-wordcloud-input', 'aba-new-question-input', 'aba-guest-input'].includes(document.activeElement?.id);
     }
 
     function renderColaboradorStepFromRemote() {
@@ -2656,6 +2694,46 @@
                     ` : ''}
                 </div>
             `;
+        } else if (step.type === 'aba_volunteer') {
+            // Voluntarios para la tarima: cada persona se postula y el facilitador elige. Postularse
+            // publica el nombre completo y la Caja, que es lo que Aba usa para buscar el perfil.
+            const applied = Boolean(myMentiVotes[step.pollKey]);
+            const volunteers = Object.values(mentiVotesState)
+                .filter(v => v?.votes?.[step.pollKey])
+                .sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+            const chosenIsMe = abaGuest && abaGuest.userId && abaGuest.userId === userId;
+
+            bodyHtml = `
+                <div class="my-4 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-md">
+                    ${abaGuest ? `
+                        <div class="p-4 rounded-xl border ${chosenIsMe ? 'bg-amber-400/15 border-amber-400/50 text-amber-200' : 'bg-sky-500/10 border-sky-400/40 text-sky-200'} text-center font-bold text-sm sm:text-base">
+                            <i class="fas fa-microphone mr-1.5"></i>
+                            ${chosenIsMe ? '¡Te toca! Pasa al frente a conversar con Aba.' : `Aba va a conversar con ${escapeHtml(abaGuest.name)}.`}
+                        </div>
+                    ` : ''}
+                    <button id="aba-volunteer-btn" ${applied ? 'disabled' : ''} class="w-full px-5 py-4 rounded-xl ${applied ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-600 text-slate-950'} font-bold text-sm sm:text-base transition flex items-center justify-center gap-2">
+                        <i class="fas ${applied ? 'fa-check' : 'fa-hand-paper'}"></i>
+                        <span>${applied ? 'Ya te postulaste. Atento a la pantalla' : 'Quiero pasar a conversar con Aba'}</span>
+                    </button>
+                    <p class="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
+                        Si te eligen, Aba te saluda por tu nombre y puede contar tu cargo, tu Caja y tu ciudad frente a todos. Lo que converses con ella lo procesa un servicio de inteligencia artificial de Google.
+                    </p>
+                    ${isFacilitatorMode ? `
+                        <div class="pt-4 border-t border-slate-800 space-y-3 text-left">
+                            <p class="text-xs font-semibold text-sky-300 flex items-center gap-2"><i class="fas fa-users"></i><span>Facilitador: elige quién pasa (${volunteers.length} ${volunteers.length === 1 ? 'voluntario' : 'voluntarios'})</span></p>
+                            ${volunteers.length ? `<ul class="space-y-2">${volunteers.map(v => `
+                                <li class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-950 border ${abaGuest?.userId === v.userId ? 'border-amber-400/60' : 'border-slate-800'}">
+                                    <span class="text-sm text-slate-100 min-w-0 truncate"><strong>${escapeHtml(v.fullName || v.name || 'Participante')}</strong>${v.caja ? ` · ${escapeHtml(v.caja)}` : ''}</span>
+                                    <button data-uid="${escapeHtml(v.userId)}" class="aba-pick-btn flex-shrink-0 px-3 py-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs transition">${abaGuest?.userId === v.userId ? 'En la tarima' : 'Elegir'}</button>
+                                </li>`).join('')}</ul>` : '<p class="text-sm text-slate-400">Todavía nadie se ha postulado.</p>'}
+                            <div class="flex gap-2">
+                                <input type="text" id="aba-guest-input" maxlength="60" style="min-width: 0;" placeholder="O escribe el nombre y apellido de quien pasa…" class="flex-1 py-2.5 px-3 text-sm rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-sky-400 focus:outline-none">
+                                <button id="aba-guest-manual-btn" class="flex-shrink-0 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition">Presentar</button>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         } else if (step.type === 'aba_open') {
             // Pregunta abierta para Aba: la respuesta va con el nombre de pila a la pantalla del
             // escenario. Reutiliza los ids de la nube para heredar el borrador y el envío.
@@ -2777,7 +2855,7 @@
         }
 
         const participantSubtitle = step.index > 0
-            ? ((step.type === 'wordcloud' || step.type === 'aba_open') ? 'Escribe tu respuesta de forma individual.' : 'Selecciona tu respuesta de forma individual.')
+            ? (step.type === 'aba_volunteer' ? step.subtitle : (step.type === 'wordcloud' || step.type === 'aba_open') ? 'Escribe tu respuesta de forma individual.' : 'Selecciona tu respuesta de forma individual.')
             : step.subtitle;
 
         let adminResultsHtml = '';
@@ -2946,6 +3024,23 @@
         stage.querySelectorAll('.menti-vote-btn').forEach(btn => {
             btn.onclick = () => submitMentiVote(btn.dataset.poll, btn.dataset.opt);
         });
+
+        // Voluntarios para la tarima.
+        const volunteerBtn = stage.querySelector('#aba-volunteer-btn');
+        if (volunteerBtn) volunteerBtn.onclick = () => submitMentiVote(step.pollKey, 'si');
+        stage.querySelectorAll('.aba-pick-btn').forEach(btn => {
+            btn.onclick = () => {
+                const v = mentiVotesState[btn.dataset.uid];
+                if (v) chooseAbaGuest({ userId: v.userId, name: v.fullName || v.name, caja: v.caja });
+            };
+        });
+        const guestInput = stage.querySelector('#aba-guest-input');
+        const guestManualBtn = stage.querySelector('#aba-guest-manual-btn');
+        if (guestInput && guestManualBtn) {
+            const present = () => chooseAbaGuest({ userId: '', name: guestInput.value, caja: '' });
+            guestManualBtn.onclick = present;
+            guestInput.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); present(); } };
+        }
 
         // Facilitador: abre una pregunta nueva para Aba; todos los celulares la reciben.
         const newQuestionInput = stage.querySelector('#aba-new-question-input');
